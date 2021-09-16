@@ -1,10 +1,9 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.CategoryEntity;
-import com.edso.resume.api.domain.request.CreateJobRequest;
-import com.edso.resume.api.domain.request.DeleteJobRequest;
-import com.edso.resume.api.domain.request.UpdateJobRequest;
+import com.edso.resume.api.domain.entities.DepartmentEntity;
+import com.edso.resume.api.domain.entities.JobLevelEntity;
+import com.edso.resume.api.domain.request.*;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -25,35 +24,34 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class JobServiceImpl extends BaseService implements JobService {
-
+public class JobLevelServiceImpl extends BaseService implements JobLevelService {
     private final MongoDbOnlineSyncActions db;
 
-    public JobServiceImpl(MongoDbOnlineSyncActions db) {
+    public JobLevelServiceImpl(MongoDbOnlineSyncActions db) {
         this.db = db;
     }
 
     @Override
-    public GetArrayResponse<CategoryEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
+    public GetArrayResponse<JobLevelEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
-        long total = db.countAll(CollectionNameDefs.COLL_JOB, cond);
+        long total = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_JOB, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
-        List<CategoryEntity> rows = new ArrayList<>();
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_JOB_LEVEL, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        List<JobLevelEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
-                CategoryEntity category = CategoryEntity.builder()
+                JobLevelEntity jobLevel = JobLevelEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .name(AppUtils.parseString(doc.get("name")))
                         .build();
-                rows.add(category);
+                rows.add(jobLevel);
             }
         }
-        GetArrayResponse<CategoryEntity> resp = new GetArrayResponse<>();
+        GetArrayResponse<JobLevelEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
         resp.setTotal(total);
         resp.setRows(rows);
@@ -61,13 +59,13 @@ public class JobServiceImpl extends BaseService implements JobService {
     }
 
     @Override
-    public BaseResponse createJob(CreateJobRequest request) {
+    public BaseResponse createJobLevel(CreateJobLevelRequest request) {
 
         BaseResponse response = new BaseResponse();
 
         String name = request.getName();
         Bson c = Filters.eq("name_search", name.toLowerCase());
-        long count = db.countAll(CollectionNameDefs.COLL_JOB, c);
+        long count = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, c);
 
         if (count > 0) {
             response.setFailed("Name already existed !");
@@ -84,7 +82,7 @@ public class JobServiceImpl extends BaseService implements JobService {
         job.append("update_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_JOB, job);
+        db.insertOne(CollectionNameDefs.COLL_JOB_LEVEL, job);
 
         response.setSuccess();
         return response;
@@ -93,12 +91,12 @@ public class JobServiceImpl extends BaseService implements JobService {
 
 
     @Override
-    public BaseResponse updateJob(UpdateJobRequest request) {
+    public BaseResponse updateJobLevel(UpdateJobLevelRequest request) {
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB, cond);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
 
         if (idDocument == null) {
             response.setFailed("Id này không tồn tại");
@@ -106,7 +104,7 @@ public class JobServiceImpl extends BaseService implements JobService {
         }
 
         String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq("name_search", name.toLowerCase()));
+        Document obj = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq("name_search", name.toLowerCase()));
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));
             if (!objId.equals(id)) {
@@ -122,7 +120,7 @@ public class JobServiceImpl extends BaseService implements JobService {
                 Updates.set("update_at", System.currentTimeMillis()),
                 Updates.set("update_by", request.getInfo().getUsername())
         );
-        db.update(CollectionNameDefs.COLL_JOB, cond, updates, true);
+        db.update(CollectionNameDefs.COLL_JOB_LEVEL, cond, updates, true);
 
         response.setSuccess();
         return response;
@@ -130,19 +128,17 @@ public class JobServiceImpl extends BaseService implements JobService {
     }
 
     @Override
-    public BaseResponse deleteJob(DeleteJobRequest request) {
+    public BaseResponse deleteJobLevel(DeleteJobLevelRequest request) {
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB, cond);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
 
         if (idDocument == null) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
-
-        db.delete(CollectionNameDefs.COLL_JOB, cond);
+        db.delete(CollectionNameDefs.COLL_JOB_LEVEL, cond);
         return new BaseResponse(0, "OK");
     }
-
 }

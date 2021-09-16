@@ -37,7 +37,7 @@ public class JobController extends BaseController {
     }
 
     @PostMapping("/create")
-    public BaseResponse createAccount(@RequestHeader Map<String, String> headers, @RequestBody CreateJobRequest request) {
+    public BaseResponse createJob(@RequestHeader Map<String, String> headers, @RequestBody CreateJobRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>createJob u: {}, req: {}", headerInfo, request);
@@ -55,7 +55,7 @@ public class JobController extends BaseController {
     }
 
     @PostMapping("/update")
-    public BaseResponse updateAccount(@RequestHeader Map<String, String> headers, @RequestBody UpdateJobRequest request) {
+    public BaseResponse updateJob(@RequestHeader Map<String, String> headers, @RequestBody UpdateJobRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>updateJob u: {}, req: {}", headerInfo, request);
@@ -73,7 +73,7 @@ public class JobController extends BaseController {
     }
 
     @PostMapping("/delete")
-    public BaseResponse deleteApiRole(@RequestHeader Map<String, String> headers, @RequestBody DeleteJobRequest request) {
+    public BaseResponse deleteJob(@RequestHeader Map<String, String> headers, @RequestBody DeleteJobRequest request) {
         logger.info("=>deleteJob req: {}", request);
         BaseResponse response = new BaseResponse();
         if (request == null) {
