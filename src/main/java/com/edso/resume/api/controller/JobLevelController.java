@@ -29,9 +29,9 @@ public class JobLevelController extends BaseController {
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAll u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
+        logger.info("=>findAllJobLevel u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
         GetArrayResponse<JobLevelEntity> resp = jobLevelService.findAll(headerInfo, name, page, size);
-        logger.info("<=findAll u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
+        logger.info("<=findAllJobLevel u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
         return resp;
     }
 

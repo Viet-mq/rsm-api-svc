@@ -72,17 +72,17 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
             return response;
         }
 
-        Document job = new Document();
-        job.append("id", UUID.randomUUID().toString());
-        job.append("name", name);
-        job.append("name_search", name.toLowerCase());
-        job.append("create_at", System.currentTimeMillis());
-        job.append("update_at", System.currentTimeMillis());
-        job.append("create_by", request.getInfo().getUsername());
-        job.append("update_by", request.getInfo().getUsername());
+        Document sourceCV = new Document();
+        sourceCV.append("id", UUID.randomUUID().toString());
+        sourceCV.append("name", name);
+        sourceCV.append("name_search", name.toLowerCase());
+        sourceCV.append("create_at", System.currentTimeMillis());
+        sourceCV.append("update_at", System.currentTimeMillis());
+        sourceCV.append("create_by", request.getInfo().getUsername());
+        sourceCV.append("update_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_SOURCE_CV, job);
+        db.insertOne(CollectionNameDefs.COLL_SOURCE_CV, sourceCV);
 
         response.setSuccess();
         return response;

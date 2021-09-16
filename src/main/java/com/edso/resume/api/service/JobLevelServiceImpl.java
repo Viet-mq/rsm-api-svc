@@ -72,17 +72,17 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
             return response;
         }
 
-        Document job = new Document();
-        job.append("id", UUID.randomUUID().toString());
-        job.append("name", name);
-        job.append("name_search", name.toLowerCase());
-        job.append("create_at", System.currentTimeMillis());
-        job.append("update_at", System.currentTimeMillis());
-        job.append("create_by", request.getInfo().getUsername());
-        job.append("update_by", request.getInfo().getUsername());
+        Document jobLevel = new Document();
+        jobLevel.append("id", UUID.randomUUID().toString());
+        jobLevel.append("name", name);
+        jobLevel.append("name_search", name.toLowerCase());
+        jobLevel.append("create_at", System.currentTimeMillis());
+        jobLevel.append("update_at", System.currentTimeMillis());
+        jobLevel.append("create_by", request.getInfo().getUsername());
+        jobLevel.append("update_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_JOB_LEVEL, job);
+        db.insertOne(CollectionNameDefs.COLL_JOB_LEVEL, jobLevel);
 
         response.setSuccess();
         return response;

@@ -72,17 +72,17 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
             return response;
         }
 
-        Document job = new Document();
-        job.append("id", UUID.randomUUID().toString());
-        job.append("name", name);
-        job.append("name_search", name.toLowerCase());
-        job.append("create_at", System.currentTimeMillis());
-        job.append("update_at", System.currentTimeMillis());
-        job.append("create_by", request.getInfo().getUsername());
-        job.append("update_by", request.getInfo().getUsername());
+        Document school = new Document();
+        school.append("id", UUID.randomUUID().toString());
+        school.append("name", name);
+        school.append("name_search", name.toLowerCase());
+        school.append("create_at", System.currentTimeMillis());
+        school.append("update_at", System.currentTimeMillis());
+        school.append("create_by", request.getInfo().getUsername());
+        school.append("update_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_SCHOOL, job);
+        db.insertOne(CollectionNameDefs.COLL_SCHOOL, school);
 
         response.setSuccess();
         return response;

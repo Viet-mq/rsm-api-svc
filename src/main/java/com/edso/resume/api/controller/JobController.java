@@ -24,15 +24,15 @@ public class JobController extends BaseController {
     }
 
     @GetMapping("/list")
-    public BaseResponse findAll(
+    public BaseResponse findAllJob(
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAll u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
+        logger.info("=>findAllJob u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
         GetArrayResponse<CategoryEntity> resp = jobService.findAll(headerInfo, name, page, size);
-        logger.info("<=findAll u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
+        logger.info("<=findAllJob u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
         return resp;
     }
 

@@ -71,17 +71,17 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
             return response;
         }
 
-        Document job = new Document();
-        job.append("id", UUID.randomUUID().toString());
-        job.append("name", name);
-        job.append("name_search", name.toLowerCase());
-        job.append("create_at", System.currentTimeMillis());
-        job.append("update_at", System.currentTimeMillis());
-        job.append("create_by", request.getInfo().getUsername());
-        job.append("update_by", request.getInfo().getUsername());
+        Document department = new Document();
+        department.append("id", UUID.randomUUID().toString());
+        department.append("name", name);
+        department.append("name_search", name.toLowerCase());
+        department.append("create_at", System.currentTimeMillis());
+        department.append("update_at", System.currentTimeMillis());
+        department.append("create_by", request.getInfo().getUsername());
+        department.append("update_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_DEPARTMENT, job);
+        db.insertOne(CollectionNameDefs.COLL_DEPARTMENT, department);
 
         response.setSuccess();
         return response;
