@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -74,8 +75,9 @@ public class JobServiceImpl extends BaseService implements JobService {
         }
 
         Document job = new Document();
-        job.append("name_search", name.toLowerCase());
+        job.append("id", UUID.randomUUID().toString());
         job.append("name", name);
+        job.append("name_search", name.toLowerCase());
         job.append("create_at", System.currentTimeMillis());
         job.append("update_at", System.currentTimeMillis());
         job.append("create_by", request.getInfo().getUsername());
