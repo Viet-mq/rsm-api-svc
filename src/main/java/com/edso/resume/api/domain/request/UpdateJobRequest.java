@@ -9,12 +9,17 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateProfileRequest extends BaseAuthRequest {
+public class UpdateJobRequest extends BaseAuthRequest {
+    private String id;
     private String name;
-    private String dateOfBirth;
 
     public BaseResponse validate(){
+        if (Strings.isNullOrEmpty(id)) {
+            return new BaseResponse(-1, "Vui lòng nhập id");
+        }
+        if (Strings.isNullOrEmpty(name)) {
+            return new BaseResponse(-1, "Vui lòng nhập tên công việc");
+        }
         return null;
     }
-
 }

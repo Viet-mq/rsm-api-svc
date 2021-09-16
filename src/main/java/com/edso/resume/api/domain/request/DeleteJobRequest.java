@@ -9,12 +9,13 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateProfileRequest extends BaseAuthRequest {
-    private String name;
-    private String dateOfBirth;
+public class DeleteJobRequest extends BaseAuthRequest{
+    private String id;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
+        if (Strings.isNullOrEmpty(id)) {
+            return new BaseResponse(-1, "Vui lòng chọn id");
+        }
         return null;
     }
-
 }
