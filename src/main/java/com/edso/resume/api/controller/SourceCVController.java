@@ -1,9 +1,7 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.entities.CategoryEntity;
 import com.edso.resume.api.domain.entities.SourceCVEntity;
 import com.edso.resume.api.domain.request.*;
-import com.edso.resume.api.service.JobService;
 import com.edso.resume.api.service.SourceCVService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;

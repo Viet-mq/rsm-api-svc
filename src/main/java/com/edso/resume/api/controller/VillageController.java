@@ -1,8 +1,8 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.entities.SchoolEntity;
+import com.edso.resume.api.domain.entities.VillageEntity;
 import com.edso.resume.api.domain.request.*;
-import com.edso.resume.api.service.SchoolService;
+import com.edso.resume.api.service.VillageService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
@@ -11,69 +11,68 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-//School: HaUI, PTIT, .....
 @RestController
-@RequestMapping("/school")
-public class SchoolController extends BaseController {
+@RequestMapping("/village")
+public class VillageController extends BaseController {
 
-    private final SchoolService schoolService;
+    private final VillageService villageService;
 
-    public SchoolController(SchoolService schoolService) {
-        this.schoolService = schoolService;
+    public VillageController(VillageService villageService) {
+        this.villageService = villageService;
     }
 
     @GetMapping("/list")
-    public BaseResponse findAllSchool(
+    public BaseResponse findAllVillage(
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllSchool u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
-        GetArrayResponse<SchoolEntity> resp = schoolService.findAll(headerInfo, name, page, size);
-        logger.info("<=findAllSchool u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
+        logger.info("=>findAllVillage u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
+        GetArrayResponse<VillageEntity> resp = villageService.findAll(headerInfo, name, page, size);
+        logger.info("<=findAllVillage u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
         return resp;
     }
 
     @PostMapping("/create")
-    public BaseResponse createSchool(@RequestHeader Map<String, String> headers, @RequestBody CreateSchoolRequest request) {
+    public BaseResponse createVillage(@RequestHeader Map<String, String> headers, @RequestBody CreateVillageRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>createSchool u: {}, req: {}", headerInfo, request);
+        logger.info("=>createVillage u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = schoolService.createSchool(request);
+                response = villageService.createVillage(request);
             }
         }
-        logger.info("<=createSchool u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=createVillage u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 
     @PostMapping("/update")
-    public BaseResponse updateSchool(@RequestHeader Map<String, String> headers, @RequestBody UpdateSchoolRequest request) {
+    public BaseResponse updateVillage(@RequestHeader Map<String, String> headers, @RequestBody UpdateVillageRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateSchool u: {}, req: {}", headerInfo, request);
+        logger.info("=>updateVillage u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = schoolService.updateSchool(request);
+                response = villageService.updateVillage(request);
             }
         }
-        logger.info("<=updateSchool u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=updateVillage u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 
     @PostMapping("/delete")
-    public BaseResponse deleteSchool(@RequestHeader Map<String, String> headers, @RequestBody DeleteSchoolRequest request) {
-        logger.info("=>deleteSchool req: {}", request);
+    public BaseResponse deleteVillage(@RequestHeader Map<String, String> headers, @RequestBody DeleteVillageRequest request) {
+        logger.info("=>deleteVillage req: {}", request);
         BaseResponse response = new BaseResponse();
         if (request == null) {
             response.setResult(-1, "Vui lòng nhập đầy đủ thông tin");
@@ -82,10 +81,10 @@ public class SchoolController extends BaseController {
             if (response == null) {
                 HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
                 request.setInfo(headerInfo);
-                response = schoolService.deleteSchool(request);
+                response = villageService.deleteVillage(request);
             }
         }
-        logger.info("<=deleteSchool req: {}, resp: {}", request, response);
+        logger.info("<=deleteVillage req: {}, resp: {}", request, response);
         return response;
     }
 

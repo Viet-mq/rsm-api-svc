@@ -1,7 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.JobLevelEntity;
+import com.edso.resume.api.domain.entities.StatusCVEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
@@ -23,34 +23,35 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class JobLevelServiceImpl extends BaseService implements JobLevelService {
+public class StatusCVServiceImpl extends BaseService implements StatusCVService {
+
     private final MongoDbOnlineSyncActions db;
 
-    public JobLevelServiceImpl(MongoDbOnlineSyncActions db) {
+    public StatusCVServiceImpl(MongoDbOnlineSyncActions db) {
         this.db = db;
     }
 
     @Override
-    public GetArrayResponse<JobLevelEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
+    public GetArrayResponse<StatusCVEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
-        long total = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+        long total = db.countAll(CollectionNameDefs.COLL_STATUS_CV, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_JOB_LEVEL, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
-        List<JobLevelEntity> rows = new ArrayList<>();
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_STATUS_CV, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        List<StatusCVEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
-                JobLevelEntity jobLevel = JobLevelEntity.builder()
+                StatusCVEntity statusCV = StatusCVEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .name(AppUtils.parseString(doc.get("name")))
                         .build();
-                rows.add(jobLevel);
+                rows.add(statusCV);
             }
         }
-        GetArrayResponse<JobLevelEntity> resp = new GetArrayResponse<>();
+        GetArrayResponse<StatusCVEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
         resp.setTotal(total);
         resp.setRows(rows);
@@ -58,30 +59,30 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     }
 
     @Override
-    public BaseResponse createJobLevel(CreateJobLevelRequest request) {
+    public BaseResponse createStatusCV(CreateStatusCVRequest request) {
 
         BaseResponse response = new BaseResponse();
 
         String name = request.getName();
         Bson c = Filters.eq("name_search", name.toLowerCase());
-        long count = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, c);
+        long count = db.countAll(CollectionNameDefs.COLL_STATUS_CV, c);
 
         if (count > 0) {
             response.setFailed("Name already existed !");
             return response;
         }
 
-        Document jobLevel = new Document();
-        jobLevel.append("id", UUID.randomUUID().toString());
-        jobLevel.append("name", name);
-        jobLevel.append("name_search", name.toLowerCase());
-        jobLevel.append("create_at", System.currentTimeMillis());
-        jobLevel.append("update_at", System.currentTimeMillis());
-        jobLevel.append("create_by", request.getInfo().getUsername());
-        jobLevel.append("update_by", request.getInfo().getUsername());
+        Document statusCV = new Document();
+        statusCV.append("id", UUID.randomUUID().toString());
+        statusCV.append("name", name);
+        statusCV.append("name_search", name.toLowerCase());
+        statusCV.append("create_at", System.currentTimeMillis());
+        statusCV.append("update_at", System.currentTimeMillis());
+        statusCV.append("create_by", request.getInfo().getUsername());
+        statusCV.append("update_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_JOB_LEVEL, jobLevel);
+        db.insertOne(CollectionNameDefs.COLL_STATUS_CV, statusCV);
 
         response.setSuccess();
         return response;
@@ -90,12 +91,12 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
 
 
     @Override
-    public BaseResponse updateJobLevel(UpdateJobLevelRequest request) {
+    public BaseResponse updateStatusCV(UpdateStatusCVRequest request) {
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
 
         if (idDocument == null) {
             response.setFailed("Id này không tồn tại");
@@ -103,7 +104,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         }
 
         String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq("name_search", name.toLowerCase()));
+        Document obj = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq("name_search", name.toLowerCase()));
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));
             if (!objId.equals(id)) {
@@ -119,7 +120,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
                 Updates.set("update_at", System.currentTimeMillis()),
                 Updates.set("update_by", request.getInfo().getUsername())
         );
-        db.update(CollectionNameDefs.COLL_JOB_LEVEL, cond, updates, true);
+        db.update(CollectionNameDefs.COLL_STATUS_CV, cond, updates, true);
 
         response.setSuccess();
         return response;
@@ -127,17 +128,19 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     }
 
     @Override
-    public BaseResponse deleteJobLevel(DeleteJobLevelRequest request) {
+    public BaseResponse deleteStatusCV(DeleteStatusCVRequest request) {
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
 
         if (idDocument == null) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
-        db.delete(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+
+        db.delete(CollectionNameDefs.COLL_STATUS_CV, cond);
         return new BaseResponse(0, "OK");
     }
+
 }
