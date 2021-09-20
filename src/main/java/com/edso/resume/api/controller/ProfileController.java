@@ -1,6 +1,5 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.entities.CategoryEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.service.ProfileService;
