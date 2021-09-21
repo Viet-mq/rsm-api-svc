@@ -58,6 +58,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                         .hrRef(AppUtils.parseString(doc.get("hrRef")))
                         .dateOfApply(AppUtils.parseString(doc.get("dateOfApply")))
                         .cvType(AppUtils.parseString(doc.get("cvType")))
+                        .statusCV(AppUtils.parseString(doc.get("statusCV")))
                         .build();
                 rows.add(profile);
             }
@@ -181,5 +182,29 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         db.delete(CollectionNameDefs.COLL_PROFILE, cond);
         return new BaseResponse(0, "OK");
+    }
+
+    @Override
+    public BaseResponse changeStatusCV(ChangeStatusCVRequest request) {
+        BaseResponse response = new BaseResponse();
+        String id = request.getId();
+        Bson cond = Filters.eq("id", id);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+
+        if (idDocument == null) {
+            response.setFailed("Id này không tồn tại");
+            return response;
+        }
+
+        // update roles
+        Bson updates = Updates.combine(
+                Updates.set("statusCV", request.getStatusCV()),
+                Updates.set("change_statuscv_at", System.currentTimeMillis()),
+                Updates.set("change_statuscv_by", request.getInfo().getUsername())
+        );
+        db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+        response.setSuccess();
+        return response;
     }
 }

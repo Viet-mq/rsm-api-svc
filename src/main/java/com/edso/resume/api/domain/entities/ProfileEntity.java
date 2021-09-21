@@ -20,5 +20,6 @@ public class ProfileEntity {
     private String hrRef;
     private String dateOfApply;
     private String cvType;
+    private String statusCV;
 
 }

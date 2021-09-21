@@ -17,4 +17,6 @@ public interface ProfileService {
     BaseResponse updateProfile(UpdateProfileRequest request);
 
     BaseResponse deleteProfile(DeleteProfileRequest request);
+
+    BaseResponse changeStatusCV(ChangeStatusCVRequest request);
 }

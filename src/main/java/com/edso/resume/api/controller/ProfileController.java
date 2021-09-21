@@ -88,4 +88,22 @@ public class ProfileController extends BaseController {
         logger.info("<=deleteProfile req: {}, resp: {}", request, response);
         return response;
     }
+
+    @PostMapping("/change-statsucv")
+    public BaseResponse changeStatusCV(@RequestHeader Map<String, String> headers, @RequestBody ChangeStatusCVRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>changeStatusCV u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.changeStatusCV(request);
+            }
+        }
+        logger.info("<=changeStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
 }

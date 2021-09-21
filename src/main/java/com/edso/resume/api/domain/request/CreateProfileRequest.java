@@ -24,6 +24,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private String hrRef;
     private String dateOfApply;
     private String cvType;
+    private String statusCV;
 
     public BaseResponse validate(){
         if (Strings.isNullOrEmpty(fullName)) {
@@ -64,6 +65,9 @@ public class CreateProfileRequest extends BaseAuthRequest {
         }
         if (Strings.isNullOrEmpty(cvType)) {
             return new BaseResponse(-1, "Vui lòng nhập kiểu cv");
+        }
+        if (Strings.isNullOrEmpty(statusCV)) {
+            return new BaseResponse(-1, "Vui lòng nhập trạng thái cv");
         }
         return null;
     }
