@@ -15,7 +15,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private String dateOfBirth;
     private String hometown;
     private String school;
-    private String phonenumber;
+    private String phoneNumber;
     private String email;
     private String job;
     private String levelJob;
@@ -24,7 +24,6 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private String hrRef;
     private String dateOfApply;
     private String cvType;
-    private String statusCV;
 
     public BaseResponse validate(){
         if (Strings.isNullOrEmpty(fullName)) {
@@ -39,7 +38,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(school)) {
             return new BaseResponse(-1, "Vui lòng nhập trường học");
         }
-        if (Strings.isNullOrEmpty(phonenumber)) {
+        if (Strings.isNullOrEmpty(phoneNumber)) {
             return new BaseResponse(-1, "Vui lòng nhập số điện thoại");
         }
         if (Strings.isNullOrEmpty(email)) {
@@ -65,9 +64,6 @@ public class CreateProfileRequest extends BaseAuthRequest {
         }
         if (Strings.isNullOrEmpty(cvType)) {
             return new BaseResponse(-1, "Vui lòng nhập kiểu cv");
-        }
-        if (Strings.isNullOrEmpty(statusCV)) {
-            return new BaseResponse(-1, "Vui lòng nhập trạng thái cv");
         }
         return null;
     }

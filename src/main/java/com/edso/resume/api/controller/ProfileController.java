@@ -9,7 +9,7 @@ import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.ParseException;
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -25,18 +25,18 @@ public class ProfileController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAllProfile(
             @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "fullName", required = false) String name,
+            @RequestParam(value = "fullName", required = false) String fullName,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, name, page, size);
-        logger.info("<=findAllProfile u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, name: {}, page: {}, size: {}", headerInfo, fullName, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, page, size);
+        logger.info("<=findAllProfile u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, page, size, resp.info());
         return resp;
     }
 
     @PostMapping("/create")
-    public BaseResponse createProfile(@RequestHeader Map<String, String> headers, @RequestBody CreateProfileRequest request) throws ParseException {
+    public BaseResponse createProfile(@RequestHeader Map<String, String> headers, @RequestBody CreateProfileRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>createProfile u: {}, req: {}", headerInfo, request);
@@ -89,21 +89,33 @@ public class ProfileController extends BaseController {
         return response;
     }
 
-    @PostMapping("/change-statsucv")
-    public BaseResponse changeStatusCV(@RequestHeader Map<String, String> headers, @RequestBody ChangeStatusCVRequest request) {
+    @GetMapping("/export")
+    public byte[] exportExcel(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "fullName", required = false) String fullName) throws IOException {
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>exportExcel u: {}, name: {}", headerInfo, fullName);
+        byte[] resp = profileService.exportExcel(headerInfo, fullName);
+        logger.info("<=exportExcel u: {}, name: {}, resp: {}", headerInfo, fullName, resp);
+        return resp;
+    }
+
+    @PostMapping("/update-status")
+    public BaseResponse updateStatusProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateStatusProfileRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>changeStatusCV u: {}, req: {}", headerInfo, request);
+        logger.info("=>updateStatusProfile u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = profileService.changeStatusCV(request);
+                response = profileService.updateStatusProfile(request);
             }
         }
-        logger.info("<=changeStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=updateStatusProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
+
 }
