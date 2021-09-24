@@ -1,6 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.edso.resume.api.domain.entities.HistoryEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.lib.common.AppUtils;
@@ -74,6 +75,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 rows.add(profile);
             }
         }
+
+        //Insert history to DB
+        createHistory(null,"Select",info.getUsername());
+
         GetArrayResponse<ProfileEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
         resp.setTotal(total);
@@ -82,12 +87,54 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     }
 
     @Override
+    public GetArrayResponse<HistoryEntity> findAllHistory(HeaderInfo info, Integer page, Integer size) {
+        List<Bson> c = new ArrayList<>();
+        Bson cond = buildCondition(c);
+        long total = db.countAll(CollectionNameDefs.COLL_HISTORY_PROFILE, cond);
+        PagingInfo pagingInfo = PagingInfo.parse(page, size);
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_HISTORY_PROFILE, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        List<HistoryEntity> rows = new ArrayList<>();
+        if (lst != null) {
+            for (Document doc : lst) {
+                HistoryEntity history = HistoryEntity.builder()
+                        .id(AppUtils.parseString(doc.get("id")))
+                        .idProfile(AppUtils.parseString(doc.get("id_profile")))
+                        .time(parseDate(AppUtils.parseLong(doc.get("time"))))
+                        .action(AppUtils.parseString(doc.get("action")))
+                        .by(AppUtils.parseString(doc.get("by")))
+                        .build();
+                rows.add(history);
+            }
+        }
+        GetArrayResponse<HistoryEntity> resp = new GetArrayResponse<>();
+        resp.setSuccess();
+        resp.setTotal(total);
+        resp.setRows(rows);
+        return resp;
+    }
+
+    public void createHistory(String idProfile, String action, String by)  {
+
+        Document history = new Document();
+        history.append("id", UUID.randomUUID().toString());
+        history.append("id_profile", idProfile);
+        history.append("time", System.currentTimeMillis());
+        history.append("action", action);
+        history.append("by", by);
+
+        // insert to database
+        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
+    }
+
+    @Override
     public BaseResponse createProfile(CreateProfileRequest request)  {
 
         BaseResponse response = new BaseResponse();
 
+        String idProfile = UUID.randomUUID().toString();
+
         Document profile = new Document();
-        profile.append("id", UUID.randomUUID().toString());
+        profile.append("id", idProfile);
         profile.append("fullName", request.getFullName());
         profile.append("dateOfBirth", request.getDateOfBirth());
         profile.append("hometown", request.getHometown());
@@ -111,6 +158,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
+
+        //Insert history to DB
+        createHistory(idProfile,"Create",request.getInfo().getUsername());
 
         response.setSuccess();
         return response;
@@ -157,6 +207,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 Updates.set("update_statuscv_by", request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+        //Insert history to DB
+        createHistory(id,"Update",request.getInfo().getUsername());
+
         response.setSuccess();
         return response;
 
@@ -175,6 +229,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         }
 
         db.delete(CollectionNameDefs.COLL_PROFILE, cond);
+
+        //Insert history to DB
+        createHistory(id,"Delete",request.getInfo().getUsername());
+
         return new BaseResponse(0, "OK");
     }
 
@@ -197,6 +255,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 Updates.set("update_statuscv_by", request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+        //Insert history to DB
+        createHistory(id,"Update status",request.getInfo().getUsername());
 
         response.setSuccess();
         return response;

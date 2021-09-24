@@ -1,5 +1,6 @@
 package com.edso.resume.api.controller;
 
+import com.edso.resume.api.domain.entities.HistoryEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.service.ProfileService;
@@ -116,6 +117,18 @@ public class ProfileController extends BaseController {
         }
         logger.info("<=updateStatusProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
+    }
+
+    @GetMapping("/history")
+    public BaseResponse findAllHistoryProfile(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size) {
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>findAllHistoryProfile u: {}, page: {}, size: {}", headerInfo, page, size);
+        GetArrayResponse<HistoryEntity> resp = profileService.findAllHistory(headerInfo, page, size);
+        logger.info("<=findAllHistoryProfile u: {}, page: {}, size: {}, resp: {}", headerInfo, page, size, resp.info());
+        return resp;
     }
 
 }
