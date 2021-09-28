@@ -1,7 +1,9 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.HistoryEntity;
+import com.edso.resume.api.domain.entities.NoteProfileEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.lib.common.AppUtils;
@@ -9,6 +11,7 @@ import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
+import com.edso.resume.lib.response.GetArrayCalendarReponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
@@ -36,10 +39,15 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     }
 
     @Override
-    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
+    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String idProfile, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
-        if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
+        if (!Strings.isNullOrEmpty(fullName)) {
+            c.add(Filters.regex("name_search", Pattern.compile(fullName.toLowerCase())));
+        }
+        if (!Strings.isNullOrEmpty(idProfile)) {
+            c.add(Filters.regex("id", Pattern.compile(idProfile)));
+            //Insert history to DB
+            createHistory(idProfile,"Select", info.getUsername());
         }
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_PROFILE, cond);
@@ -76,9 +84,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             }
         }
 
-        //Insert history to DB
-        createHistory(null,"Select",info.getUsername());
-
         GetArrayResponse<ProfileEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
         resp.setTotal(total);
@@ -87,8 +92,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     }
 
     @Override
-    public GetArrayResponse<HistoryEntity> findAllHistory(HeaderInfo info, Integer page, Integer size) {
+    public GetArrayResponse<HistoryEntity> findAllHistory(HeaderInfo info, String idProfile, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(idProfile)) {
+            c.add(Filters.regex("idProfile", Pattern.compile(idProfile)));
+        }
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_HISTORY_PROFILE, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -98,7 +106,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             for (Document doc : lst) {
                 HistoryEntity history = HistoryEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
-                        .idProfile(AppUtils.parseString(doc.get("id_profile")))
+                        .idProfile(AppUtils.parseString(doc.get("idProfile")))
                         .time(parseDate(AppUtils.parseLong(doc.get("time"))))
                         .action(AppUtils.parseString(doc.get("action")))
                         .by(AppUtils.parseString(doc.get("by")))
@@ -113,11 +121,83 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         return resp;
     }
 
+    @Override
+    public GetArrayResponse<NoteProfileEntity> findAllNote(HeaderInfo info, String idProfile, Integer page, Integer size) {
+        List<Bson> c = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(idProfile)) {
+            c.add(Filters.regex("idProfile", Pattern.compile(idProfile)));
+        }
+        Bson cond = buildCondition(c);
+        long total = db.countAll(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
+        PagingInfo pagingInfo = PagingInfo.parse(page, size);
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_NOTE_PROFILE, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        List<NoteProfileEntity> rows = new ArrayList<>();
+        if (lst != null) {
+            for (Document doc : lst) {
+                NoteProfileEntity noteProfile = NoteProfileEntity.builder()
+                        .id(AppUtils.parseString(doc.get("id")))
+                        .idProfile(AppUtils.parseString(doc.get("idProfile")))
+                        .note(AppUtils.parseString(doc.get("note")))
+                        .create_at(parseDate(AppUtils.parseLong(doc.get("create_at"))))
+                        .create_by(AppUtils.parseString(doc.get("create_by")))
+                        .build();
+                rows.add(noteProfile);
+            }
+        }
+        GetArrayResponse<NoteProfileEntity> resp = new GetArrayResponse<>();
+        resp.setSuccess();
+        resp.setTotal(total);
+        resp.setRows(rows);
+        return resp;
+    }
+
+    @Override
+    public GetArrayCalendarReponse<CalendarEntity> findAllCalendar(HeaderInfo info, String idProfile) {
+        List<Bson> c = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(idProfile)) {
+            c.add(Filters.regex("idProfile", Pattern.compile(idProfile)));
+        }
+        Bson cond = buildCondition(c);
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, null, 0, 0);
+        List<CalendarEntity> calendars = new ArrayList<>();
+        if (lst != null) {
+            for (Document doc : lst) {
+                CalendarEntity calendar = CalendarEntity.builder()
+                        .id(AppUtils.parseString(doc.get("id")))
+                        .idProfile(AppUtils.parseString(doc.get("idProfile")))
+                        .time(AppUtils.parseString(doc.get("time")))
+                        .address(AppUtils.parseString(doc.get("address")))
+                        .form(AppUtils.parseString(doc.get("form")))
+                        .interviewer(parseList(doc.get("interviewer")))
+                        .interviewee(AppUtils.parseString(doc.get("interviewee")))
+                        .content(AppUtils.parseString(doc.get("content")))
+                        .question(parseList(doc.get("question")))
+                        .comment(parseList(doc.get("comment")))
+                        .evaluation(AppUtils.parseString(doc.get("evaluation")))
+                        .status(AppUtils.parseString(doc.get("status")))
+                        .reason(AppUtils.parseString(doc.get("reason")))
+                        .timeStart(AppUtils.parseString(doc.get("timeStart")))
+                        .timeFinish(AppUtils.parseString(doc.get("timeFinish")))
+                        .build();
+                calendars.add(calendar);
+            }
+        }
+        GetArrayCalendarReponse<CalendarEntity> resp = new GetArrayCalendarReponse<>();
+        resp.setSuccess();
+        resp.setCalendars(calendars);
+        return resp;
+    }
+
+    @SuppressWarnings (value="unchecked")
+    public List<String> parseList(Object list){
+        return (List<String>) list;
+    }
+
     public void createHistory(String idProfile, String action, String by)  {
 
         Document history = new Document();
         history.append("id", UUID.randomUUID().toString());
-        history.append("id_profile", idProfile);
+        history.append("idProfile", idProfile);
         history.append("time", System.currentTimeMillis());
         history.append("action", action);
         history.append("by", by);
@@ -161,6 +241,65 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         //Insert history to DB
         createHistory(idProfile,"Create",request.getInfo().getUsername());
+
+        response.setSuccess();
+        return response;
+
+    }
+
+    @Override
+    public BaseResponse createNoteProfile(CreateNoteProfileRequest request)  {
+
+        BaseResponse response = new BaseResponse();
+
+        Document profile = new Document();
+        profile.append("id", UUID.randomUUID().toString());
+        profile.append("idProfile", request.getIdProfile());
+        profile.append("note", request.getNote());
+        profile.append("create_at", System.currentTimeMillis());
+        profile.append("create_by", request.getInfo().getUsername());
+
+        // insert to database
+        db.insertOne(CollectionNameDefs.COLL_NOTE_PROFILE, profile);
+
+        response.setSuccess();
+        return response;
+
+    }
+
+    @Override
+    public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request)  {
+
+        BaseResponse response = new BaseResponse();
+
+        String idProfile = request.getIdProfile();
+
+        Document profile = new Document();
+        profile.append("id", UUID.randomUUID().toString());
+        profile.append("idProfile", idProfile);
+        profile.append("time", request.getTime());
+        profile.append("address", request.getAddress());
+        profile.append("form", request.getForm());
+        profile.append("interviewer", request.getInterviewer());
+        profile.append("interviewee", request.getInterviewee());
+        profile.append("content", request.getContent());
+        profile.append("question", request.getQuestion());
+        profile.append("comment", request.getComment());
+        profile.append("evaluation", request.getEvaluation());
+        profile.append("status", request.getStatus());
+        profile.append("reason", request.getReason());
+        profile.append("timeStart", request.getTimeStart());
+        profile.append("timeFinish", request.getTimeFinish());
+        profile.append("create_at", System.currentTimeMillis());
+        profile.append("update_at", System.currentTimeMillis());
+        profile.append("create_by", request.getInfo().getUsername());
+        profile.append("update_by", request.getInfo().getUsername());
+
+        // insert to database
+        db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, profile);
+
+        //Insert history to DB
+        createHistory(idProfile,"Create calendar",request.getInfo().getUsername());
 
         response.setSuccess();
         return response;
@@ -217,6 +356,47 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     }
 
     @Override
+    public BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest request) {
+
+        BaseResponse response = new BaseResponse();
+        String id = request.getId();
+        Bson cond = Filters.eq("id", id);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
+
+        if (idDocument == null) {
+            response.setFailed("Id này không tồn tại");
+            return response;
+        }
+
+        // update roles
+        Bson updates = Updates.combine(
+                Updates.set("time", request.getTime()),
+                Updates.set("address", request.getAddress()),
+                Updates.set("form", request.getForm()),
+                Updates.set("interviewer", request.getInterviewer()),
+                Updates.set("interviewee", request.getInterviewee()),
+                Updates.set("content", request.getContent()),
+                Updates.set("question", request.getQuestion()),
+                Updates.set("comment", request.getComment()),
+                Updates.set("evaluation", request.getEvaluation()),
+                Updates.set("status", request.getStatus()),
+                Updates.set("reason", request.getReason()),
+                Updates.set("timeStart", request.getTimeStart()),
+                Updates.set("timeFinish", request.getTimeFinish()),
+                Updates.set("update_at", System.currentTimeMillis()),
+                Updates.set("update_by", request.getInfo().getUsername())
+        );
+        db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, updates, true);
+
+        //Insert history to DB
+        createHistory(id,"Update calendar",request.getInfo().getUsername());
+
+        response.setSuccess();
+        return response;
+
+    }
+
+    @Override
     public BaseResponse deleteProfile(DeleteProfileRequest request) {
         BaseResponse response = new BaseResponse();
         String id = request.getId();
@@ -232,6 +412,26 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         //Insert history to DB
         createHistory(id,"Delete",request.getInfo().getUsername());
+
+        return new BaseResponse(0, "OK");
+    }
+
+    @Override
+    public BaseResponse deleteCalendarProfile(DeleteCalendarProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        String id = request.getId();
+        Bson cond = Filters.eq("id", id);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
+
+        if (idDocument == null) {
+            response.setFailed("Id này không tồn tại");
+            return response;
+        }
+
+        db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
+
+        //Insert history to DB
+        createHistory(id,"Delete calendar",request.getInfo().getUsername());
 
         return new BaseResponse(0, "OK");
     }
