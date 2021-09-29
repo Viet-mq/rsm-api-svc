@@ -5,9 +5,10 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ProfileEntity {
+public class ProfileExcelEntity {
     private String id;
     private String fullName;
+    private String gender;
     private String phoneNumber;
     private String email;
     private String dateOfBirth;
@@ -20,5 +21,11 @@ public class ProfileEntity {
     private String hrRef;
     private String dateOfApply;
     private String cvType;
+    private String lastApply;
+    private String tags;
+    private String dateOfCreate;
+    private String dateOfUpdate;
+    private String note;
+    private String evaluation;
     private String statusCV;
 }

@@ -9,9 +9,10 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class UpdateProfileRequest extends BaseAuthRequest {
+public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private String id;
     private String fullName;
+    private String gender;
     private String phoneNumber;
     private String email;
     private String dateOfBirth;
@@ -24,8 +25,27 @@ public class UpdateProfileRequest extends BaseAuthRequest {
     private String hrRef;
     private String dateOfApply;
     private String cvType;
+    private String lastApply;
+    private String tags;
+    private String note;
+    private String evaluation;
 
     public BaseResponse validate(){
+        if (Strings.isNullOrEmpty(gender)) {
+            return new BaseResponse(-1, "Vui lòng nhập giới tính");
+        }
+        if (Strings.isNullOrEmpty(tags)) {
+            return new BaseResponse(-1, "Vui lòng nhập tags");
+        }
+        if (Strings.isNullOrEmpty(note)) {
+            return new BaseResponse(-1, "Vui lòng nhập note");
+        }
+        if (Strings.isNullOrEmpty(lastApply)) {
+            return new BaseResponse(-1, "Vui lòng nhập thời gian ứng tuyển gần nhất");
+        }
+        if (Strings.isNullOrEmpty(evaluation)) {
+            return new BaseResponse(-1, "Vui lòng nhập đánh giá");
+        }
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(-1, "Vui lòng nhập họ và tên");
         }
