@@ -8,6 +8,8 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayCalendarReponse;
 
+import java.text.ParseException;
+
 public interface CalendarService {
 
     GetArrayCalendarReponse<CalendarEntity> findAllCalendar(HeaderInfo info, String idProfile);
@@ -17,4 +19,6 @@ public interface CalendarService {
     BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest request);
 
     BaseResponse deleteCalendarProfile(DeleteCalendarProfileRequest request);
+
+    void alarmInterview() throws Exception;
 }

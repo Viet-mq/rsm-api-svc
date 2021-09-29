@@ -9,6 +9,7 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayCalendarReponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -26,7 +27,7 @@ public class CalendarController extends BaseController{
     @GetMapping("/list")
     public BaseResponse findAllCalendar(
             @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "idProfile", required = false) String idProfile) {
+            @RequestParam(value = "idProfile") String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>findAllCalendar u: {}, idProfile: {}", headerInfo, idProfile);
         GetArrayCalendarReponse<CalendarEntity> resp = calendarService.findAllCalendar(headerInfo, idProfile);
@@ -87,4 +88,10 @@ public class CalendarController extends BaseController{
         logger.info("<=deleteCalendarProfile req: {}, resp: {}", request, response);
         return response;
     }
+
+    @Scheduled(fixedRate = 60000)
+    public void alarmInterview() throws Exception {
+        calendarService.alarmInterview();
+    }
+
 }

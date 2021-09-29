@@ -1,7 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.ProfileEntity;
+import com.edso.resume.api.domain.entities.ProfileExcelEntity;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -62,10 +62,10 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         }
         Bson cond = buildCondition(c);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
-        List<ProfileEntity> profiles = new ArrayList<>();
+        List<ProfileExcelEntity> profiles = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
-                ProfileEntity profile = ProfileEntity.builder()
+                ProfileExcelEntity profile = ProfileExcelEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .fullName(AppUtils.parseString(doc.get("fullName")))
                         .dateOfBirth(AppUtils.parseString(doc.get("dateOfBirth")))
@@ -95,7 +95,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         return writeExcel(profiles, excelFilePath);
     }
 
-    public static byte[] writeExcel(List<ProfileEntity> profiles, String excelFilePath) throws IOException {
+    public static byte[] writeExcel(List<ProfileExcelEntity> profiles, String excelFilePath) throws IOException {
         // Create Workbook
         Workbook workbook = getWorkbook(excelFilePath);
 
@@ -109,7 +109,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
 
         // Write data
         rowIndex++;
-        for (ProfileEntity profile : profiles) {
+        for (ProfileExcelEntity profile : profiles) {
             // Create row
             Row row = sheet.createRow(rowIndex);
             // Write data on row
@@ -239,7 +239,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
     }
 
     // Write data
-    private static void writeBook(ProfileEntity profile, Row row) {
+    private static void writeBook(ProfileExcelEntity profile, Row row) {
 
         Cell cell = row.createCell(COLUMN_INDEX_FULLNAME);
         cell.setCellValue(profile.getFullName());

@@ -2,6 +2,7 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.NoteProfileEntity;
+import com.edso.resume.api.domain.request.CreateHistoryRequest;
 import com.edso.resume.api.domain.request.CreateNoteProfileRequest;
 import com.edso.resume.api.domain.request.DeleteNoteProfileRequest;
 import com.edso.resume.api.domain.request.UpdateNoteProfileRequest;
@@ -28,9 +29,11 @@ import java.util.regex.Pattern;
 public class NoteServiceImpl extends BaseService implements NoteService{
 
     private final MongoDbOnlineSyncActions db;
+    private final HistoryService historyService;
 
-    public NoteServiceImpl(MongoDbOnlineSyncActions db){
+    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService){
         this.db = db;
+        this.historyService = historyService;
     }
 
     @Override
@@ -68,20 +71,23 @@ public class NoteServiceImpl extends BaseService implements NoteService{
 
         BaseResponse response = new BaseResponse();
 
+        String idProfile = request.getIdProfile();
+
         Document profile = new Document();
         profile.append("id", UUID.randomUUID().toString());
-        profile.append("idProfile", request.getIdProfile());
+        profile.append("idProfile", idProfile);
         profile.append("note", request.getNote());
         profile.append("create_at", System.currentTimeMillis());
         profile.append("create_by", request.getInfo().getUsername());
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_NOTE_PROFILE, profile);
-
-        //insert history to DB
-        createHistory(request.getIdProfile(), "Create note",request.getInfo().getUsername(), db);
-
         response.setSuccess();
+
+        //Insert history to DB
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Create note",request.getInfo().getUsername());
+        historyService.createHistory(createHistoryRequest);
+
         return response;
     }
 
@@ -97,19 +103,22 @@ public class NoteServiceImpl extends BaseService implements NoteService{
             return response;
         }
 
+        String idProfile = request.getIdProfile();
+
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("ipProfile", request.getIdProfile()),
+                Updates.set("ipProfile", idProfile),
                 Updates.set("note", request.getNote()),
                 Updates.set("update_at", System.currentTimeMillis()),
                 Updates.set("update_by", request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_NOTE_PROFILE, cond, updates, true);
+        response.setSuccess();
 
         //Insert history to DB
-        createHistory(request.getIdProfile(),"Update note",request.getInfo().getUsername(),db);
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Update note",request.getInfo().getUsername());
+        historyService.createHistory(createHistoryRequest);
 
-        response.setSuccess();
         return response;
     }
 
@@ -128,7 +137,8 @@ public class NoteServiceImpl extends BaseService implements NoteService{
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        createHistory(id, "Delete note", request.getInfo().getUsername(), db);
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(),System.currentTimeMillis(),"Update note",request.getInfo().getUsername());
+        historyService.createHistory(createHistoryRequest);
 
         return new BaseResponse(0, "OK");
     }

@@ -1,16 +1,17 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.entities.HistoryEntity;
+import com.edso.resume.api.domain.entities.ProfileDetailEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.service.ProfileService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
+import com.edso.resume.lib.response.GetReponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -27,14 +28,24 @@ public class ProfileController extends BaseController {
     public BaseResponse findAllProfile(
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "fullName", required = false) String fullName,
-            @RequestParam(value = "idProfile", required = false) String idProfile,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, fullName: {}, idProfile: {}, page: {}, size: {}", headerInfo, fullName, idProfile, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, idProfile, page, size);
-        logger.info("<=findAllProfile u: {}, fullName: {}, idProfile: {}, page: {}, size: {}, resp: {}", headerInfo, idProfile, fullName, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, fullName: {}, page: {}, size: {}", headerInfo, fullName, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, page, size);
+        logger.info("<=findAllProfile u: {}, fullName: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, page, size, resp.info());
         return resp;
+    }
+
+    @GetMapping("/detail")
+    public BaseResponse findOneProfile(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "idProfile") String idProfile) {
+            HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+            logger.info("=>findOneProfile u: {}, idProfile: {}", headerInfo, idProfile);
+            GetReponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
+            logger.info("<=findOneProfile u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
+            return resp;
     }
 
     @PostMapping("/create")
@@ -67,6 +78,24 @@ public class ProfileController extends BaseController {
             if (response == null) {
                 request.setInfo(headerInfo);
                 response = profileService.updateProfile(request);
+            }
+        }
+        logger.info("<=updateProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
+    @PostMapping("/update-detail")
+    public BaseResponse updateDetailProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateDetailProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>updateProfile u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.updateDetailProfile(request);
             }
         }
         logger.info("<=updateProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
@@ -107,19 +136,6 @@ public class ProfileController extends BaseController {
         }
         logger.info("<=updateStatusProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
-    }
-
-    @GetMapping("/history")
-    public BaseResponse findAllHistoryProfile(
-            @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "idProfile", required = false) String idProfile,
-            @RequestParam(value = "page", required = false) Integer page,
-            @RequestParam(value = "size", required = false) Integer size) {
-        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllHistoryProfile u: {}, idProfile: {}, page: {}, size: {}", headerInfo, idProfile, page, size);
-        GetArrayResponse<HistoryEntity> resp = profileService.findAllHistory(headerInfo, idProfile, page, size);
-        logger.info("<=findAllHistoryProfile u: {}, idProfile: {}, page: {}, size: {}, resp: {}", headerInfo, idProfile, page, size, resp.info());
-        return resp;
     }
 
 }

@@ -9,8 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,23 +29,16 @@ public abstract class BaseService {
         return Filters.and(lst);
     }
 
-    public void createHistory(String idProfile, String action, String by, MongoDbOnlineSyncActions db)  {
-
-        Document history = new Document();
-        history.append("id", UUID.randomUUID().toString());
-        history.append("idProfile", idProfile);
-        history.append("time", System.currentTimeMillis());
-        history.append("action", action);
-        history.append("by", by);
-
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
-    }
-
     public String parseDate(Long milliSeconds){
         DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(milliSeconds);
         return formatter.format(calendar.getTime());
+    }
+
+    public Long parseMillisecond(String date) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        Date myDate = sdf.parse(date);
+        return myDate.getTime();
     }
 }

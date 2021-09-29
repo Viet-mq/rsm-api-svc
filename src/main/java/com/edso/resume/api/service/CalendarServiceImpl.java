@@ -2,6 +2,7 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
+import com.edso.resume.api.domain.entities.TimeEntity;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
@@ -16,16 +17,21 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
 public class CalendarServiceImpl extends BaseService implements CalendarService{
     private final MongoDbOnlineSyncActions db;
+
+    @Value("${calendar.timeCheck}")
+    private long timeCheck;
+
+    @Value("${calendar.nLoop}")
+    private int nLoop;
 
     public CalendarServiceImpl(MongoDbOnlineSyncActions db){
         this.db = db;
@@ -96,6 +102,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         profile.append("reason", request.getReason());
         profile.append("timeStart", request.getTimeStart());
         profile.append("timeFinish", request.getTimeFinish());
+        profile.append("check", "0");
+        profile.append("nLoop", 0);
         profile.append("create_at", System.currentTimeMillis());
         profile.append("update_at", System.currentTimeMillis());
         profile.append("create_by", request.getInfo().getUsername());
@@ -103,9 +111,6 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, profile);
-
-        //Insert history to DB
-        createHistory(idProfile,"Create calendar",request.getInfo().getUsername(),db);
 
         response.setSuccess();
         return response;
@@ -146,9 +151,6 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         );
         db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, updates, true);
 
-        //Insert history to DB
-        createHistory(request.getIdProfile(),"Update calendar",request.getInfo().getUsername(),db);
-
         response.setSuccess();
         return response;
 
@@ -168,9 +170,82 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
 
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
-        //Insert history to DB
-        createHistory(id,"Delete calendar",request.getInfo().getUsername(),db);
-
         return new BaseResponse(0, "OK");
     }
+
+    public void alarmInterview() throws Exception {
+        Bson c = Filters.regex("check", Pattern.compile("0"));
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, c, null, 0, 0);
+        List<TimeEntity> calendars = new ArrayList<>();
+        if (lst != null) {
+            for (Document doc : lst) {
+                TimeEntity calendar = TimeEntity.builder()
+                        .id(AppUtils.parseString(doc.get("id")))
+                        .time(AppUtils.parseString(doc.get("time")))
+                        .check(AppUtils.parseString(doc.get("check")))
+                        .nLoop(AppUtils.parseInt(doc.get("nLoop")))
+                        .build();
+                calendars.add(calendar);
+            }
+        }
+        for (TimeEntity calendar : calendars) {
+            long differenceTime = parseMillisecond(calendar.getTime()) - System.currentTimeMillis();
+            int n = calendar.getNLoop();
+            if(differenceTime <= timeCheck && differenceTime > 0 ){
+                Bson con = Filters.eq("id", calendar.getId());
+                if(n != nLoop){
+                    n++;
+                    // update roles
+                    Bson updates = Updates.combine(
+                            Updates.set("nLoop", n)
+                    );
+                    db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, con, updates, true);
+                    sendEmail(calendar.getTime());
+                }
+                else {
+                    Bson updates = Updates.combine(
+                            Updates.set("check", "1")
+                    );
+                    db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, con, updates, true);
+                }
+
+            }
+        }
+
+    }
+
+    @Value("${gmail.account}")
+    private String fromEmail;
+    @Value("${gmail.password}")
+    private String password;
+
+    public void sendEmail(String time) {
+//        // dia chi email nguoi nhan
+//        final String toEmail = "quanbn69@gmail.com";
+//        final String subject = "ALARM INTERVIEW";
+//        final String body = "You have an interview at "+time;
+//        Properties props = new Properties();
+//        props.put("mail.smtp.host", "smtp.gmail.com"); //SMTP Host
+//        props.put("mail.smtp.port", "587"); //TLS Port
+//        props.put("mail.smtp.auth", "true"); //enable authentication
+//        props.put("mail.smtp.starttls.enable", "true"); //enable STARTTLS
+//        Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
+//            protected PasswordAuthentication getPasswordAuthentication() {
+//                return new PasswordAuthentication(fromEmail, password);
+//            }
+//        });
+//        MimeMessage message = new MimeMessage(session);
+//        message.setFrom(new InternetAddress(fromEmail));
+//        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
+//        message.setSubject(subject);
+//        // Phan 1 gom doan tin nhan
+//        BodyPart messageBodyPart1 = new MimeBodyPart();
+//        messageBodyPart1.setText(body);
+//        Multipart multipart = new MimeMultipart();
+//        multipart.addBodyPart(messageBodyPart1);
+//        message.setContent(multipart);
+//        Transport.send(message);
+    }
+
+
 }
