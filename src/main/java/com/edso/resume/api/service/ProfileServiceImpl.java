@@ -108,7 +108,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         reponse.setSuccess(profile);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Select profile", info.getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Select profile", info.getUsername());
         historyService.createHistory(createHistoryRequest);
 
         return reponse;

@@ -137,7 +137,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(),System.currentTimeMillis(),"Update note",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(),System.currentTimeMillis(),"Delete note",request.getInfo().getUsername());
         historyService.createHistory(createHistoryRequest);
 
         return new BaseResponse(0, "OK");

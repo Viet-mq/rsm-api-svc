@@ -29,6 +29,11 @@ public abstract class BaseService {
         return Filters.and(lst);
     }
 
+    @SuppressWarnings (value="unchecked")
+    public List<String> parseList(Object list){
+        return (List<String>) list;
+    }
+
     public String parseDate(Long milliSeconds){
         DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         Calendar calendar = Calendar.getInstance();

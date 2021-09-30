@@ -4,6 +4,7 @@ import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
+import com.edso.resume.api.domain.request.CreateHistoryRequest;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
 import com.edso.resume.lib.common.AppUtils;
@@ -26,6 +27,7 @@ import java.util.regex.Pattern;
 @Service
 public class CalendarServiceImpl extends BaseService implements CalendarService{
     private final MongoDbOnlineSyncActions db;
+    private final HistoryService historyService;
 
     @Value("${calendar.timeCheck}")
     private long timeCheck;
@@ -33,8 +35,9 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
     @Value("${calendar.nLoop}")
     private int nLoop;
 
-    public CalendarServiceImpl(MongoDbOnlineSyncActions db){
+    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService){
         this.db = db;
+        this.historyService = historyService;
     }
 
     @Override
@@ -74,11 +77,6 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         return resp;
     }
 
-    @SuppressWarnings (value="unchecked")
-    public List<String> parseList(Object list){
-        return (List<String>) list;
-    }
-
     @Override
     public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request)  {
 
@@ -111,8 +109,12 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, profile);
-
         response.setSuccess();
+
+        //Insert history to DB
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Create calendar",request.getInfo().getUsername());
+        historyService.createHistory(createHistoryRequest);
+
         return response;
 
     }
@@ -130,9 +132,11 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
             return response;
         }
 
+        String idProfile = request.getIdProfile();
+
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("ipProfile", request.getIdProfile()),
+                Updates.set("ipProfile", idProfile),
                 Updates.set("time", request.getTime()),
                 Updates.set("address", request.getAddress()),
                 Updates.set("form", request.getForm()),
@@ -150,8 +154,12 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
                 Updates.set("update_by", request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, updates, true);
-
         response.setSuccess();
+
+        //Insert history to DB
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Update calendar",request.getInfo().getUsername());
+        historyService.createHistory(createHistoryRequest);
+
         return response;
 
     }
@@ -169,6 +177,10 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         }
 
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
+
+        //Insert history to DB
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(),System.currentTimeMillis(),"Delete calendar",request.getInfo().getUsername());
+        historyService.createHistory(createHistoryRequest);
 
         return new BaseResponse(0, "OK");
     }
