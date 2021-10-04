@@ -89,9 +89,9 @@ public class CalendarController extends BaseController{
         return response;
     }
 
-    @Scheduled(fixedRate = 60000)
-    public void alarmInterview() throws Exception {
-        calendarService.alarmInterview();
-    }
+//    @Scheduled(fixedRate = 60000)
+//    public void alarmInterview() throws Exception {
+//        calendarService.alarmInterview();
+//    }
 
 }

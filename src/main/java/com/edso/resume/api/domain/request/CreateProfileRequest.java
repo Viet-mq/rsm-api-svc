@@ -12,7 +12,7 @@ import lombok.ToString;
 public class CreateProfileRequest extends BaseAuthRequest {
 
     private String fullName;
-    private String dateOfBirth;
+    private Long dateOfBirth;
     private String hometown;
     private String school;
     private String phoneNumber;
@@ -22,14 +22,14 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private String cv;
     private String sourceCV;
     private String hrRef;
-    private String dateOfApply;
+    private Long dateOfApply;
     private String cvType;
 
     public BaseResponse validate(){
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(-1, "Vui lòng nhập họ và tên");
         }
-        if (Strings.isNullOrEmpty(dateOfBirth)) {
+        if (Strings.isNullOrEmpty(dateOfBirth.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập ngày tháng năm sinh");
         }
         if (Strings.isNullOrEmpty(hometown)) {
@@ -59,7 +59,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(hrRef)) {
             return new BaseResponse(-1, "Vui lòng nhập HR ref");
         }
-        if (Strings.isNullOrEmpty(dateOfApply)) {
+        if (Strings.isNullOrEmpty(dateOfApply.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập ngày apply");
         }
         if (Strings.isNullOrEmpty(cvType)) {

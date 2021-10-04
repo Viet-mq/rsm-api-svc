@@ -1,5 +1,6 @@
 package com.edso.resume.api.service;
 
+import com.edso.resume.api.domain.Object.Comment;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.mongodb.client.model.Filters;
@@ -34,16 +35,9 @@ public abstract class BaseService {
         return (List<String>) list;
     }
 
-    public String parseDate(Long milliSeconds){
-        DateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(milliSeconds);
-        return formatter.format(calendar.getTime());
+    @SuppressWarnings (value="unchecked")
+    public List<Comment> parseListComment(Object list){
+        return (List<Comment>) list;
     }
 
-    public Long parseMillisecond(String date) throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        Date myDate = sdf.parse(date);
-        return myDate.getTime();
-    }
 }

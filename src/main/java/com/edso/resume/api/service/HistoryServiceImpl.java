@@ -46,7 +46,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService{
                 HistoryEntity history = HistoryEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .idProfile(AppUtils.parseString(doc.get("idProfile")))
-                        .time(parseDate(AppUtils.parseLong(doc.get("time"))))
+                        .time(AppUtils.parseLong(doc.get("time")))
                         .action(AppUtils.parseString(doc.get("action")))
                         .by(AppUtils.parseString(doc.get("by")))
                         .build();

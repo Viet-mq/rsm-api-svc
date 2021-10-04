@@ -1,5 +1,6 @@
 package com.edso.resume.api.domain.request;
 
+import com.edso.resume.api.domain.Object.Comment;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;
@@ -13,25 +14,25 @@ import java.util.List;
 @ToString(callSuper = true)
 public class CreateCalendarProfileRequest extends BaseAuthRequest{
     private String idProfile;
-    private String time;
+    private Long time;
     private String address;
     private String form;
     private List<String> interviewer;
     private String interviewee;
     private String content;
     private List<String> question;
-    private List<String> comment;
+    private List<Comment> comments;
     private String evaluation;
     private String status;
     private String reason;
-    private String timeStart;
-    private String timeFinish;
+    private Long timeStart;
+    private Long timeFinish;
 
     public BaseResponse validate(){
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(time)) {
+        if (Strings.isNullOrEmpty(time.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian");
         }
         if (Strings.isNullOrEmpty(address)) {
@@ -52,7 +53,7 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest{
         if (question.size()==0) {
             return new BaseResponse(-1, "Vui lòng nhập câu hỏi");
         }
-        if (comment.size()==0) {
+        if (comments.size()==0) {
             return new BaseResponse(-1, "Vui lòng nhập nhận xét");
         }
         if (Strings.isNullOrEmpty(evaluation)) {
@@ -64,10 +65,10 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(reason)) {
             return new BaseResponse(-1, "Vui lòng nhập lý do");
         }
-        if (Strings.isNullOrEmpty(timeStart)) {
+        if (Strings.isNullOrEmpty(timeStart.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian bắt đầu");
         }
-        if (Strings.isNullOrEmpty(timeFinish)) {
+        if (Strings.isNullOrEmpty(timeFinish.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian kết thúc");
         }
         return null;

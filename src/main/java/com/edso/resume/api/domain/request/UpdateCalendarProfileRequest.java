@@ -15,7 +15,7 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest{
 
     private String id;
     private String idProfile;
-    private String time;
+    private Long time;
     private String address;
     private String form;
     private List<String> interviewer;
@@ -26,8 +26,8 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest{
     private String evaluation;
     private String status;
     private String reason;
-    private String timeStart;
-    private String timeFinish;
+    private Long timeStart;
+    private Long timeFinish;
 
     public BaseResponse validate(){
         if (Strings.isNullOrEmpty(id)) {
@@ -36,7 +36,7 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(time)) {
+        if (Strings.isNullOrEmpty(time.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian");
         }
         if (Strings.isNullOrEmpty(address)) {
@@ -69,10 +69,10 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(reason)) {
             return new BaseResponse(-1, "Vui lòng nhập lý do");
         }
-        if (Strings.isNullOrEmpty(timeStart)) {
+        if (Strings.isNullOrEmpty(timeStart.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian bắt đầu");
         }
-        if (Strings.isNullOrEmpty(timeFinish)) {
+        if (Strings.isNullOrEmpty(timeFinish.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian kết thúc");
         }
         return null;

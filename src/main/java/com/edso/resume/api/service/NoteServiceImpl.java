@@ -53,7 +53,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
                         .id(AppUtils.parseString(doc.get("id")))
                         .idProfile(AppUtils.parseString(doc.get("idProfile")))
                         .note(AppUtils.parseString(doc.get("note")))
-                        .create_at(parseDate(AppUtils.parseLong(doc.get("create_at"))))
+                        .create_at(AppUtils.parseLong(doc.get("create_at")))
                         .create_by(AppUtils.parseString(doc.get("create_by")))
                         .build();
                 rows.add(noteProfile);

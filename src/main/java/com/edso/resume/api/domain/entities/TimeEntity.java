@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class TimeEntity {
     private String id;
-    private String time;
+    private Long time;
     private String check;
     private int nLoop;
 }

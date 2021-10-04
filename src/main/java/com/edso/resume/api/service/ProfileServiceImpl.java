@@ -49,7 +49,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 ProfileEntity profile = ProfileEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .fullName(AppUtils.parseString(doc.get("fullName")))
-                        .dateOfBirth(AppUtils.parseString(doc.get("dateOfBirth")))
+                        .dateOfBirth(AppUtils.parseLong(doc.get("dateOfBirth")))
                         .hometown(AppUtils.parseString(doc.get("hometown")))
                         .school(AppUtils.parseString(doc.get("school")))
                         .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
@@ -59,7 +59,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                         .cv(AppUtils.parseString(doc.get("cv")))
                         .sourceCV(AppUtils.parseString(doc.get("sourceCV")))
                         .hrRef(AppUtils.parseString(doc.get("hrRef")))
-                        .dateOfApply(AppUtils.parseString(doc.get("dateOfApply")))
+                        .dateOfApply(AppUtils.parseLong(doc.get("dateOfApply")))
                         .cvType(AppUtils.parseString(doc.get("cvType")))
                         .statusCV(AppUtils.parseString(doc.get("statusCV")))
                         .build();
@@ -99,8 +99,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 .tags(AppUtils.parseString(one.get("tags")))
                 .gender(AppUtils.parseString(one.get("gender")))
                 .note(AppUtils.parseString(one.get("note")))
-                .dateOfCreate(parseDate(AppUtils.parseLong(one.get("create_at"))))
-                .dateOfUpdate(parseDate(AppUtils.parseLong(one.get("update_at"))))
+                .dateOfCreate(AppUtils.parseLong(one.get("create_at")))
+                .dateOfUpdate(AppUtils.parseLong(one.get("update_at")))
                 .evaluation(AppUtils.parseString(one.get("evaluation")))
                 .build();
 

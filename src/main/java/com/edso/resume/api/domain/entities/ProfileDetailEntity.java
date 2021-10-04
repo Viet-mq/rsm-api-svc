@@ -23,8 +23,8 @@ public class ProfileDetailEntity {
     private String cvType;
     private String lastApply;
     private String tags;
-    private String dateOfCreate;
-    private String dateOfUpdate;
+    private Long dateOfCreate;
+    private Long dateOfUpdate;
     private String note;
     private String evaluation;
     private String statusCV;
