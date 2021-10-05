@@ -8,7 +8,6 @@ import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ToString(callSuper = true)
 public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private String id;
     private String fullName;
@@ -30,7 +29,34 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private String note;
     private String evaluation;
 
-    public BaseResponse validate(){
+    @Override
+    public String toString() {
+        return "{" +
+                "\"type\"=\"Update detail\"" +
+                ", \"profile\":{" +
+                " \"id\"=\"" + id + '\"' +
+                ", \"fullName\"=\"" + fullName + '\"' +
+                ", \"gender\"=\"" + gender + '\"' +
+                ", \"dateOfBirth\"=" + dateOfBirth +
+                ", \"hometown\"=\"" + hometown + '\"' +
+                ", \"school\"=\"" + school + '\"' +
+                ", \"phoneNumber\"=\"" + phoneNumber + '\"' +
+                ", \"email\"=\"" + email + '\"' +
+                ", \"job\"=\"" + job + '\"' +
+                ", \"levelJob\"=\"" + levelJob + '\"' +
+                ", \"cv\"=\"" + cv + '\"' +
+                ", \"sourceCV\"=\"" + sourceCV + '\"' +
+                ", \"hrRef\"=\"" + hrRef + '\"' +
+                ", \"dateOfApply\"=" + dateOfApply +
+                ", \"cvType\"=\"" + cvType + '\"' +
+                ", \"lastApply\"=\"" + lastApply + '\"' +
+                ", \"tags\"=\"" + tags + '\"' +
+                ", \"note\"=\"" + note + '\"' +
+                ", \"evaluation\"=\"" + evaluation + '\"' +
+                " } }";
+    }
+
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(gender)) {
             return new BaseResponse(-1, "Vui lòng nhập giới tính");
         }

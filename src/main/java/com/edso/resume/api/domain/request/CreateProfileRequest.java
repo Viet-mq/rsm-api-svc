@@ -4,11 +4,9 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ToString(callSuper = true)
 public class CreateProfileRequest extends BaseAuthRequest {
 
     private String fullName;
@@ -25,7 +23,28 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private Long dateOfApply;
     private String cvType;
 
-    public BaseResponse validate(){
+    @Override
+    public String toString() {
+        return "{" +
+                "\"type\"=\"Create\"" +
+                ", \"profile\":{" +
+                " \"fullName\"=\"" + fullName + '\"' +
+                ", \"dateOfBirth\"=" + dateOfBirth +
+                ", \"hometown\"=\"" + hometown + '\"' +
+                ", \"school\"=\"" + school + '\"' +
+                ", \"phoneNumber\"=\"" + phoneNumber + '\"' +
+                ", \"email\"=\"" + email + '\"' +
+                ", \"job\"=\"" + job + '\"' +
+                ", \"levelJob\"=\"" + levelJob + '\"' +
+                ", \"cv\"=\"" + cv + '\"' +
+                ", \"sourceCV\"=\"" + sourceCV + '\"' +
+                ", \"hrRef\"=\"" + hrRef + '\"' +
+                ", \"dateOfApply\"=" + dateOfApply +
+                ", \"cvType\"=\"" + cvType + '\"' +
+                "} }";
+    }
+
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(-1, "Vui lòng nhập họ và tên");
         }

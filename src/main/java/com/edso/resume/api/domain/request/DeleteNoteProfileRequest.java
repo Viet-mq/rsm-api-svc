@@ -9,7 +9,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class DeleteNoteProfileRequest extends BaseAuthRequest{
+public class DeleteNoteProfileRequest extends BaseAuthRequest {
     private String id;
     private String idProfile;
 

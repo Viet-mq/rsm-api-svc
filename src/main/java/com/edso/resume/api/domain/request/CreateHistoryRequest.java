@@ -3,7 +3,7 @@ package com.edso.resume.api.domain.request;
 import lombok.Data;
 
 @Data
-public class CreateHistoryRequest{
+public class CreateHistoryRequest {
     private String idProfile;
     private Long time;
     private String action;

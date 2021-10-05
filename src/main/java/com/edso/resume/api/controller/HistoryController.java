@@ -1,7 +1,6 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.entities.HistoryEntity;
-import com.edso.resume.api.domain.request.CreateHistoryRequest;
 import com.edso.resume.api.service.HistoryService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -13,11 +12,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/history")
-public class HistoryController extends BaseController{
+public class HistoryController extends BaseController {
 
     private final HistoryService historyService;
 
-    public HistoryController(HistoryService historyService){
+    public HistoryController(HistoryService historyService) {
         this.historyService = historyService;
     }
 

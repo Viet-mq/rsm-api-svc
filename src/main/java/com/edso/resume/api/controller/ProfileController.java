@@ -40,11 +40,11 @@ public class ProfileController extends BaseController {
     public BaseResponse findOneProfile(
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "idProfile") String idProfile) {
-            HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-            logger.info("=>findOneProfile u: {}, idProfile: {}", headerInfo, idProfile);
-            GetReponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
-            logger.info("<=findOneProfile u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
-            return resp;
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>findOneProfile u: {}, idProfile: {}", headerInfo, idProfile);
+        GetReponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
+        logger.info("<=findOneProfile u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
+        return resp;
     }
 
     @PostMapping("/create")

@@ -12,7 +12,7 @@ import lombok.ToString;
 public class DeleteVillageRequest extends BaseAuthRequest {
     private String id;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id)) {
             return new BaseResponse(-1, "Vui lòng chọn id");
         }

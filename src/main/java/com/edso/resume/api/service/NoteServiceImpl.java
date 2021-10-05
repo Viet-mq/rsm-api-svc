@@ -26,12 +26,12 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class NoteServiceImpl extends BaseService implements NoteService{
+public class NoteServiceImpl extends BaseService implements NoteService {
 
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
 
-    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService){
+    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
         this.db = db;
         this.historyService = historyService;
     }
@@ -67,7 +67,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
     }
 
     @Override
-    public BaseResponse createNoteProfile(CreateNoteProfileRequest request)  {
+    public BaseResponse createNoteProfile(CreateNoteProfileRequest request) {
 
         BaseResponse response = new BaseResponse();
 
@@ -85,7 +85,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Create note",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Tạo chú ý", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -116,7 +116,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Update note",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Sửa chú ý", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -137,7 +137,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(),System.currentTimeMillis(),"Delete note",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(), System.currentTimeMillis(), "Xóa chú ý", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return new BaseResponse(0, "OK");

@@ -12,7 +12,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateCalendarProfileRequest extends BaseAuthRequest{
+public class CreateCalendarProfileRequest extends BaseAuthRequest {
     private String idProfile;
     private Long time;
     private String address;
@@ -28,7 +28,7 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest{
     private Long timeStart;
     private Long timeFinish;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
@@ -41,7 +41,7 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(form)) {
             return new BaseResponse(-1, "Vui lòng nhập hình thức");
         }
-        if (interviewer.size()==0) {
+        if (interviewer.size() == 0) {
             return new BaseResponse(-1, "Vui lòng nhập người phỏng vấn");
         }
         if (Strings.isNullOrEmpty(interviewee)) {
@@ -50,10 +50,10 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(content)) {
             return new BaseResponse(-1, "Vui lòng nhập nội dung");
         }
-        if (question.size()==0) {
+        if (question.size() == 0) {
             return new BaseResponse(-1, "Vui lòng nhập câu hỏi");
         }
-        if (comments.size()==0) {
+        if (comments.size() == 0) {
             return new BaseResponse(-1, "Vui lòng nhập nhận xét");
         }
         if (Strings.isNullOrEmpty(evaluation)) {

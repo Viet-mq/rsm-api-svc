@@ -12,6 +12,7 @@ import lombok.ToString;
 public class DeleteCalendarProfileRequest extends BaseAuthRequest {
     private String id;
     private String idProfile;
+
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id)) {
             return new BaseResponse(-1, "Vui lòng chọn id");

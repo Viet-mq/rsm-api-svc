@@ -2,7 +2,9 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.VillageEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateVillageRequest;
+import com.edso.resume.api.domain.request.DeleteVillageRequest;
+import com.edso.resume.api.domain.request.UpdateVillageRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;

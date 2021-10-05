@@ -1,7 +1,9 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.entities.VillageEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateVillageRequest;
+import com.edso.resume.api.domain.request.DeleteVillageRequest;
+import com.edso.resume.api.domain.request.UpdateVillageRequest;
 import com.edso.resume.api.service.VillageService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;

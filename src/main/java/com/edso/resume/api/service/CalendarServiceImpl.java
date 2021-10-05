@@ -22,11 +22,13 @@ import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class CalendarServiceImpl extends BaseService implements CalendarService{
+public class CalendarServiceImpl extends BaseService implements CalendarService {
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
 
@@ -36,7 +38,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
     @Value("${calendar.nLoop}")
     private int nLoop;
 
-    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService){
+    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
         this.db = db;
         this.historyService = historyService;
     }
@@ -79,7 +81,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
     }
 
     @Override
-    public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request)  {
+    public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request) {
         BaseResponse response = new BaseResponse();
 
         List<Comment> lst = request.getComments();
@@ -122,7 +124,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Create calendar",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Tạo lịch phỏng vấn", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -167,7 +169,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Update calendar",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Sửa lịch phỏng vấn", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -189,7 +191,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(),System.currentTimeMillis(),"Delete calendar",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(), System.currentTimeMillis(), "Xóa lịch phỏng vấn", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return new BaseResponse(0, "OK");
@@ -213,9 +215,9 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         for (TimeEntity calendar : calendars) {
             long differenceTime = calendar.getTime() - System.currentTimeMillis();
             int n = calendar.getNLoop();
-            if(differenceTime <= timeCheck && differenceTime > 0 ){
+            if (differenceTime <= timeCheck && differenceTime > 0) {
                 Bson con = Filters.eq("id", calendar.getId());
-                if(n != nLoop){
+                if (n != nLoop) {
                     n++;
                     // update roles
                     Bson updates = Updates.combine(
@@ -223,8 +225,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
                     );
                     db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, con, updates, true);
 //                    sendEmail(calendar.getTime());
-                }
-                else {
+                } else {
                     Bson updates = Updates.combine(
                             Updates.set("check", "1")
                     );

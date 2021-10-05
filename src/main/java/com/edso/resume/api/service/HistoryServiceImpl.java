@@ -22,11 +22,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class HistoryServiceImpl extends BaseService implements HistoryService{
+public class HistoryServiceImpl extends BaseService implements HistoryService {
 
     private final MongoDbOnlineSyncActions db;
 
-    public HistoryServiceImpl(MongoDbOnlineSyncActions db){
+    public HistoryServiceImpl(MongoDbOnlineSyncActions db) {
         this.db = db;
     }
 
@@ -61,7 +61,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService{
     }
 
     @Override
-    public BaseResponse createHistory(CreateHistoryRequest request)  {
+    public BaseResponse createHistory(CreateHistoryRequest request) {
 
         BaseResponse response = new BaseResponse();
 

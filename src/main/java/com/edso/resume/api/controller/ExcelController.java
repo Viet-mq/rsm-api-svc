@@ -10,11 +10,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/excel")
-public class ExcelController extends BaseController{
+public class ExcelController extends BaseController {
 
     private ExcelService excelService;
 
-    public ExcelController(ExcelService excelService){
+    public ExcelController(ExcelService excelService) {
         this.excelService = excelService;
     }
 
@@ -24,7 +24,7 @@ public class ExcelController extends BaseController{
             @RequestParam(value = "fullName", required = false) String fullName) throws IOException {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>exportExcel u: {}, name: {}", headerInfo, fullName);
-        byte[] resp = excelService. exportExcel(headerInfo, fullName);
+        byte[] resp = excelService.exportExcel(headerInfo, fullName);
         logger.info("<=exportExcel u: {}, name: {}, resp: {}", headerInfo, fullName, resp);
         return resp;
     }

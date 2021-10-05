@@ -2,7 +2,9 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.StatusCVEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateStatusCVRequest;
+import com.edso.resume.api.domain.request.DeleteStatusCVRequest;
+import com.edso.resume.api.domain.request.UpdateStatusCVRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;

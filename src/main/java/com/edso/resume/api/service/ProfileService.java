@@ -8,6 +8,8 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.response.GetReponse;
 
+import java.io.IOException;
+
 public interface ProfileService {
 
     GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, Integer page, Integer size);
@@ -23,4 +25,5 @@ public interface ProfileService {
     BaseResponse deleteProfile(DeleteProfileRequest request);
 
     BaseResponse updateStatusProfile(UpdateStatusProfileRequest request);
+
 }

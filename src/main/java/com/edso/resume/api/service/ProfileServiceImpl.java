@@ -3,6 +3,7 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.ProfileDetailEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
+import com.edso.resume.api.domain.rabbitmq.RabbitMQOnlineSyncActions;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
@@ -27,10 +28,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
+    private final RabbitMQOnlineSyncActions rabbitMQOnlineSyncActions;
 
-    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitMQOnlineSyncActions rabbitMQOnlineSyncActions) {
         this.db = db;
         this.historyService = historyService;
+        this.rabbitMQOnlineSyncActions = rabbitMQOnlineSyncActions;
     }
 
     @Override
@@ -108,14 +111,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         reponse.setSuccess(profile);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Select profile", info.getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Xem chi tiết profile", info.getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return reponse;
     }
 
     @Override
-    public BaseResponse createProfile(CreateProfileRequest request)  {
+    public BaseResponse createProfile(CreateProfileRequest request) {
 
         BaseResponse response = new BaseResponse();
 
@@ -147,8 +150,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
 
+        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
+
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Create profile",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Tạo profile",request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         response.setSuccess();
@@ -157,7 +162,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     }
 
     @Override
-    public BaseResponse updateProfile(UpdateProfileRequest request) {
+    public BaseResponse updateProfile(UpdateProfileRequest request){
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
@@ -193,8 +198,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
         response.setSuccess();
 
+        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
+
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Update profile",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Sửa profile",request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -243,8 +250,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
         response.setSuccess();
 
+        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
+
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Update detail profile",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Sửa chi tiết profile",request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -265,8 +274,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         db.delete(CollectionNameDefs.COLL_PROFILE, cond);
 
+        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
+
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Delete profile",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Xóa profile",request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return new BaseResponse(0, "OK");
@@ -294,7 +305,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Update status profile",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Cập nhật trạng thái profile",request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
