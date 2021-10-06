@@ -124,18 +124,54 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         String idProfile = UUID.randomUUID().toString();
 
+        String job = request.getJob();
+        Bson conJob = Filters.eq("name", job);
+        Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, conJob);
+
+        if(jobDocument == null){
+            response.setFailed("Công việc không tồn tại");
+            return response;
+        }
+
+        String levelJob = request.getLevelJob();
+        Bson conLevelJob = Filters.eq("name", levelJob);
+        Document levelJobDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, conLevelJob);
+
+        if(levelJobDocument == null){
+            response.setFailed("Vị trí tuyển dụng không tồn tại");
+            return response;
+        }
+
+        String school = request.getSchool();
+        Bson conSchool = Filters.eq("name", school);
+        Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, conSchool);
+
+        if(schoolDocument == null){
+            response.setFailed("Trường học không tồn tại");
+            return response;
+        }
+
+        String sourceCV = request.getSourceCV();
+        Bson conSourceCV = Filters.eq("name", sourceCV);
+        Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, conSourceCV);
+
+        if(sourceCVDocument == null){
+            response.setFailed("Nguồn cv không tồn tại");
+            return response;
+        }
+
         Document profile = new Document();
         profile.append("id", idProfile);
         profile.append("fullName", request.getFullName());
         profile.append("dateOfBirth", request.getDateOfBirth());
         profile.append("hometown", request.getHometown());
-        profile.append("school", request.getSchool());
+        profile.append("school", school);
         profile.append("phoneNumber", request.getPhoneNumber());
         profile.append("email", request.getEmail());
-        profile.append("job", request.getJob());
-        profile.append("levelJob", request.getLevelJob());
+        profile.append("job", job);
+        profile.append("levelJob", levelJob);
         profile.append("cv", request.getCv());
-        profile.append("sourceCV", request.getSourceCV());
+        profile.append("sourceCV", sourceCV);
         profile.append("hrRef", request.getHrRef());
         profile.append("dateOfApply", request.getDateOfApply());
         profile.append("cvType", request.getCvType());
@@ -150,7 +186,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
 
-        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
+//        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
 
         //Insert history to DB
         CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Tạo profile",request.getInfo().getFullName());
@@ -174,18 +210,54 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
+        String job = request.getJob();
+        Bson conJob = Filters.eq("name", job);
+        Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, conJob);
+
+        if(jobDocument == null){
+            response.setFailed("Công việc không tồn tại");
+            return response;
+        }
+
+        String levelJob = request.getLevelJob();
+        Bson conLevelJob = Filters.eq("name", levelJob);
+        Document levelJobDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, conLevelJob);
+
+        if(levelJobDocument == null){
+            response.setFailed("Vị trí tuyển dụng không tồn tại");
+            return response;
+        }
+
+        String school = request.getSchool();
+        Bson conSchool = Filters.eq("name", school);
+        Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, conSchool);
+
+        if(schoolDocument == null){
+            response.setFailed("Trường học không tồn tại");
+            return response;
+        }
+
+        String sourceCV = request.getSourceCV();
+        Bson conSourceCV = Filters.eq("name", sourceCV);
+        Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, conSourceCV);
+
+        if(sourceCVDocument == null){
+            response.setFailed("Nguồn cv không tồn tại");
+            return response;
+        }
+
         // update roles
         Bson updates = Updates.combine(
                 Updates.set("fullName", request.getFullName()),
                 Updates.set("dateOfBirth", request.getDateOfBirth()),
                 Updates.set("hometown", request.getHometown()),
-                Updates.set("school", request.getSchool()),
+                Updates.set("school", school),
                 Updates.set("phoneNumber", request.getPhoneNumber()),
                 Updates.set("email", request.getEmail()),
-                Updates.set("job", request.getJob()),
-                Updates.set("levelJob", request.getLevelJob()),
+                Updates.set("job", job),
+                Updates.set("levelJob", levelJob),
                 Updates.set("cv", request.getCv()),
-                Updates.set("sourceCV", request.getSourceCV()),
+                Updates.set("sourceCV", sourceCV),
                 Updates.set("hrRef", request.getHrRef()),
                 Updates.set("dateOfApply", request.getDateOfApply()),
                 Updates.set("cvType", request.getCvType()),
@@ -198,7 +270,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
         response.setSuccess();
 
-        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
+//        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
 
         //Insert history to DB
         CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Sửa profile",request.getInfo().getFullName());
@@ -221,18 +293,54 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
+        String job = request.getJob();
+        Bson conJob = Filters.eq("name", job);
+        Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, conJob);
+
+        if(jobDocument == null){
+            response.setFailed("Công việc không tồn tại");
+            return response;
+        }
+
+        String levelJob = request.getLevelJob();
+        Bson conLevelJob = Filters.eq("name", levelJob);
+        Document levelJobDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, conLevelJob);
+
+        if(levelJobDocument == null){
+            response.setFailed("Vị trí tuyển dụng không tồn tại");
+            return response;
+        }
+
+        String school = request.getSchool();
+        Bson conSchool = Filters.eq("name", school);
+        Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, conSchool);
+
+        if(schoolDocument == null){
+            response.setFailed("Trường học không tồn tại");
+            return response;
+        }
+
+        String sourceCV = request.getSourceCV();
+        Bson conSourceCV = Filters.eq("name", sourceCV);
+        Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, conSourceCV);
+
+        if(sourceCVDocument == null){
+            response.setFailed("Nguồn cv không tồn tại");
+            return response;
+        }
+
         // update roles
         Bson updates = Updates.combine(
                 Updates.set("fullName", request.getFullName()),
                 Updates.set("dateOfBirth", request.getDateOfBirth()),
                 Updates.set("hometown", request.getHometown()),
-                Updates.set("school", request.getSchool()),
+                Updates.set("school", school),
                 Updates.set("phoneNumber", request.getPhoneNumber()),
                 Updates.set("email", request.getEmail()),
-                Updates.set("job", request.getJob()),
-                Updates.set("levelJob", request.getLevelJob()),
+                Updates.set("job", job),
+                Updates.set("levelJob", levelJob),
                 Updates.set("cv", request.getCv()),
-                Updates.set("sourceCV", request.getSourceCV()),
+                Updates.set("sourceCV", sourceCV),
                 Updates.set("hrRef", request.getHrRef()),
                 Updates.set("dateOfApply", request.getDateOfApply()),
                 Updates.set("cvType", request.getCvType()),
@@ -250,7 +358,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
         response.setSuccess();
 
-        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
+//        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
 
         //Insert history to DB
         CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Sửa chi tiết profile",request.getInfo().getFullName());
@@ -274,7 +382,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         db.delete(CollectionNameDefs.COLL_PROFILE, cond);
 
-        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
+//        rabbitMQOnlineSyncActions.publish("Profile", request.toString());
 
         //Insert history to DB
         CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Xóa profile",request.getInfo().getFullName());
@@ -295,9 +403,18 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
+        String statusCV = request.getStatusCV();
+        Bson constatusCV = Filters.eq("name", statusCV);
+        Document statusCVDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, constatusCV);
+
+        if (statusCVDocument == null) {
+            response.setFailed("Trạng thái cv không tồn tại");
+            return response;
+        }
+
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("statusCV", request.getStatusCV()),
+                Updates.set("statusCV", statusCV),
                 Updates.set("update_statuscv_at", System.currentTimeMillis()),
                 Updates.set("update_statuscv_by", request.getInfo().getUsername())
         );

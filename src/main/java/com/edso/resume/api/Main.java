@@ -14,7 +14,7 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 @SpringBootApplication(exclude = MongoAutoConfiguration.class)
 @EnableScheduling
@@ -24,22 +24,22 @@ public class Main {
         SpringApplication.run(Main.class, args);
     }
 
-//    @Bean
-//    public Docket swaggerPersonApi10() {
-//
-//        return new Docket(DocumentationType.SWAGGER_2)
-//                .globalOperationParameters(
-//                        Arrays.asList(new ParameterBuilder()
-//                                .name("Authorization")
-//                                .description("Token")
-//                                .modelRef(new ModelRef("string"))
-//                                .parameterType("header")
-//                                .required(false)
-//                                .build()))
-//                .select()
-//                .apis(RequestHandlerSelectors.basePackage("com.edso.resume.api.controller"))
-//                .paths(PathSelectors.any())
-//                .build()
-//                .apiInfo(new ApiInfoBuilder().version("1.0").title("Resume API").build());
-//    }
+    @Bean
+    public Docket swaggerApi() {
+
+        return new Docket(DocumentationType.SWAGGER_2)
+                .globalOperationParameters(
+                        Collections.singletonList(new ParameterBuilder()
+                                .name("Authorization")
+                                .description("Token")
+                                .modelRef(new ModelRef("string"))
+                                .parameterType("header")
+                                .required(false)
+                                .build()))
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.edso.resume.api.controller"))
+                .paths(PathSelectors.any())
+                .build()
+                .apiInfo(new ApiInfoBuilder().version("1.0").title("Resume API").build());
+    }
 }

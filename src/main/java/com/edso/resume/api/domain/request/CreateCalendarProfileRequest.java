@@ -1,6 +1,5 @@
 package com.edso.resume.api.domain.request;
 
-import com.edso.resume.api.domain.Object.Comment;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;
@@ -20,8 +19,8 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest {
     private List<String> interviewer;
     private String interviewee;
     private String content;
-    private List<String> question;
-    private List<Comment> comments;
+    private String question;
+    private String comments;
     private String evaluation;
     private String status;
     private String reason;
@@ -50,10 +49,10 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(content)) {
             return new BaseResponse(-1, "Vui lòng nhập nội dung");
         }
-        if (question.size() == 0) {
+        if (Strings.isNullOrEmpty(question)) {
             return new BaseResponse(-1, "Vui lòng nhập câu hỏi");
         }
-        if (comments.size() == 0) {
+        if (Strings.isNullOrEmpty(comments)) {
             return new BaseResponse(-1, "Vui lòng nhập nhận xét");
         }
         if (Strings.isNullOrEmpty(evaluation)) {

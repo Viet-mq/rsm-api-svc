@@ -43,7 +43,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
 
         db.insertOne(CollectionNameDefs.COLL_COMMENT, comment);
 
-        rabbitMQOnlineSyncActions.publish("event.queue", request.toString());
+//        rabbitMQOnlineSyncActions.publish("event.queue", request.toString());
 
         response.setSuccess();
         return response;
@@ -69,7 +69,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
         db.update(CollectionNameDefs.COLL_COMMENT, cond, updates);
         response.setSuccess();
 
-        rabbitMQOnlineSyncActions.publish("event.queue", request.toString());
+//        rabbitMQOnlineSyncActions.publish("event.queue", request.toString());
 
         return response;
     }

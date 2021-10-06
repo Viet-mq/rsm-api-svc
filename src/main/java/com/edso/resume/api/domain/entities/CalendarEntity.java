@@ -1,6 +1,5 @@
 package com.edso.resume.api.domain.entities;
 
-import com.edso.resume.api.domain.Object.Comment;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,8 +16,8 @@ public class CalendarEntity {
     private List<String> interviewer;
     private String interviewee;
     private String content;
-    private List<String> question;
-    private List<Comment> comment;
+    private String question;
+    private String comments;
     private String evaluation;
     private String status;
     private String reason;

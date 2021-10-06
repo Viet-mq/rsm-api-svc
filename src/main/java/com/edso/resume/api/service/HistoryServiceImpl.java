@@ -65,15 +65,15 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
 
         BaseResponse response = new BaseResponse();
 
-        Document profile = new Document();
-        profile.append("id", UUID.randomUUID().toString());
-        profile.append("idProfile", request.getIdProfile());
-        profile.append("time", request.getTime());
-        profile.append("action", request.getAction());
-        profile.append("by", request.getBy());
+        Document history = new Document();
+        history.append("id", UUID.randomUUID().toString());
+        history.append("idProfile", request.getIdProfile());
+        history.append("time", request.getTime());
+        history.append("action", request.getAction());
+        history.append("by", request.getBy());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, profile);
+        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
 
         response.setSuccess();
         return response;

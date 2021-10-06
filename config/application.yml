@@ -12,6 +12,14 @@ spring:
       database: 'resume'
       username: 'resume'
       password: 'abc123resume'
+  rabbitmq:
+    host: 18.139.222.137
+    port: 5672
+    username: admin
+    password: rabb@t@7911
+    exchange: event.exchange
+    queue: event.queue
+    routingkey: event.routingkey
 
 server:
   port: ${API_SVC_PORT:30003}
@@ -53,8 +61,8 @@ calendar:
   timeCheck: 18000000 #30p = 30*60*1000
   nLoop: 3 #canh bao 3 lan
 
-rabbitmq:
-  host: '18.139.222.137'
-  port: 5672
-  username: 'admin'
-  password: 'rabb@t@7911'
+#rabbitmq:
+#  host: '18.139.222.137'
+#  port: 5672
+#  username: 'admin'
+#  password: 'rabb@t@7911'

@@ -1,6 +1,5 @@
 package com.edso.resume.api.service;
 
-import com.edso.resume.api.domain.Object.Comment;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -25,11 +24,6 @@ public abstract class BaseService {
     @SuppressWarnings(value = "unchecked")
     public List<String> parseList(Object list) {
         return (List<String>) list;
-    }
-
-    @SuppressWarnings(value = "unchecked")
-    public List<Comment> parseListComment(Object list) {
-        return (List<Comment>) list;
     }
 
 }

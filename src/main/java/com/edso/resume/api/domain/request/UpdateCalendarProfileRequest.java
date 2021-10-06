@@ -21,8 +21,8 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest {
     private List<String> interviewer;
     private String interviewee;
     private String content;
-    private List<String> question;
-    private List<String> comment;
+    private String question;
+    private String comments;
     private String evaluation;
     private String status;
     private String reason;
@@ -54,10 +54,10 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(content)) {
             return new BaseResponse(-1, "Vui lòng nhập nội dung");
         }
-        if (question.size() == 0) {
+        if (Strings.isNullOrEmpty(question)) {
             return new BaseResponse(-1, "Vui lòng nhập câu hỏi");
         }
-        if (comment.size() == 0) {
+        if (Strings.isNullOrEmpty(comments)) {
             return new BaseResponse(-1, "Vui lòng nhập nhận xét");
         }
         if (Strings.isNullOrEmpty(evaluation)) {

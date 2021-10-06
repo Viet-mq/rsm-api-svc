@@ -1,6 +1,5 @@
 package com.edso.resume.api.service;
 
-import com.edso.resume.api.domain.Object.Comment;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
@@ -63,8 +62,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
                         .interviewer(parseList(doc.get("interviewer")))
                         .interviewee(AppUtils.parseString(doc.get("interviewee")))
                         .content(AppUtils.parseString(doc.get("content")))
-                        .question(parseList(doc.get("question")))
-                        .comment(parseListComment(doc.get("comments")))
+                        .question(AppUtils.parseString(doc.get("question")))
+                        .comments(AppUtils.parseString(doc.get("comments")))
                         .evaluation(AppUtils.parseString(doc.get("evaluation")))
                         .status(AppUtils.parseString(doc.get("status")))
                         .reason(AppUtils.parseString(doc.get("reason")))
@@ -84,43 +83,40 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request) {
         BaseResponse response = new BaseResponse();
 
-        List<Comment> lst = request.getComments();
-        List<Document> lstComment = new ArrayList<>();
+        String idProfile = request.getIdProfile();
+        Bson cond = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        for (Comment c : lst) {
-            Document comment = new Document();
-            comment.append("name", c.getName());
-            comment.append("content", c.getContent());
-            lstComment.add(comment);
+        if(idProfileDocument == null){
+            response.setFailed("Id profile không tồn tại");
+            return response;
         }
 
-        String idProfile = request.getIdProfile();
-
-        Document profile = new Document();
-        profile.append("id", UUID.randomUUID().toString());
-        profile.append("idProfile", idProfile);
-        profile.append("time", request.getTime());
-        profile.append("address", request.getAddress());
-        profile.append("form", request.getForm());
-        profile.append("interviewer", request.getInterviewer());
-        profile.append("interviewee", request.getInterviewee());
-        profile.append("content", request.getContent());
-        profile.append("question", request.getQuestion());
-        profile.append("comments", lstComment);
-        profile.append("evaluation", request.getEvaluation());
-        profile.append("status", request.getStatus());
-        profile.append("reason", request.getReason());
-        profile.append("timeStart", request.getTimeStart());
-        profile.append("timeFinish", request.getTimeFinish());
-        profile.append("check", "0");
-        profile.append("nLoop", 0);
-        profile.append("create_at", System.currentTimeMillis());
-        profile.append("update_at", System.currentTimeMillis());
-        profile.append("create_by", request.getInfo().getUsername());
-        profile.append("update_by", request.getInfo().getUsername());
+        Document calendar = new Document();
+        calendar.append("id", UUID.randomUUID().toString());
+        calendar.append("idProfile", idProfile);
+        calendar.append("time", request.getTime());
+        calendar.append("address", request.getAddress());
+        calendar.append("form", request.getForm());
+        calendar.append("interviewer", request.getInterviewer());
+        calendar.append("interviewee", request.getInterviewee());
+        calendar.append("content", request.getContent());
+        calendar.append("question", request.getQuestion());
+        calendar.append("comments", request.getComments());
+        calendar.append("evaluation", request.getEvaluation());
+        calendar.append("status", request.getStatus());
+        calendar.append("reason", request.getReason());
+        calendar.append("timeStart", request.getTimeStart());
+        calendar.append("timeFinish", request.getTimeFinish());
+        calendar.append("check", "0");
+        calendar.append("nLoop", 0);
+        calendar.append("create_at", System.currentTimeMillis());
+        calendar.append("update_at", System.currentTimeMillis());
+        calendar.append("create_by", request.getInfo().getUsername());
+        calendar.append("update_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, profile);
+        db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
         response.setSuccess();
 
         //Insert history to DB
@@ -145,6 +141,13 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         }
 
         String idProfile = request.getIdProfile();
+        Bson con = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
+
+        if(idProfileDocument == null){
+            response.setFailed("Id profile không tồn tại");
+            return response;
+        }
 
         // update roles
         Bson updates = Updates.combine(
@@ -156,7 +159,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
                 Updates.set("interviewee", request.getInterviewee()),
                 Updates.set("content", request.getContent()),
                 Updates.set("question", request.getQuestion()),
-                Updates.set("comment", request.getComment()),
+                Updates.set("comments", request.getComments()),
                 Updates.set("evaluation", request.getEvaluation()),
                 Updates.set("status", request.getStatus()),
                 Updates.set("reason", request.getReason()),
