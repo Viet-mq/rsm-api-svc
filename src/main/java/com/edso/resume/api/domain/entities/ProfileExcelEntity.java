@@ -21,7 +21,7 @@ public class ProfileExcelEntity {
     private String hrRef;
     private Long dateOfApply;
     private String cvType;
-    private String lastApply;
+    private Long lastApply;
     private String tags;
     private Long dateOfCreate;
     private Long dateOfUpdate;

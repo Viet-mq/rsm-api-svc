@@ -1,6 +1,5 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.entities.EventEntity;
 import com.edso.resume.api.domain.entities.ProfileDetailEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
@@ -10,8 +9,6 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.response.GetReponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -20,18 +17,10 @@ import java.util.Map;
 @RequestMapping("/profile")
 public class ProfileController extends BaseController {
 
-    @Value("${spring.rabbitmq.exchange}")
-    private String exchange;
-
-    @Value("${spring.rabbitmq.routingkey}")
-    private String routingkey;
-
     private final ProfileService profileService;
-    private final RabbitTemplate rabbitTemplate;
 
-    public ProfileController(ProfileService profileService, RabbitTemplate rabbitTemplate) {
+    public ProfileController(ProfileService profileService) {
         this.profileService = profileService;
-        this.rabbitTemplate = rabbitTemplate;
     }
 
     @GetMapping("/list")
@@ -70,8 +59,6 @@ public class ProfileController extends BaseController {
             if (response == null) {
                 request.setInfo(headerInfo);
                 response = profileService.createProfile(request);
-//                EventEntity event = new EventEntity("create", request);
-//                rabbitTemplate.convertAndSend(exchange, routingkey, event);
             }
         }
         logger.info("<=createProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
@@ -100,7 +87,7 @@ public class ProfileController extends BaseController {
     public BaseResponse updateDetailProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateDetailProfileRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateProfile u: {}, req: {}", headerInfo, request);
+        logger.info("=>updateDetailProfile u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
@@ -110,7 +97,7 @@ public class ProfileController extends BaseController {
                 response = profileService.updateDetailProfile(request);
             }
         }
-        logger.info("<=updateProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=updateDetailProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 

@@ -311,7 +311,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
                         .dateOfApply(AppUtils.parseLong(doc.get("dateOfApply")))
                         .cvType(AppUtils.parseString(doc.get("cvType")))
                         .statusCV(AppUtils.parseString(doc.get("statusCV")))
-                        .lastApply(AppUtils.parseString(doc.get("lastApply")))
+                        .lastApply(AppUtils.parseLong(doc.get("lastApply")))
                         .tags(AppUtils.parseString(doc.get("tags")))
                         .gender(AppUtils.parseString(doc.get("gender")))
                         .note(AppUtils.parseString(doc.get("note")))

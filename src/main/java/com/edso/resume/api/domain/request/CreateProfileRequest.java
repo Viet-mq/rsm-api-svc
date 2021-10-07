@@ -29,7 +29,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(-1, "Vui lòng nhập họ và tên");
         }
-        if (Strings.isNullOrEmpty(dateOfBirth.toString())) {
+        if (dateOfBirth <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày tháng năm sinh");
         }
         if (Strings.isNullOrEmpty(hometown)) {
@@ -43,6 +43,9 @@ public class CreateProfileRequest extends BaseAuthRequest {
         }
         if (Strings.isNullOrEmpty(email)) {
             return new BaseResponse(-1, "Vui lòng nhập email");
+        }
+        if (!validateEmail(email)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(job)) {
             return new BaseResponse(-1, "Vui lòng nhập tên công việc");
@@ -59,7 +62,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(hrRef)) {
             return new BaseResponse(-1, "Vui lòng nhập HR ref");
         }
-        if (Strings.isNullOrEmpty(dateOfApply.toString())) {
+        if (dateOfApply <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày apply");
         }
         if (Strings.isNullOrEmpty(cvType)) {

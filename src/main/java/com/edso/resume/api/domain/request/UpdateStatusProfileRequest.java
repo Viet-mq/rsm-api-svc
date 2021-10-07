@@ -10,6 +10,7 @@ import lombok.ToString;
 @Data
 @ToString(callSuper = true)
 public class UpdateStatusProfileRequest extends BaseAuthRequest {
+
     private String id;
     private String statusCV;
 

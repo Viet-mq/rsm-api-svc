@@ -1,7 +1,6 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.rabbitmq.RabbitMQOnlineSyncActions;
 import com.edso.resume.api.domain.request.CreateCommentRequest;
 import com.edso.resume.api.domain.request.UpdateCommentRequest;
 import com.edso.resume.lib.common.CollectionNameDefs;
@@ -18,11 +17,9 @@ import java.util.UUID;
 public class CommentServiceImpl extends BaseService implements CommentService {
 
     private final MongoDbOnlineSyncActions db;
-    private final RabbitMQOnlineSyncActions rabbitMQOnlineSyncActions;
 
-    public CommentServiceImpl(MongoDbOnlineSyncActions db, RabbitMQOnlineSyncActions rabbitMQOnlineSyncActions) {
+    public CommentServiceImpl(MongoDbOnlineSyncActions db) {
         this.db = db;
-        this.rabbitMQOnlineSyncActions = rabbitMQOnlineSyncActions;
     }
 
 
@@ -42,8 +39,6 @@ public class CommentServiceImpl extends BaseService implements CommentService {
         comment.append("update_by", request.getInfo().getUsername());
 
         db.insertOne(CollectionNameDefs.COLL_COMMENT, comment);
-
-//        rabbitMQOnlineSyncActions.publish("event.queue", request.toString());
 
         response.setSuccess();
         return response;
@@ -68,8 +63,6 @@ public class CommentServiceImpl extends BaseService implements CommentService {
 
         db.update(CollectionNameDefs.COLL_COMMENT, cond, updates);
         response.setSuccess();
-
-//        rabbitMQOnlineSyncActions.publish("event.queue", request.toString());
 
         return response;
     }

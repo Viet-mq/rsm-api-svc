@@ -1,7 +1,6 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.entities.SchoolEntity;
 import com.edso.resume.api.domain.request.CreateSchoolRequest;
 import com.edso.resume.api.domain.request.DeleteSchoolRequest;
@@ -114,36 +113,6 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
                 response.setFailed("Name already existed !");
                 return response;
             }
-        }
-
-        SchoolEntity school = SchoolEntity.builder()
-                .id(AppUtils.parseString(idDocument.get("id")))
-                .name(AppUtils.parseString(idDocument.get("name")))
-                .build();
-
-        String oldName = school.getName();
-        String newName = request.getName();
-
-        Bson conOldName = Filters.eq("school", oldName);
-
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, conOldName, null, 0, 0);
-        List<ProfileEntity> list = new ArrayList<>();
-        if (lst != null) {
-            for (Document doc : lst) {
-                ProfileEntity profile = ProfileEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .build();
-                list.add(profile);
-            }
-        }
-
-        for (ProfileEntity profile : list) {
-            Bson conProfile = Filters.eq("id", profile.getId());
-            Bson updateSchool = Updates.combine(
-                    Updates.set("school", newName)
-            );
-
-            db.update(CollectionNameDefs.COLL_PROFILE, conProfile, updateSchool, true);
         }
 
         // update roles

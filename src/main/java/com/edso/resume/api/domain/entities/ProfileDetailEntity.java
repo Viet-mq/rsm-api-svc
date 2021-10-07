@@ -11,7 +11,7 @@ public class ProfileDetailEntity {
     private String gender;
     private String phoneNumber;
     private String email;
-    private String dateOfBirth;
+    private Long dateOfBirth;
     private String hometown;
     private String school;
     private String job;
@@ -19,9 +19,9 @@ public class ProfileDetailEntity {
     private String cv;
     private String sourceCV;
     private String hrRef;
-    private String dateOfApply;
+    private Long dateOfApply;
     private String cvType;
-    private String lastApply;
+    private Long lastApply;
     private String tags;
     private Long dateOfCreate;
     private Long dateOfUpdate;
