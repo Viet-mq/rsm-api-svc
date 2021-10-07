@@ -56,35 +56,30 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         if (lst != null) {
             for (Document doc : lst) {
 
-                String school = AppUtils.parseString(doc.get("school"));
-                Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq("id",school));
-                SchoolEntity schoolEntity = SchoolEntity.builder().name(AppUtils.parseString(schoolDocument.get("name"))).build();
+                String idSchool = AppUtils.parseString(doc.get("school"));
+                Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq("id",idSchool));
 
                 String job = AppUtils.parseString(doc.get("job"));
                 Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq("id",job));
-                CategoryEntity categoryEntity = CategoryEntity.builder().name(AppUtils.parseString(jobDocument.get("name"))).build();
 
                 String jobLevel = AppUtils.parseString(doc.get("levelJob"));
                 Document jobLevelDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq("id",jobLevel));
-                JobLevelEntity jobLevelEntity = JobLevelEntity.builder().name(AppUtils.parseString(jobLevelDocument.get("name"))).build();
 
                 String sourceCV = AppUtils.parseString(doc.get("sourceCV"));
                 Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq("id",sourceCV));
-                SourceCVEntity sourceCVEntity = SourceCVEntity.builder().name(AppUtils.parseString(sourceCVDocument.get("name"))).build();
-
 
                 ProfileEntity profile = ProfileEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .fullName(AppUtils.parseString(doc.get("fullName")))
                         .dateOfBirth(AppUtils.parseLong(doc.get("dateOfBirth")))
                         .hometown(AppUtils.parseString(doc.get("hometown")))
-                        .school(schoolEntity.getName())
+                        .school(AppUtils.parseString(schoolDocument.get("name")))
                         .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
                         .email(AppUtils.parseString(doc.get("email")))
-                        .job(categoryEntity.getName())
-                        .levelJob(jobLevelEntity.getName())
+                        .job(AppUtils.parseString(jobDocument.get("name")))
+                        .levelJob(AppUtils.parseString(jobLevelDocument.get("name")))
                         .cv(AppUtils.parseString(doc.get("cv")))
-                        .sourceCV(sourceCVEntity.getName())
+                        .sourceCV(AppUtils.parseString(sourceCVDocument.get("name")))
                         .hrRef(AppUtils.parseString(doc.get("hrRef")))
                         .dateOfApply(AppUtils.parseLong(doc.get("dateOfApply")))
                         .cvType(AppUtils.parseString(doc.get("cvType")))
@@ -104,6 +99,18 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
     @Override
     public GetReponse<ProfileDetailEntity> findOne(HeaderInfo info, String idProfile) {
+
+        GetReponse<ProfileDetailEntity> response = new GetReponse<>();
+
+        //Validate
+        Bson con = Filters.eq("id", idProfile);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
+
+        if (idDocument == null) {
+            response.setFailed("Id profile này không tồn tại");
+            return response;
+        }
+
         Bson cond = Filters.regex("id", Pattern.compile(idProfile));
         Document one = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
         ProfileDetailEntity profile = ProfileDetailEntity.builder()
@@ -131,14 +138,13 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 .evaluation(AppUtils.parseString(one.get("evaluation")))
                 .build();
 
-        GetReponse<ProfileDetailEntity> reponse = new GetReponse<>();
-        reponse.setSuccess(profile);
+        response.setSuccess(profile);
 
         //Insert history to DB
         CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Xem chi tiết profile", info.getFullName());
         historyService.createHistory(createHistoryRequest);
 
-        return reponse;
+        return response;
     }
 
     @Override

@@ -70,7 +70,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
         long count = db.countAll(CollectionNameDefs.COLL_VILLAGE, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 

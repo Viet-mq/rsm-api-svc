@@ -70,7 +70,7 @@ public class JobServiceImpl extends BaseService implements JobService {
         long count = db.countAll(CollectionNameDefs.COLL_JOB, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 

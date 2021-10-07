@@ -70,7 +70,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
         long count = db.countAll(CollectionNameDefs.COLL_SOURCE_CV, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 
