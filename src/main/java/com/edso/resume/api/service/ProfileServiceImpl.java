@@ -141,7 +141,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         response.setSuccess(profile);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Xem chi tiết profile", info.getFullName());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Xem chi tiết profile", info.getUsername());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -222,7 +222,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         rabbitTemplate.convertAndSend(exchange, routingkey, event);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Tạo profile",request.getInfo().getFullName());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Tạo profile",request.getInfo().getUsername());
         historyService.createHistory(createHistoryRequest);
 
         response.setSuccess();
@@ -310,7 +310,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         rabbitTemplate.convertAndSend(exchange, routingkey, event);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id, System.currentTimeMillis(),"Sửa profile",request.getInfo().getFullName());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id, System.currentTimeMillis(),"Sửa profile",request.getInfo().getUsername());
         historyService.createHistory(createHistoryRequest);
 
         return response;

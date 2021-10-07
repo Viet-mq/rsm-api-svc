@@ -110,7 +110,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));
             if (!objId.equals(id)) {
-                response.setFailed("Name already existed !");
+                response.setFailed("Tên này đã tồn tại");
                 return response;
             }
         }

@@ -70,7 +70,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         long count = db.countAll(CollectionNameDefs.COLL_SCHOOL, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 

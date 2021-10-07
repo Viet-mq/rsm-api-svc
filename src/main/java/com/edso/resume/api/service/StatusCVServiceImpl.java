@@ -70,7 +70,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         long count = db.countAll(CollectionNameDefs.COLL_STATUS_CV, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 

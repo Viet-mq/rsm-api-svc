@@ -69,7 +69,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         long count = db.countAll(CollectionNameDefs.COLL_DEPARTMENT, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 
