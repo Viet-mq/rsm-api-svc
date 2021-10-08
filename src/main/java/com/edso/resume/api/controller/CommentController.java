@@ -1,8 +1,5 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.request.CreateCommentRequest;
-import com.edso.resume.api.domain.request.UpdateCommentRequest;
-import com.edso.resume.api.service.CommentService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;

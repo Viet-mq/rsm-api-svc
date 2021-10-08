@@ -9,6 +9,6 @@ public class NoteProfileEntity {
     private String id;
     private String idProfile;
     private String note;
-    private Long create_at;
-    private String create_by;
+    private Long createAt;
+    private String createBy;
 }

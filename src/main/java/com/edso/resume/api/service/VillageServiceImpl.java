@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.request.DeleteVillageRequest;
 import com.edso.resume.api.domain.request.UpdateVillageRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -39,7 +40,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
     public GetArrayResponse<VillageEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_VILLAGE, cond);
@@ -49,8 +50,8 @@ public class VillageServiceImpl extends BaseService implements VillageService {
         if (lst != null) {
             for (Document doc : lst) {
                 VillageEntity village = VillageEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .name(AppUtils.parseString(doc.get("name")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
                         .build();
                 rows.add(village);
             }
@@ -68,7 +69,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
         BaseResponse response = new BaseResponse();
 
         String name = request.getName();
-        Bson c = Filters.eq("name_search", name.toLowerCase());
+        Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         long count = db.countAll(CollectionNameDefs.COLL_VILLAGE, c);
 
         if (count > 0) {
@@ -77,13 +78,13 @@ public class VillageServiceImpl extends BaseService implements VillageService {
         }
 
         Document village = new Document();
-        village.append("id", UUID.randomUUID().toString());
-        village.append("name", name);
-        village.append("name_search", name.toLowerCase());
-        village.append("create_at", System.currentTimeMillis());
-        village.append("update_at", System.currentTimeMillis());
-        village.append("create_by", request.getInfo().getUsername());
-        village.append("update_by", request.getInfo().getUsername());
+        village.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+        village.append(DbKeyConfig.NAME, name);
+        village.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+        village.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+        village.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+        village.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+        village.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_VILLAGE, village);
@@ -99,7 +100,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_VILLAGE, cond);
 
         if (idDocument == null) {
@@ -108,9 +109,9 @@ public class VillageServiceImpl extends BaseService implements VillageService {
         }
 
         String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_VILLAGE, Filters.eq("name_search", name.toLowerCase()));
+        Document obj = db.findOne(CollectionNameDefs.COLL_VILLAGE, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
         if (obj != null) {
-            String objId = AppUtils.parseString(obj.get("id"));
+            String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
             if (!objId.equals(id)) {
                 response.setFailed("Tên này đã tồn tại");
                 return response;
@@ -119,10 +120,10 @@ public class VillageServiceImpl extends BaseService implements VillageService {
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("name", name),
-                Updates.set("name_search", name.toLowerCase()),
-                Updates.set("update_at", System.currentTimeMillis()),
-                Updates.set("update_by", request.getInfo().getUsername())
+                Updates.set(DbKeyConfig.NAME, name),
+                Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_VILLAGE, cond, updates, true);
 
@@ -135,7 +136,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
     public BaseResponse deleteVillage(DeleteVillageRequest request) {
         BaseResponse response = new BaseResponse();
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_VILLAGE, cond);
 
         if (idDocument == null) {

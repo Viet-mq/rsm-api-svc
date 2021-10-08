@@ -13,11 +13,15 @@ public class ProfileDetailEntity {
     private String email;
     private Long dateOfBirth;
     private String hometown;
-    private String school;
-    private String job;
-    private String levelJob;
+    private String schoolId;
+    private String schoolName;
+    private String jobId;
+    private String jobName;
+    private String levelJobId;
+    private String levelJobName;
     private String cv;
-    private String sourceCV;
+    private String sourceCVId;
+    private String sourceCVName;
     private String hrRef;
     private Long dateOfApply;
     private String cvType;
@@ -27,5 +31,6 @@ public class ProfileDetailEntity {
     private Long dateOfUpdate;
     private String note;
     private String evaluation;
-    private String statusCV;
+    private String statusCVId;
+    private String statusCVName;
 }

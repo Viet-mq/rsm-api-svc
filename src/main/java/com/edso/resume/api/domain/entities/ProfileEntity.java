@@ -16,6 +16,7 @@ public class ProfileEntity {
     private String schoolName;
     private String jobId;
     private String jobName;
+    private String levelJobId;
     private String levelJobName;
     private String cv;
     private String sourceCVId;

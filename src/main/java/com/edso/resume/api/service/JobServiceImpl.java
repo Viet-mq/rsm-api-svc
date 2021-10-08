@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.request.DeleteJobRequest;
 import com.edso.resume.api.domain.request.UpdateJobRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -39,7 +40,7 @@ public class JobServiceImpl extends BaseService implements JobService {
     public GetArrayResponse<CategoryEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_JOB, cond);
@@ -49,8 +50,8 @@ public class JobServiceImpl extends BaseService implements JobService {
         if (lst != null) {
             for (Document doc : lst) {
                 CategoryEntity category = CategoryEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .name(AppUtils.parseString(doc.get("name")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
                         .build();
                 rows.add(category);
             }
@@ -68,7 +69,7 @@ public class JobServiceImpl extends BaseService implements JobService {
         BaseResponse response = new BaseResponse();
 
         String name = request.getName();
-        Bson c = Filters.eq("name_search", name.toLowerCase());
+        Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         long count = db.countAll(CollectionNameDefs.COLL_JOB, c);
 
         if (count > 0) {
@@ -77,13 +78,13 @@ public class JobServiceImpl extends BaseService implements JobService {
         }
 
         Document job = new Document();
-        job.append("id", UUID.randomUUID().toString());
-        job.append("name", name);
-        job.append("name_search", name.toLowerCase());
-        job.append("create_at", System.currentTimeMillis());
-        job.append("update_at", System.currentTimeMillis());
-        job.append("create_by", request.getInfo().getUsername());
-        job.append("update_by", request.getInfo().getUsername());
+        job.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+        job.append(DbKeyConfig.NAME, name);
+        job.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+        job.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+        job.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+        job.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+        job.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_JOB, job);
@@ -99,7 +100,7 @@ public class JobServiceImpl extends BaseService implements JobService {
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB, cond);
 
         if (idDocument == null) {
@@ -108,9 +109,9 @@ public class JobServiceImpl extends BaseService implements JobService {
         }
 
         String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq("name_search", name.toLowerCase()));
+        Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
         if (obj != null) {
-            String objId = AppUtils.parseString(obj.get("id"));
+            String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
             if (!objId.equals(id)) {
                 response.setFailed("Tên này đã tồn tại");
                 return response;
@@ -119,10 +120,10 @@ public class JobServiceImpl extends BaseService implements JobService {
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("name", name),
-                Updates.set("name_search", name.toLowerCase()),
-                Updates.set("update_at", System.currentTimeMillis()),
-                Updates.set("update_by", request.getInfo().getUsername())
+                Updates.set(DbKeyConfig.NAME, name),
+                Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_JOB, cond, updates, true);
 
@@ -135,7 +136,7 @@ public class JobServiceImpl extends BaseService implements JobService {
     public BaseResponse deleteJob(DeleteJobRequest request) {
         BaseResponse response = new BaseResponse();
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB, cond);
 
         if (idDocument == null) {

@@ -13,6 +13,7 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.response.GetReponse;
 import com.google.common.base.Strings;
+import com.mongodb.DB;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -44,7 +45,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
-            c.add(Filters.regex("name_search", Pattern.compile(fullName.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(fullName.toLowerCase())));
         }
 
         Bson cond = buildCondition(c);
@@ -63,15 +64,19 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                         .schoolId(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_ID)))
                         .schoolName(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_NAME)))
                         .phoneNumber(AppUtils.parseString(doc.get(DbKeyConfig.PHONE_NUMBER)))
-                        .email(AppUtils.parseString(doc.get("email")))
-                        .job(AppUtils.parseString(jobDocument.get("name")))
-                        .levelJob(AppUtils.parseString(jobLevelDocument.get("name")))
-                        .cv(AppUtils.parseString(doc.get("cv")))
-                        .sourceCV(AppUtils.parseString(sourceCVDocument.get("name")))
-                        .hrRef(AppUtils.parseString(doc.get("hrRef")))
-                        .dateOfApply(AppUtils.parseLong(doc.get("dateOfApply")))
-                        .cvType(AppUtils.parseString(doc.get("cvType")))
-                        .statusCV(AppUtils.parseString(doc.get("statusCV")))
+                        .email(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)))
+                        .jobId(AppUtils.parseString(doc.get(DbKeyConfig.JOB_ID)))
+                        .jobName(AppUtils.parseString(doc.get(DbKeyConfig.JOB_NAME)))
+                        .levelJobId(AppUtils.parseString(doc.get(DbKeyConfig.LEVEL_JOB_ID)))
+                        .levelJobName(AppUtils.parseString(doc.get(DbKeyConfig.LEVEL_JOB_NAME)))
+                        .cv(AppUtils.parseString(doc.get(DbKeyConfig.CV)))
+                        .sourceCVId(AppUtils.parseString(doc.get(DbKeyConfig.SOURCE_CV_ID)))
+                        .sourceCVName(AppUtils.parseString(doc.get(DbKeyConfig.SOURCE_CV_NAME)))
+                        .hrRef(AppUtils.parseString(doc.get(DbKeyConfig.HR_REF)))
+                        .dateOfApply(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY)))
+                        .cvType(AppUtils.parseString(doc.get(DbKeyConfig.CV_TYPE)))
+                        .statusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
+                        .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
                         .build();
                 rows.add(profile);
             }
@@ -96,31 +101,36 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
-        Bson cond = Filters.regex("id", Pattern.compile(idProfile));
+        Bson cond = Filters.regex(DbKeyConfig.ID, Pattern.compile(idProfile));
         Document one = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
         ProfileDetailEntity profile = ProfileDetailEntity.builder()
-                .id(AppUtils.parseString(one.get("id")))
-                .fullName(AppUtils.parseString(one.get("fullName")))
-                .dateOfBirth(AppUtils.parseLong(one.get("dateOfBirth")))
-                .hometown(AppUtils.parseString(one.get("hometown")))
-                .school(AppUtils.parseString(one.get("school")))
-                .phoneNumber(AppUtils.parseString(one.get("phoneNumber")))
-                .email(AppUtils.parseString(one.get("email")))
-                .job(AppUtils.parseString(one.get("job")))
-                .levelJob(AppUtils.parseString(one.get("levelJob")))
-                .cv(AppUtils.parseString(one.get("cv")))
-                .sourceCV(AppUtils.parseString(one.get("sourceCV")))
-                .hrRef(AppUtils.parseString(one.get("hrRef")))
-                .dateOfApply(AppUtils.parseLong(one.get("dateOfApply")))
-                .cvType(AppUtils.parseString(one.get("cvType")))
-                .statusCV(AppUtils.parseString(one.get("statusCV")))
-                .lastApply(AppUtils.parseLong(one.get("lastApply")))
-                .tags(AppUtils.parseString(one.get("tags")))
-                .gender(AppUtils.parseString(one.get("gender")))
-                .note(AppUtils.parseString(one.get("note")))
-                .dateOfCreate(AppUtils.parseLong(one.get("create_at")))
-                .dateOfUpdate(AppUtils.parseLong(one.get("update_at")))
-                .evaluation(AppUtils.parseString(one.get("evaluation")))
+                .id(AppUtils.parseString(one.get(DbKeyConfig.ID)))
+                .fullName(AppUtils.parseString(one.get(DbKeyConfig.FULL_NAME)))
+                .dateOfBirth(AppUtils.parseLong(one.get(DbKeyConfig.DATE_OF_BIRTH)))
+                .hometown(AppUtils.parseString(one.get(DbKeyConfig.HOMETOWN)))
+                .schoolId(AppUtils.parseString(one.get(DbKeyConfig.SCHOOL_ID)))
+                .schoolName(AppUtils.parseString(one.get(DbKeyConfig.SCHOOL_NAME)))
+                .phoneNumber(AppUtils.parseString(one.get(DbKeyConfig.PHONE_NUMBER)))
+                .email(AppUtils.parseString(one.get(DbKeyConfig.EMAIL)))
+                .jobId(AppUtils.parseString(one.get(DbKeyConfig.JOB_ID)))
+                .jobName(AppUtils.parseString(one.get(DbKeyConfig.JOB_NAME)))
+                .levelJobId(AppUtils.parseString(one.get(DbKeyConfig.LEVEL_JOB_ID)))
+                .levelJobName(AppUtils.parseString(one.get(DbKeyConfig.LEVEL_JOB_NAME)))
+                .cv(AppUtils.parseString(one.get(DbKeyConfig.CV)))
+                .sourceCVId(AppUtils.parseString(one.get(DbKeyConfig.SOURCE_CV_ID)))
+                .sourceCVName(AppUtils.parseString(one.get(DbKeyConfig.SOURCE_CV_NAME)))
+                .hrRef(AppUtils.parseString(one.get(DbKeyConfig.HR_REF)))
+                .dateOfApply(AppUtils.parseLong(one.get(DbKeyConfig.DATE_OF_APPLY)))
+                .cvType(AppUtils.parseString(one.get(DbKeyConfig.CV_TYPE)))
+                .statusCVId(AppUtils.parseString(one.get(DbKeyConfig.STATUS_CV_ID)))
+                .statusCVName(AppUtils.parseString(one.get(DbKeyConfig.STATUS_CV_NAME)))
+                .lastApply(AppUtils.parseLong(one.get(DbKeyConfig.LAST_APPLY)))
+                .tags(AppUtils.parseString(one.get(DbKeyConfig.TAGS)))
+                .gender(AppUtils.parseString(one.get(DbKeyConfig.GENDER)))
+                .note(AppUtils.parseString(one.get(DbKeyConfig.NOTE)))
+                .dateOfCreate(AppUtils.parseLong(one.get(DbKeyConfig.CREATE_AT)))
+                .dateOfUpdate(AppUtils.parseLong(one.get(DbKeyConfig.UPDATE_AT)))
+                .evaluation(AppUtils.parseString(one.get(DbKeyConfig.EVALUATION)))
                 .build();
 
         response.setSuccess(profile);
@@ -138,23 +148,26 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
 
         //Validate
-        if (!validateDictionary(request.getJob(), CollectionNameDefs.COLL_JOB)) {
+        Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, request.getJob()));
+        if (job ==  null) {
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getLevelJob(), CollectionNameDefs.COLL_JOB_LEVEL)) {
+        Document levelJob = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.ID, request.getLevelJob()));
+        if (levelJob == null) {
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq("id", request.getSchool()));
+        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.ID, request.getSchool()));
         if (school == null) {
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)) {
+        Document sourceCV = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.ID, request.getSourceCV()));
+        if (sourceCV == null) {
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
@@ -163,29 +176,29 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         Document profile = new Document();
         profile.append(DbKeyConfig.ID, idProfile);
         profile.append(DbKeyConfig.FULL_NAME, request.getFullName());
+        profile.append(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber());
+        profile.append(DbKeyConfig.EMAIL, request.getEmail());
         profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
         profile.append(DbKeyConfig.HOMETOWN, request.getHometown());
         profile.append(DbKeyConfig.SCHOOL_ID, request.getSchool());
-        profile.append(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.NAME));
-
-        profile.append("phone_number", request.getPhoneNumber());
-        profile.append("email", request.getEmail());
-        profile.append("job", request.getJob());
-
-        profile.append("level_job_id", request.getLevelJob());
-
-        profile.append("cv", request.getCv());
-        profile.append("sourceCV", request.getSourceCV());
-        profile.append("hrRef", request.getHrRef());
-        profile.append("dateOfApply", request.getDateOfApply());
-        profile.append("cvType", request.getCvType());
-        profile.append("name_search", request.getFullName().toLowerCase());
-        profile.append("create_at", System.currentTimeMillis());
-        profile.append("update_at", System.currentTimeMillis());
-        profile.append("update_statuscv_at", System.currentTimeMillis());
-        profile.append("create_by", request.getInfo().getUsername());
-        profile.append("update_by", request.getInfo().getUsername());
-        profile.append("update_statuscv_by", request.getInfo().getUsername());
+        profile.append(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.SCHOOL_NAME));
+        profile.append(DbKeyConfig.JOB_ID, request.getJob());
+        profile.append(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.JOB_NAME));
+        profile.append(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob());
+        profile.append(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.LEVEL_JOB_NAME));
+        profile.append(DbKeyConfig.CV, request.getCv());
+        profile.append(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV());
+        profile.append(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.SOURCE_CV_NAME));
+        profile.append(DbKeyConfig.HR_REF, request.getHrRef());
+        profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
+        profile.append(DbKeyConfig.CV_TYPE, request.getCvType());
+        profile.append(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase());
+        profile.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+        profile.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+        profile.append(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis());
+        profile.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+        profile.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+        profile.append(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername());
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
@@ -206,53 +219,61 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         //Validate
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
 
         if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getJob(), CollectionNameDefs.COLL_JOB)) {
+        Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, request.getJob()));
+        if (job ==  null) {
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getLevelJob(), CollectionNameDefs.COLL_JOB_LEVEL)) {
+        Document levelJob = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.ID, request.getLevelJob()));
+        if (levelJob == null) {
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)) {
+        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.ID, request.getSchool()));
+        if (school == null) {
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)) {
+        Document sourceCV = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.ID, request.getSourceCV()));
+        if (sourceCV == null) {
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("fullName", request.getFullName()),
-                Updates.set("dateOfBirth", request.getDateOfBirth()),
-                Updates.set("hometown", request.getHometown()),
-                Updates.set("school", request.getSchool()),
-                Updates.set("phoneNumber", request.getPhoneNumber()),
-                Updates.set("email", request.getEmail()),
-                Updates.set("job", request.getJob()),
-                Updates.set("levelJob", request.getLevelJob()),
-                Updates.set("cv", request.getCv()),
-                Updates.set("sourceCV", request.getSourceCV()),
-                Updates.set("hrRef", request.getHrRef()),
-                Updates.set("dateOfApply", request.getDateOfApply()),
-                Updates.set("cvType", request.getCvType()),
-                Updates.set("name_search", request.getFullName().toLowerCase()),
-                Updates.set("update_at", System.currentTimeMillis()),
-                Updates.set("update_by", request.getInfo().getUsername()),
-                Updates.set("update_statuscv_at", System.currentTimeMillis()),
-                Updates.set("update_statuscv_by", request.getInfo().getUsername())
+                Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
+                Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
+                Updates.set(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.SCHOOL_NAME)),
+                Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
+                Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
+                Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
+                Updates.set(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.JOB_NAME)),
+                Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
+                Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.LEVEL_JOB_NAME)),
+                Updates.set(DbKeyConfig.CV, request.getCv()),
+                Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
+                Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.SOURCE_CV_NAME)),
+                Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
+                Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
+                Updates.set(DbKeyConfig.CV_TYPE, request.getCvType()),
+                Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
+                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
+                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
         response.setSuccess();
@@ -272,58 +293,66 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         //Validate
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
 
         if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getJob(), CollectionNameDefs.COLL_JOB)) {
+        Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, request.getJob()));
+        if (job ==  null) {
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getLevelJob(), CollectionNameDefs.COLL_JOB_LEVEL)) {
+        Document levelJob = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.ID, request.getLevelJob()));
+        if (levelJob == null) {
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)) {
+        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.ID, request.getSchool()));
+        if (school == null) {
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)) {
+        Document sourceCV = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.ID, request.getSourceCV()));
+        if (sourceCV == null) {
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("fullName", request.getFullName()),
-                Updates.set("dateOfBirth", request.getDateOfBirth()),
-                Updates.set("hometown", request.getHometown()),
-                Updates.set("school", request.getSchool()),
-                Updates.set("phoneNumber", request.getPhoneNumber()),
-                Updates.set("email", request.getEmail()),
-                Updates.set("job", request.getJob()),
-                Updates.set("levelJob", request.getLevelJob()),
-                Updates.set("cv", request.getCv()),
-                Updates.set("sourceCV", request.getSourceCV()),
-                Updates.set("hrRef", request.getHrRef()),
-                Updates.set("dateOfApply", request.getDateOfApply()),
-                Updates.set("cvType", request.getCvType()),
-                Updates.set("name_search", request.getFullName().toLowerCase()),
-                Updates.set("tags", request.getTags()),
-                Updates.set("note", request.getNote()),
-                Updates.set("gender", request.getGender()),
-                Updates.set("lastApply", request.getLastApply()),
-                Updates.set("evaluation", request.getEvaluation()),
-                Updates.set("update_at", System.currentTimeMillis()),
-                Updates.set("update_by", request.getInfo().getUsername()),
-                Updates.set("update_statuscv_at", System.currentTimeMillis()),
-                Updates.set("update_statuscv_by", request.getInfo().getUsername())
+                Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
+                Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
+                Updates.set(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.SCHOOL_NAME)),
+                Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
+                Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
+                Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
+                Updates.set(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.JOB_NAME)),
+                Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
+                Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.LEVEL_JOB_NAME)),
+                Updates.set(DbKeyConfig.CV, request.getCv()),
+                Updates.set(DbKeyConfig.TAGS, request.getTags()),
+                Updates.set(DbKeyConfig.NOTE, request.getNote()),
+                Updates.set(DbKeyConfig.GENDER, request.getGender()),
+                Updates.set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
+                Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
+                Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
+                Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.SOURCE_CV_NAME)),
+                Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
+                Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
+                Updates.set(DbKeyConfig.CV_TYPE, request.getCvType()),
+                Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
+                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
+                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
         response.setSuccess();
@@ -340,11 +369,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
     @Override
     public BaseResponse deleteProfile(DeleteProfileRequest request) {
-        BaseResponse response = new BaseResponse();
-
         //Validate
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
 
         if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id này không tồn tại");
@@ -358,8 +385,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         //Insert history to DB
         historyService.createHistory(id, "Xóa profile", request.getInfo().getFullName());
+        response.setSuccess();
 
-        return new BaseResponse(0, "OK");
+        return response;
     }
 
     @Override
@@ -367,23 +395,25 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         //Validate
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
 
         if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
 
-        if (!validateDictionary(request.getStatusCV(), CollectionNameDefs.COLL_STATUS_CV)) {
+        Document statusCV = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, request.getStatusCV()));
+        if (statusCV == null) {
             response.setFailed("Trạng thái cv không tồn tại");
             return response;
         }
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("statusCV", request.getStatusCV()),
-                Updates.set("update_statuscv_at", System.currentTimeMillis()),
-                Updates.set("update_statuscv_by", request.getInfo().getUsername())
+                Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatusCV()),
+                Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCV.get(DbKeyConfig.STATUS_CV_NAME)),
+                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
         response.setSuccess();

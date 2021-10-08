@@ -4,6 +4,7 @@ import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.ProfileExcelEntity;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
@@ -210,13 +211,13 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         cell.setCellValue(profile.getPhoneNumber());
 
         cell = row.createCell(COLUMN_INDEX_JOB);
-        cell.setCellValue(profile.getJob());
+        cell.setCellValue(profile.getJobName());
 
         cell = row.createCell(COLUMN_INDEX_LASTAPPLY);
         cell.setCellValue(profile.getLastApply());
 
         cell = row.createCell(COLUMN_INDEX_SOURCECV);
-        cell.setCellValue(profile.getSourceCV());
+        cell.setCellValue(profile.getSourceCVName());
 
         cell = row.createCell(COLUMN_INDEX_TAGS);
         cell.setCellValue(profile.getTags());
@@ -246,10 +247,10 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         cell.setCellValue(profile.getEvaluation());
 
         cell = row.createCell(COLUMN_INDEX_SCHOOL);
-        cell.setCellValue(profile.getSchool());
+        cell.setCellValue(profile.getSchoolName());
 
         cell = row.createCell(COLUMN_INDEX_LEVELJOB);
-        cell.setCellValue(profile.getLevelJob());
+        cell.setCellValue(profile.getLevelJobName());
 
         cell = row.createCell(COLUMN_INDEX_CV);
         cell.setCellValue(profile.getCv());
@@ -261,7 +262,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         cell.setCellValue(profile.getCvType());
 
         cell = row.createCell(COLUMN_INDEX_STATUSCV);
-        cell.setCellValue(profile.getStatusCV());
+        cell.setCellValue(profile.getStatusCVName());
     }
 
     // Create CellStyle for header
@@ -290,7 +291,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         final String excelFilePath = "D:\\Profiles.xlsx";
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
@@ -298,28 +299,28 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         if (lst != null) {
             for (Document doc : lst) {
                 ProfileExcelEntity profile = ProfileExcelEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .fullName(AppUtils.parseString(doc.get("fullName")))
-                        .dateOfBirth(AppUtils.parseLong(doc.get("dateOfBirth")))
-                        .hometown(AppUtils.parseString(doc.get("hometown")))
-                        .school(AppUtils.parseString(doc.get("school")))
-                        .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
-                        .email(AppUtils.parseString(doc.get("email")))
-                        .job(AppUtils.parseString(doc.get("job")))
-                        .levelJob(AppUtils.parseString(doc.get("levelJob")))
-                        .cv(AppUtils.parseString(doc.get("cv")))
-                        .sourceCV(AppUtils.parseString(doc.get("sourceCV")))
-                        .hrRef(AppUtils.parseString(doc.get("hrRef")))
-                        .dateOfApply(AppUtils.parseLong(doc.get("dateOfApply")))
-                        .cvType(AppUtils.parseString(doc.get("cvType")))
-                        .statusCV(AppUtils.parseString(doc.get("statusCV")))
-                        .lastApply(AppUtils.parseLong(doc.get("lastApply")))
-                        .tags(AppUtils.parseString(doc.get("tags")))
-                        .gender(AppUtils.parseString(doc.get("gender")))
-                        .note(AppUtils.parseString(doc.get("note")))
-                        .dateOfCreate(AppUtils.parseLong(doc.get("create_at")))
-                        .dateOfUpdate(AppUtils.parseLong(doc.get("update_at")))
-                        .evaluation(AppUtils.parseString(doc.get("evaluation")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
+                        .dateOfBirth(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_BIRTH)))
+                        .hometown(AppUtils.parseString(doc.get(DbKeyConfig.HOMETOWN)))
+                        .schoolName(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_NAME)))
+                        .phoneNumber(AppUtils.parseString(doc.get(DbKeyConfig.PHONE_NUMBER)))
+                        .email(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)))
+                        .jobName(AppUtils.parseString(doc.get(DbKeyConfig.JOB_NAME)))
+                        .levelJobName(AppUtils.parseString(doc.get(DbKeyConfig.LEVEL_JOB_NAME)))
+                        .cv(AppUtils.parseString(doc.get(DbKeyConfig.CV)))
+                        .sourceCVName(AppUtils.parseString(doc.get(DbKeyConfig.SOURCE_CV_NAME)))
+                        .hrRef(AppUtils.parseString(doc.get(DbKeyConfig.HR_REF)))
+                        .dateOfApply(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY)))
+                        .cvType(AppUtils.parseString(doc.get(DbKeyConfig.CV_TYPE)))
+                        .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
+                        .lastApply(AppUtils.parseLong(doc.get(DbKeyConfig.LAST_APPLY)))
+                        .tags(AppUtils.parseString(doc.get(DbKeyConfig.TAGS)))
+                        .gender(AppUtils.parseString(doc.get(DbKeyConfig.GENDER)))
+                        .note(AppUtils.parseString(doc.get(DbKeyConfig.NOTE)))
+                        .dateOfCreate(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
+                        .dateOfUpdate(AppUtils.parseLong(doc.get(DbKeyConfig.UPDATE_AT)))
+                        .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
                         .build();
                 profiles.add(profile);
             }

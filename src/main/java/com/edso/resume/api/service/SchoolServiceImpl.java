@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.request.DeleteSchoolRequest;
 import com.edso.resume.api.domain.request.UpdateSchoolRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -20,6 +21,7 @@ import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.xml.bind.DataBindingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -39,7 +41,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
     public GetArrayResponse<SchoolEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_SCHOOL, cond);
@@ -49,8 +51,8 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         if (lst != null) {
             for (Document doc : lst) {
                 SchoolEntity school = SchoolEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .name(AppUtils.parseString(doc.get("name")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
                         .build();
                 rows.add(school);
             }
@@ -68,7 +70,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         BaseResponse response = new BaseResponse();
 
         String name = request.getName();
-        Bson c = Filters.eq("name_search", name.toLowerCase());
+        Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         long count = db.countAll(CollectionNameDefs.COLL_SCHOOL, c);
 
         if (count > 0) {
@@ -77,13 +79,13 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         }
 
         Document school = new Document();
-        school.append("id", UUID.randomUUID().toString());
-        school.append("name", name);
-        school.append("name_search", name.toLowerCase());
-        school.append("create_at", System.currentTimeMillis());
-        school.append("update_at", System.currentTimeMillis());
-        school.append("create_by", request.getInfo().getUsername());
-        school.append("update_by", request.getInfo().getUsername());
+        school.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+        school.append(DbKeyConfig.NAME, name);
+        school.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+        school.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+        school.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+        school.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+        school.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_SCHOOL, school);
@@ -99,7 +101,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, cond);
 
         if (idDocument == null) {
@@ -108,9 +110,9 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         }
 
         String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq("name_search", name.toLowerCase()));
+        Document obj = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
         if (obj != null) {
-            String objId = AppUtils.parseString(obj.get("id"));
+            String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
             if (!objId.equals(id)) {
                 response.setFailed("Tên này đã tồn tại");
                 return response;
@@ -119,10 +121,10 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("name", name),
-                Updates.set("name_search", name.toLowerCase()),
-                Updates.set("update_at", System.currentTimeMillis()),
-                Updates.set("update_by", request.getInfo().getUsername())
+                Updates.set(DbKeyConfig.NAME, name),
+                Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_SCHOOL, cond, updates, true);
 
@@ -135,7 +137,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
     public BaseResponse deleteSchool(DeleteSchoolRequest request) {
         BaseResponse response = new BaseResponse();
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, cond);
 
         if (idDocument == null) {

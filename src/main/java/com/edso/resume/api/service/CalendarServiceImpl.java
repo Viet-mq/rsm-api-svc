@@ -8,6 +8,7 @@ import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayCalendarReponse;
@@ -55,7 +56,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
-            c.add(Filters.eq("idProfile", idProfile));
+            c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
         Bson cond = buildCondition(c);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, null, 0, 0);
@@ -63,21 +64,21 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         if (lst != null) {
             for (Document doc : lst) {
                 CalendarEntity calendar = CalendarEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .idProfile(AppUtils.parseString(doc.get("idProfile")))
-                        .time(AppUtils.parseLong(doc.get("time")))
-                        .address(AppUtils.parseString(doc.get("address")))
-                        .form(AppUtils.parseString(doc.get("form")))
-                        .interviewer(parseList(doc.get("interviewer")))
-                        .interviewee(AppUtils.parseString(doc.get("interviewee")))
-                        .content(AppUtils.parseString(doc.get("content")))
-                        .question(AppUtils.parseString(doc.get("question")))
-                        .comments(AppUtils.parseString(doc.get("comments")))
-                        .evaluation(AppUtils.parseString(doc.get("evaluation")))
-                        .status(AppUtils.parseString(doc.get("status")))
-                        .reason(AppUtils.parseString(doc.get("reason")))
-                        .timeStart(AppUtils.parseLong(doc.get("timeStart")))
-                        .timeFinish(AppUtils.parseLong(doc.get("timeFinish")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .idProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)))
+                        .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
+                        .address(AppUtils.parseString(doc.get(DbKeyConfig.ADDRESS)))
+                        .form(AppUtils.parseString(doc.get(DbKeyConfig.FORM)))
+                        .interviewer(parseList(doc.get(DbKeyConfig.INTERVIEWER)))
+                        .interviewee(AppUtils.parseString(doc.get(DbKeyConfig.INTERVIEWEE)))
+                        .content(AppUtils.parseString(doc.get(DbKeyConfig.CONTENT)))
+                        .question(AppUtils.parseString(doc.get(DbKeyConfig.QUESTION)))
+                        .comments(AppUtils.parseString(doc.get(DbKeyConfig.COMMENTS)))
+                        .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
+                        .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
+                        .reason(AppUtils.parseString(doc.get(DbKeyConfig.REASON)))
+                        .timeStart(AppUtils.parseLong(doc.get(DbKeyConfig.TIME_START)))
+                        .timeFinish(AppUtils.parseLong(doc.get(DbKeyConfig.TIME_FINISH)))
                         .build();
                 calendars.add(calendar);
             }
@@ -91,7 +92,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request) {
 
         String idProfile = request.getIdProfile();
-        Bson cond = Filters.eq("id", idProfile);
+        Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
         if (idProfileDocument == null) {
@@ -100,27 +101,27 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         }
 
         Document calendar = new Document();
-        calendar.append("id", UUID.randomUUID().toString());
-        calendar.append("idProfile", idProfile);
-        calendar.append("time", request.getTime());
-        calendar.append("address", request.getAddress());
-        calendar.append("form", request.getForm());
-        calendar.append("interviewer", request.getInterviewer());
-        calendar.append("interviewee", request.getInterviewee());
-        calendar.append("content", request.getContent());
-        calendar.append("question", request.getQuestion());
-        calendar.append("comments", request.getComments());
-        calendar.append("evaluation", request.getEvaluation());
-        calendar.append("status", request.getStatus());
-        calendar.append("reason", request.getReason());
-        calendar.append("timeStart", request.getTimeStart());
-        calendar.append("timeFinish", request.getTimeFinish());
-        calendar.append("check", "0");
-        calendar.append("nLoop", 0);
-        calendar.append("create_at", System.currentTimeMillis());
-        calendar.append("update_at", System.currentTimeMillis());
-        calendar.append("create_by", request.getInfo().getUsername());
-        calendar.append("update_by", request.getInfo().getUsername());
+        calendar.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+        calendar.append(DbKeyConfig.ID_PROFILE, idProfile);
+        calendar.append(DbKeyConfig.TIME, request.getTime());
+        calendar.append(DbKeyConfig.ADDRESS, request.getAddress());
+        calendar.append(DbKeyConfig.FORM, request.getForm());
+        calendar.append(DbKeyConfig.INTERVIEWER, request.getInterviewer());
+        calendar.append(DbKeyConfig.INTERVIEWEE, request.getInterviewee());
+        calendar.append(DbKeyConfig.CONTENT, request.getContent());
+        calendar.append(DbKeyConfig.QUESTION, request.getQuestion());
+        calendar.append(DbKeyConfig.COMMENTS, request.getComments());
+        calendar.append(DbKeyConfig.EVALUATION, request.getEvaluation());
+        calendar.append(DbKeyConfig.STATUS, request.getStatus());
+        calendar.append(DbKeyConfig.REASON, request.getReason());
+        calendar.append(DbKeyConfig.TIME_START, request.getTimeStart());
+        calendar.append(DbKeyConfig.TIME_FINISH, request.getTimeFinish());
+        calendar.append(DbKeyConfig.CHECK, "0");
+        calendar.append(DbKeyConfig.N_LOOP, 0);
+        calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+        calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+        calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+        calendar.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
@@ -137,7 +138,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     public BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest request) {
 
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
         if (idDocument == null) {
@@ -146,7 +147,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         }
 
         String idProfile = request.getIdProfile();
-        Bson con = Filters.eq("id", idProfile);
+        Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
 
         if (idProfileDocument == null) {
@@ -156,22 +157,22 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("ipProfile", idProfile),
-                Updates.set("time", request.getTime()),
-                Updates.set("address", request.getAddress()),
-                Updates.set("form", request.getForm()),
-                Updates.set("interviewer", request.getInterviewer()),
-                Updates.set("interviewee", request.getInterviewee()),
-                Updates.set("content", request.getContent()),
-                Updates.set("question", request.getQuestion()),
-                Updates.set("comments", request.getComments()),
-                Updates.set("evaluation", request.getEvaluation()),
-                Updates.set("status", request.getStatus()),
-                Updates.set("reason", request.getReason()),
-                Updates.set("timeStart", request.getTimeStart()),
-                Updates.set("timeFinish", request.getTimeFinish()),
-                Updates.set("update_at", System.currentTimeMillis()),
-                Updates.set("update_by", request.getInfo().getUsername())
+                Updates.set(DbKeyConfig.ID_PROFILE, idProfile),
+                Updates.set(DbKeyConfig.TIME, request.getTime()),
+                Updates.set(DbKeyConfig.ADDRESS, request.getAddress()),
+                Updates.set(DbKeyConfig.FORM, request.getForm()),
+                Updates.set(DbKeyConfig.INTERVIEWER, request.getInterviewer()),
+                Updates.set(DbKeyConfig.INTERVIEWEE, request.getInterviewee()),
+                Updates.set(DbKeyConfig.CONTENT, request.getContent()),
+                Updates.set(DbKeyConfig.QUESTION, request.getQuestion()),
+                Updates.set(DbKeyConfig.COMMENTS, request.getComments()),
+                Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
+                Updates.set(DbKeyConfig.STATUS, request.getStatus()),
+                Updates.set(DbKeyConfig.REASON, request.getReason()),
+                Updates.set(DbKeyConfig.TIME_START, request.getTimeStart()),
+                Updates.set(DbKeyConfig.TIME_FINISH, request.getTimeFinish()),
+                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, updates, true);
         response.setSuccess();
@@ -186,7 +187,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     @Override
     public BaseResponse deleteCalendarProfile(DeleteCalendarProfileRequest request) {
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
         if (idDocument == null) {
@@ -204,16 +205,16 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     }
 
     public void alarmInterview() {
-        Bson c = Filters.regex("check", Pattern.compile("0"));
+        Bson c = Filters.regex(DbKeyConfig.CHECK, Pattern.compile("0"));
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, c, null, 0, 0);
         List<TimeEntity> calendars = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
                 TimeEntity calendar = TimeEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .time(AppUtils.parseLong(doc.get("time")))
-                        .check(AppUtils.parseString(doc.get("check")))
-                        .nLoop(AppUtils.parseInt(doc.get("nLoop")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
+                        .check(AppUtils.parseString(doc.get(DbKeyConfig.CHECK)))
+                        .nLoop(AppUtils.parseInt(doc.get(DbKeyConfig.N_LOOP)))
                         .build();
                 calendars.add(calendar);
             }
@@ -222,18 +223,18 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
             long differenceTime = calendar.getTime() - System.currentTimeMillis();
             int n = calendar.getNLoop();
             if (differenceTime <= timeCheck && differenceTime > 0) {
-                Bson con = Filters.eq("id", calendar.getId());
+                Bson con = Filters.eq(DbKeyConfig.ID, calendar.getId());
                 if (n != nLoop) {
                     n++;
                     // update roles
                     Bson updates = Updates.combine(
-                            Updates.set("nLoop", n)
+                            Updates.set(DbKeyConfig.N_LOOP, n)
                     );
                     db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, con, updates, true);
 //                    sendEmail(calendar.getTime());
                 } else {
                     Bson updates = Updates.combine(
-                            Updates.set("check", "1")
+                            Updates.set(DbKeyConfig.CHECK, "1")
                     );
                     db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, con, updates, true);
                 }

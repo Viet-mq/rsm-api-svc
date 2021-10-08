@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.request.DeleteJobLevelRequest;
 import com.edso.resume.api.domain.request.UpdateJobLevelRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -20,6 +21,7 @@ import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import java.awt.image.DataBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +40,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     public GetArrayResponse<JobLevelEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, cond);
@@ -48,8 +50,8 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         if (lst != null) {
             for (Document doc : lst) {
                 JobLevelEntity jobLevel = JobLevelEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .name(AppUtils.parseString(doc.get("name")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
                         .build();
                 rows.add(jobLevel);
             }
@@ -67,7 +69,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         BaseResponse response = new BaseResponse();
 
         String name = request.getName();
-        Bson c = Filters.eq("name_search", name.toLowerCase());
+        Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         long count = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, c);
 
         if (count > 0) {
@@ -76,13 +78,13 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         }
 
         Document jobLevel = new Document();
-        jobLevel.append("id", UUID.randomUUID().toString());
-        jobLevel.append("name", name);
-        jobLevel.append("name_search", name.toLowerCase());
-        jobLevel.append("create_at", System.currentTimeMillis());
-        jobLevel.append("update_at", System.currentTimeMillis());
-        jobLevel.append("create_by", request.getInfo().getUsername());
-        jobLevel.append("update_by", request.getInfo().getUsername());
+        jobLevel.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+        jobLevel.append(DbKeyConfig.NAME, name);
+        jobLevel.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+        jobLevel.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+        jobLevel.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+        jobLevel.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+        jobLevel.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_JOB_LEVEL, jobLevel);
@@ -98,7 +100,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
 
         if (idDocument == null) {
@@ -107,9 +109,9 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         }
 
         String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq("name_search", name.toLowerCase()));
+        Document obj = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
         if (obj != null) {
-            String objId = AppUtils.parseString(obj.get("id"));
+            String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
             if (!objId.equals(id)) {
                 response.setFailed("Tên này đã tồn tại");
                 return response;
@@ -118,10 +120,10 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("name", name),
-                Updates.set("name_search", name.toLowerCase()),
-                Updates.set("update_at", System.currentTimeMillis()),
-                Updates.set("update_by", request.getInfo().getUsername())
+                Updates.set(DbKeyConfig.NAME, name),
+                Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_JOB_LEVEL, cond, updates, true);
 
@@ -134,7 +136,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     public BaseResponse deleteJobLevel(DeleteJobLevelRequest request) {
         BaseResponse response = new BaseResponse();
         String id = request.getId();
-        Bson cond = Filters.eq("id", id);
+        Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
 
         if (idDocument == null) {

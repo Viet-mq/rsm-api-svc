@@ -4,6 +4,7 @@ import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.HistoryEntity;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -36,7 +37,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
 
         GetArrayResponse<HistoryEntity> resp = new GetArrayResponse<>();
 
-        Bson con = Filters.eq("id", idProfile);
+        Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
 
         if(idProfileDocument == null){
@@ -46,7 +47,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
-            c.add(Filters.regex("idProfile", Pattern.compile(idProfile)));
+            c.add(Filters.regex(DbKeyConfig.ID_PROFILE, Pattern.compile(idProfile)));
         }
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_HISTORY_PROFILE, cond);
@@ -56,11 +57,11 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         if (lst != null) {
             for (Document doc : lst) {
                 HistoryEntity history = HistoryEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .idProfile(AppUtils.parseString(doc.get("idProfile")))
-                        .time(AppUtils.parseLong(doc.get("time")))
-                        .action(AppUtils.parseString(doc.get("action")))
-                        .by(AppUtils.parseString(doc.get("by")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .idProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)))
+                        .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
+                        .action(AppUtils.parseString(doc.get(DbKeyConfig.ACTION)))
+                        .by(AppUtils.parseString(doc.get(DbKeyConfig.BY)))
                         .build();
                 rows.add(history);
             }
@@ -78,11 +79,11 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         BaseResponse response = new BaseResponse();
 
         Document history = new Document();
-        history.append("id", UUID.randomUUID().toString());
-        history.append("idProfile", idProfile);
-        history.append("time", System.currentTimeMillis());
-        history.append("action", action);
-        history.append("by", by);
+        history.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+        history.append(DbKeyConfig.ID_PROFILE, idProfile);
+        history.append(DbKeyConfig.TIME, System.currentTimeMillis());
+        history.append(DbKeyConfig.ACTION, action);
+        history.append(DbKeyConfig.BY, by);
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
