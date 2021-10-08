@@ -17,6 +17,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,7 +30,8 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
 
     private final MongoDbOnlineSyncActions db;
 
-    public  BlacklistServiceImpl (MongoDbOnlineSyncActions db){
+    public  BlacklistServiceImpl (MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate){
+        super(db, rabbitTemplate);
         this.db = db;
     }
 

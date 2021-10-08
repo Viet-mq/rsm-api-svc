@@ -2,7 +2,6 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.HistoryEntity;
-import com.edso.resume.api.domain.request.CreateHistoryRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -14,6 +13,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -26,8 +26,8 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
 
     private final MongoDbOnlineSyncActions db;
 
-    public HistoryServiceImpl(MongoDbOnlineSyncActions db) {
-        super(db);
+    public HistoryServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
+        super(db, rabbitTemplate);
         this.db = db;
     }
 
@@ -73,16 +73,16 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     }
 
     @Override
-    public BaseResponse createHistory(CreateHistoryRequest request) {
+    public BaseResponse createHistory(String idProfile, String action, String by) {
 
         BaseResponse response = new BaseResponse();
 
         Document history = new Document();
         history.append("id", UUID.randomUUID().toString());
-        history.append("idProfile", request.getIdProfile());
-        history.append("time", request.getTime());
-        history.append("action", request.getAction());
-        history.append("by", request.getBy());
+        history.append("idProfile", idProfile);
+        history.append("time", System.currentTimeMillis());
+        history.append("action", action);
+        history.append("by", by);
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);

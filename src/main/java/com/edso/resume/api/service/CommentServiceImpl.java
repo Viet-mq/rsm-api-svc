@@ -9,6 +9,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -18,8 +19,8 @@ public class CommentServiceImpl extends BaseService implements CommentService {
 
     private final MongoDbOnlineSyncActions db;
 
-    public CommentServiceImpl(MongoDbOnlineSyncActions db) {
-        super(db);
+    public CommentServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
+        super(db, rabbitTemplate);
         this.db = db;
     }
 

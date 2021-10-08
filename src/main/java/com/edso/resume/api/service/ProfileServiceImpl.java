@@ -1,7 +1,8 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.*;
+import com.edso.resume.api.domain.entities.ProfileDetailEntity;
+import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
@@ -17,30 +18,24 @@ import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
 public class ProfileServiceImpl extends BaseService implements ProfileService {
 
-    @Value("${spring.rabbitmq.exchange}")
-    private String exchange;
-
-    @Value("${spring.rabbitmq.routingkey}")
-    private String routingkey;
-
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
-    private final RabbitTemplate rabbitTemplate;
+    private final BaseResponse response = new BaseResponse();
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
-        super(db);
+        super(db, rabbitTemplate);
         this.db = db;
         this.historyService = historyService;
-        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
@@ -58,16 +53,16 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             for (Document doc : lst) {
 
                 String idSchool = AppUtils.parseString(doc.get("school"));
-                Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq("id",idSchool));
+                Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq("id", idSchool));
 
                 String job = AppUtils.parseString(doc.get("job"));
-                Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq("id",job));
+                Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq("id", job));
 
                 String jobLevel = AppUtils.parseString(doc.get("levelJob"));
-                Document jobLevelDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq("id",jobLevel));
+                Document jobLevelDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq("id", jobLevel));
 
                 String sourceCV = AppUtils.parseString(doc.get("sourceCV"));
-                Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq("id",sourceCV));
+                Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq("id", sourceCV));
 
                 ProfileEntity profile = ProfileEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
@@ -104,10 +99,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         GetReponse<ProfileDetailEntity> response = new GetReponse<>();
 
         //Validate
-        Bson con = Filters.eq("id", idProfile);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
-
-        if (idDocument == null) {
+        if (!validateDictionary(idProfile, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id profile này không tồn tại");
             return response;
         }
@@ -142,35 +134,33 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         response.setSuccess(profile);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Xem chi tiết profile", info.getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(idProfile, "Xem chi tiết profile", info.getFullName());
 
         return response;
     }
 
     @Override
     public BaseResponse createProfile(CreateProfileRequest request) {
-        BaseResponse response = new BaseResponse();
 
         String idProfile = UUID.randomUUID().toString();
 
         //Validate
-        if(validateDictionary(request.getJob(),CollectionNameDefs.COLL_JOB)){
+        if (!validateDictionary(request.getJob(), CollectionNameDefs.COLL_JOB)) {
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getLevelJob(),CollectionNameDefs.COLL_JOB_LEVEL)){
+        if (!validateDictionary(request.getLevelJob(), CollectionNameDefs.COLL_JOB_LEVEL)) {
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)){
+        if (!validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)) {
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)){
+        if (!validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)) {
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
@@ -202,12 +192,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
 
         // insert to rabbitmq
-        EventEntity event = new EventEntity("create profile", profile);
-        rabbitTemplate.convertAndSend(exchange, routingkey, event);
+        insertToRabbitMQ("create profile", profile);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Tạo profile",request.getInfo().getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(idProfile, "Tạo profile", request.getInfo().getFullName());
 
         response.setSuccess();
         return response;
@@ -215,9 +203,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     }
 
     @Override
-    public BaseResponse updateProfile(UpdateProfileRequest request){
-
-        BaseResponse response = new BaseResponse();
+    public BaseResponse updateProfile(UpdateProfileRequest request) {
 
         //Validate
         String id = request.getId();
@@ -228,22 +214,22 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
-        if(validateDictionary(request.getJob(),CollectionNameDefs.COLL_JOB)){
+        if (!validateDictionary(request.getJob(), CollectionNameDefs.COLL_JOB)) {
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getLevelJob(),CollectionNameDefs.COLL_JOB_LEVEL)){
+        if (!validateDictionary(request.getLevelJob(), CollectionNameDefs.COLL_JOB_LEVEL)) {
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)){
+        if (!validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)) {
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)){
+        if (!validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)) {
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
@@ -273,12 +259,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         response.setSuccess();
 
         // insert to rabbitmq
-        EventEntity event = new EventEntity("update profile", request);
-        rabbitTemplate.convertAndSend(exchange, routingkey, event);
+        insertToRabbitMQ("update profile", request);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id, System.currentTimeMillis(),"Sửa profile",request.getInfo().getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(id, "Sửa profile", request.getInfo().getFullName());
 
         return response;
 
@@ -286,8 +270,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
     @Override
     public BaseResponse updateDetailProfile(UpdateDetailProfileRequest request) {
-
-        BaseResponse response = new BaseResponse();
 
         //Validate
         String id = request.getId();
@@ -298,22 +280,22 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
-        if(validateDictionary(request.getJob(),CollectionNameDefs.COLL_JOB)){
+        if (!validateDictionary(request.getJob(), CollectionNameDefs.COLL_JOB)) {
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getLevelJob(),CollectionNameDefs.COLL_JOB_LEVEL)){
+        if (!validateDictionary(request.getLevelJob(), CollectionNameDefs.COLL_JOB_LEVEL)) {
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)){
+        if (!validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)) {
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        if(validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)){
+        if (!validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)) {
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
@@ -348,12 +330,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         response.setSuccess();
 
         // insert to rabbitmq
-        EventEntity event = new EventEntity("update detail profile", request);
-        rabbitTemplate.convertAndSend(exchange, routingkey, event);
+        insertToRabbitMQ("update detail profile", request);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Sửa chi tiết profile",request.getInfo().getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(id, "Sửa chi tiết profile", request.getInfo().getFullName());
 
         return response;
 
@@ -375,42 +355,34 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         db.delete(CollectionNameDefs.COLL_PROFILE, cond);
 
         // insert to rabbitmq
-        EventEntity event = new EventEntity("delete profile", request);
-        rabbitTemplate.convertAndSend(exchange, routingkey, event);
+        insertToRabbitMQ("delete profile", request);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Xóa profile",request.getInfo().getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(id, "Xóa profile", request.getInfo().getFullName());
 
         return new BaseResponse(0, "OK");
     }
 
     @Override
     public BaseResponse updateStatusProfile(UpdateStatusProfileRequest request) {
-        BaseResponse response = new BaseResponse();
 
         //Validate
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if (idDocument == null) {
+        if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
 
-        String statusCV = request.getStatusCV();
-        Bson conStatusCV = Filters.eq("id", statusCV);
-        Document statusCVDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, conStatusCV);
-
-        if(statusCVDocument == null){
-            response.setFailed("Nguồn cv không tồn tại");
+        if (!validateDictionary(request.getStatusCV(), CollectionNameDefs.COLL_STATUS_CV)) {
+            response.setFailed("Trạng thái cv không tồn tại");
             return response;
         }
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("statusCV", statusCV),
+                Updates.set("statusCV", request.getStatusCV()),
                 Updates.set("update_statuscv_at", System.currentTimeMillis()),
                 Updates.set("update_statuscv_by", request.getInfo().getUsername())
         );
@@ -418,17 +390,13 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         response.setSuccess();
 
         // insert to rabbitmq
-        EventEntity event = new EventEntity("update status profile", request);
-        rabbitTemplate.convertAndSend(exchange, routingkey, event);
+        insertToRabbitMQ("update status profile", request);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id,System.currentTimeMillis(),"Cập nhật trạng thái profile",request.getInfo().getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(id, "Cập nhật trạng thái profile", request.getInfo().getFullName());
 
         return response;
     }
-
-
 
 
 }

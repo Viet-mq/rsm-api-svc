@@ -4,7 +4,6 @@ import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
-import com.edso.resume.api.domain.request.CreateHistoryRequest;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
 import com.edso.resume.lib.common.AppUtils;
@@ -18,6 +17,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 public class CalendarServiceImpl extends BaseService implements CalendarService {
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
+    private final BaseResponse response;
 
     @Value("${calendar.timeCheck}")
     private long timeCheck;
@@ -37,20 +38,17 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     @Value("${calendar.nLoop}")
     private int nLoop;
 
-    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
-        super(db);
+    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
+        super(db, rabbitTemplate);
         this.db = db;
         this.historyService = historyService;
+        this.response = new BaseResponse();
     }
 
     @Override
     public GetArrayCalendarReponse<CalendarEntity> findAllCalendar(HeaderInfo info, String idProfile) {
         GetArrayCalendarReponse<CalendarEntity> resp = new GetArrayCalendarReponse<>();
-
-        Bson con = Filters.eq("id", idProfile);
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
-
-        if(idProfileDocument == null){
+        if (!validateDictionary(idProfile, CollectionNameDefs.COLL_PROFILE)) {
             resp.setFailed("Id profile không tồn tại");
             return resp;
         }
@@ -91,13 +89,12 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
 
     @Override
     public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request) {
-        BaseResponse response = new BaseResponse();
 
         String idProfile = request.getIdProfile();
         Bson cond = Filters.eq("id", idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if(idProfileDocument == null){
+        if (idProfileDocument == null) {
             response.setFailed("Id profile không tồn tại");
             return response;
         }
@@ -130,8 +127,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Tạo lịch phỏng vấn", request.getInfo().getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(idProfile, "Tạo lịch phỏng vấn", request.getInfo().getFullName());
 
         return response;
 
@@ -140,7 +136,6 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     @Override
     public BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest request) {
 
-        BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
@@ -154,7 +149,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         Bson con = Filters.eq("id", idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
 
-        if(idProfileDocument == null){
+        if (idProfileDocument == null) {
             response.setFailed("Id profile không tồn tại");
             return response;
         }
@@ -182,8 +177,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Sửa lịch phỏng vấn", request.getInfo().getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(idProfile, "Sửa lịch phỏng vấn", request.getInfo().getFullName());
 
         return response;
 
@@ -191,7 +185,6 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
 
     @Override
     public BaseResponse deleteCalendarProfile(DeleteCalendarProfileRequest request) {
-        BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
@@ -204,10 +197,10 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(), System.currentTimeMillis(), "Xóa lịch phỏng vấn", request.getInfo().getFullName());
-        historyService.createHistory(createHistoryRequest);
+        historyService.createHistory(request.getIdProfile(), "Xóa lịch phỏng vấn", request.getInfo().getFullName());
+        response.setSuccess();
 
-        return new BaseResponse(0, "OK");
+        return response;
     }
 
     public void alarmInterview() {
