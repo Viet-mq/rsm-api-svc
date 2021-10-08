@@ -27,11 +27,23 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     private final MongoDbOnlineSyncActions db;
 
     public HistoryServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 
     @Override
     public GetArrayResponse<HistoryEntity> findAllHistory(HeaderInfo info, String idProfile, Integer page, Integer size) {
+
+        GetArrayResponse<HistoryEntity> resp = new GetArrayResponse<>();
+
+        Bson con = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
+
+        if(idProfileDocument == null){
+            resp.setFailed("Id profile không tồn tại");
+            return resp;
+        }
+
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.regex("idProfile", Pattern.compile(idProfile)));
@@ -53,7 +65,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
                 rows.add(history);
             }
         }
-        GetArrayResponse<HistoryEntity> resp = new GetArrayResponse<>();
+
         resp.setSuccess();
         resp.setTotal(total);
         resp.setRows(rows);

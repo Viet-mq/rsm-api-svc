@@ -19,6 +19,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
     private final MongoDbOnlineSyncActions db;
 
     public CommentServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 

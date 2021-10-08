@@ -1,5 +1,6 @@
-package com.edso.resume.api.domain.rabbitmq;
+package com.edso.resume.api.domain.db;
 
+import com.mongodb.MongoClientURI;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -11,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RabbitMQConfig {
+public class RabbitMQConfig  extends BaseAction{
 
     @Value("${spring.rabbitmq.queue}")
     private String queue;
@@ -30,6 +31,9 @@ public class RabbitMQConfig {
 
     @Value("${spring.rabbitmq.host}")
     private String host;
+
+    @Value("${spring.rabbitmq.port}")
+    private String port;
 
     @Bean
     Queue queue() {
@@ -66,6 +70,14 @@ public class RabbitMQConfig {
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+
+        logger.info("RabbitMQ server: {}:{}", host, port);
+        logger.info("RabbitMQ user: {}", username);
+        logger.info("RabbitMQ pwd: {}", password);
+        String uri = "amqp://" + username + ":" + password + "@" + host + ":" + port;
+        logger.info("RabbitMQ info: {}", uri);
+        logger.info("Connect to RabbitMQ information: {}", uri);
+
         rabbitTemplate.setMessageConverter(jsonMessageConverter());
         return rabbitTemplate;
     }

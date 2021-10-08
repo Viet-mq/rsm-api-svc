@@ -29,6 +29,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     private final MongoDbOnlineSyncActions db;
 
     public JobLevelServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 

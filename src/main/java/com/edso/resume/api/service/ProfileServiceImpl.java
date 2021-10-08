@@ -37,6 +37,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     private final RabbitTemplate rabbitTemplate;
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
+        super(db);
         this.db = db;
         this.historyService = historyService;
         this.rabbitTemplate = rabbitTemplate;
@@ -141,7 +142,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         response.setSuccess(profile);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Xem chi tiết profile", info.getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(),"Xem chi tiết profile", info.getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -149,44 +150,27 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
     @Override
     public BaseResponse createProfile(CreateProfileRequest request) {
-
         BaseResponse response = new BaseResponse();
 
         String idProfile = UUID.randomUUID().toString();
 
         //Validate
-        String job = request.getJob();
-        Bson conJob = Filters.eq("id", job);
-        Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, conJob);
-
-        if(jobDocument == null){
+        if(validateDictionary(request.getJob(),CollectionNameDefs.COLL_JOB)){
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        String levelJob = request.getLevelJob();
-        Bson conLevelJob = Filters.eq("id", levelJob);
-        Document levelJobDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, conLevelJob);
-
-        if(levelJobDocument == null){
+        if(validateDictionary(request.getLevelJob(),CollectionNameDefs.COLL_JOB_LEVEL)){
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        String school = request.getSchool();
-        Bson conSchool = Filters.eq("id", school);
-        Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, conSchool);
-
-        if(schoolDocument == null){
+        if(validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)){
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        String sourceCV = request.getSourceCV();
-        Bson conSourceCV = Filters.eq("id", sourceCV);
-        Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, conSourceCV);
-
-        if(sourceCVDocument == null){
+        if(validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)){
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
@@ -196,13 +180,13 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         profile.append("fullName", request.getFullName());
         profile.append("dateOfBirth", request.getDateOfBirth());
         profile.append("hometown", request.getHometown());
-        profile.append("school", school);
+        profile.append("school", request.getSchool());
         profile.append("phoneNumber", request.getPhoneNumber());
         profile.append("email", request.getEmail());
-        profile.append("job", job);
-        profile.append("levelJob", levelJob);
+        profile.append("job", request.getJob());
+        profile.append("levelJob", request.getLevelJob());
         profile.append("cv", request.getCv());
-        profile.append("sourceCV", sourceCV);
+        profile.append("sourceCV", request.getSourceCV());
         profile.append("hrRef", request.getHrRef());
         profile.append("dateOfApply", request.getDateOfApply());
         profile.append("cvType", request.getCvType());
@@ -222,7 +206,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         rabbitTemplate.convertAndSend(exchange, routingkey, event);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Tạo profile",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Tạo profile",request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         response.setSuccess();
@@ -238,45 +222,28 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         //Validate
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if (idDocument == null) {
+        if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
 
-        String job = request.getJob();
-        Bson conJob = Filters.eq("id", job);
-        Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, conJob);
-
-        if(jobDocument == null){
+        if(validateDictionary(request.getJob(),CollectionNameDefs.COLL_JOB)){
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        String levelJob = request.getLevelJob();
-        Bson conLevelJob = Filters.eq("id", levelJob);
-        Document levelJobDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, conLevelJob);
-
-        if(levelJobDocument == null){
+        if(validateDictionary(request.getLevelJob(),CollectionNameDefs.COLL_JOB_LEVEL)){
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        String school = request.getSchool();
-        Bson conSchool = Filters.eq("id", school);
-        Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, conSchool);
-
-        if(schoolDocument == null){
+        if(validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)){
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        String sourceCV = request.getSourceCV();
-        Bson conSourceCV = Filters.eq("id", sourceCV);
-        Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, conSourceCV);
-
-        if(sourceCVDocument == null){
+        if(validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)){
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
@@ -286,13 +253,13 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 Updates.set("fullName", request.getFullName()),
                 Updates.set("dateOfBirth", request.getDateOfBirth()),
                 Updates.set("hometown", request.getHometown()),
-                Updates.set("school", school),
+                Updates.set("school", request.getSchool()),
                 Updates.set("phoneNumber", request.getPhoneNumber()),
                 Updates.set("email", request.getEmail()),
-                Updates.set("job", job),
-                Updates.set("levelJob", levelJob),
+                Updates.set("job", request.getJob()),
+                Updates.set("levelJob", request.getLevelJob()),
                 Updates.set("cv", request.getCv()),
-                Updates.set("sourceCV", sourceCV),
+                Updates.set("sourceCV", request.getSourceCV()),
                 Updates.set("hrRef", request.getHrRef()),
                 Updates.set("dateOfApply", request.getDateOfApply()),
                 Updates.set("cvType", request.getCvType()),
@@ -310,7 +277,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         rabbitTemplate.convertAndSend(exchange, routingkey, event);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id, System.currentTimeMillis(),"Sửa profile",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(id, System.currentTimeMillis(),"Sửa profile",request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -321,48 +288,32 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     public BaseResponse updateDetailProfile(UpdateDetailProfileRequest request) {
 
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
         //Validate
-        if (idDocument == null) {
+        String id = request.getId();
+        Bson cond = Filters.eq("id", id);
+
+        if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
 
-        String job = request.getJob();
-        Bson conJob = Filters.eq("id", job);
-        Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, conJob);
-
-        if(jobDocument == null){
+        if(validateDictionary(request.getJob(),CollectionNameDefs.COLL_JOB)){
             response.setFailed("Công việc không tồn tại");
             return response;
         }
 
-        String levelJob = request.getLevelJob();
-        Bson conLevelJob = Filters.eq("id", levelJob);
-        Document levelJobDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, conLevelJob);
-
-        if(levelJobDocument == null){
+        if(validateDictionary(request.getLevelJob(),CollectionNameDefs.COLL_JOB_LEVEL)){
             response.setFailed("Vị trí tuyển dụng không tồn tại");
             return response;
         }
 
-        String school = request.getSchool();
-        Bson conSchool = Filters.eq("id", school);
-        Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, conSchool);
-
-        if(schoolDocument == null){
+        if(validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)){
             response.setFailed("Trường học không tồn tại");
             return response;
         }
 
-        String sourceCV = request.getSourceCV();
-        Bson conSourceCV = Filters.eq("id", sourceCV);
-        Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, conSourceCV);
-
-        if(sourceCVDocument == null){
+        if(validateDictionary(request.getSourceCV(), CollectionNameDefs.COLL_SOURCE_CV)){
             response.setFailed("Nguồn cv không tồn tại");
             return response;
         }
@@ -372,13 +323,13 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 Updates.set("fullName", request.getFullName()),
                 Updates.set("dateOfBirth", request.getDateOfBirth()),
                 Updates.set("hometown", request.getHometown()),
-                Updates.set("school", school),
+                Updates.set("school", request.getSchool()),
                 Updates.set("phoneNumber", request.getPhoneNumber()),
                 Updates.set("email", request.getEmail()),
-                Updates.set("job", job),
-                Updates.set("levelJob", levelJob),
+                Updates.set("job", request.getJob()),
+                Updates.set("levelJob", request.getLevelJob()),
                 Updates.set("cv", request.getCv()),
-                Updates.set("sourceCV", sourceCV),
+                Updates.set("sourceCV", request.getSourceCV()),
                 Updates.set("hrRef", request.getHrRef()),
                 Updates.set("dateOfApply", request.getDateOfApply()),
                 Updates.set("cvType", request.getCvType()),
@@ -415,9 +366,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         //Validate
         String id = request.getId();
         Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if (idDocument == null) {
+        if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
@@ -477,5 +427,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         return response;
     }
+
+
+
 
 }

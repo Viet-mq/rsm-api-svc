@@ -49,6 +49,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
     public final MongoDbOnlineSyncActions db;
 
     public ExcelServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 

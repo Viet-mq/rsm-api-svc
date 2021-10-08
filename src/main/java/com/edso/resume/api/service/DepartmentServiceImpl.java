@@ -29,6 +29,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
     private final MongoDbOnlineSyncActions db;
 
     public DepartmentServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 

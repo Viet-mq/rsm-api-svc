@@ -36,7 +36,7 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(time.toString())) {
+        if (time <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian");
         }
         if (Strings.isNullOrEmpty(address)) {
@@ -69,10 +69,10 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(reason)) {
             return new BaseResponse(-1, "Vui lòng nhập lý do");
         }
-        if (Strings.isNullOrEmpty(timeStart.toString())) {
+        if (timeStart <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian bắt đầu");
         }
-        if (Strings.isNullOrEmpty(timeFinish.toString())) {
+        if (timeFinish <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian kết thúc");
         }
         return null;

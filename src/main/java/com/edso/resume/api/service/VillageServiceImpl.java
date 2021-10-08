@@ -30,6 +30,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
     private final MongoDbOnlineSyncActions db;
 
     public VillageServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 

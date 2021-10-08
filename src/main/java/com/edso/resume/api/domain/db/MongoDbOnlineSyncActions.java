@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class MongoDbOnlineSyncActions extends BaseMongoAction {
+public class MongoDbOnlineSyncActions extends BaseAction {
 
     private final MongoDbAccess mongoDbAccess;
     @Value("${spring.data.mongodb.database}")

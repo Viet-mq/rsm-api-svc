@@ -30,6 +30,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     private final MongoDbOnlineSyncActions db;
 
     public StatusCVServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 

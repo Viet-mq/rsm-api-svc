@@ -20,7 +20,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.stereotype.Service;
 
-import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,12 +32,24 @@ public class NoteServiceImpl extends BaseService implements NoteService {
     private final HistoryService historyService;
 
     public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+        super(db);
         this.db = db;
         this.historyService = historyService;
     }
 
     @Override
     public GetArrayResponse<NoteProfileEntity> findAllNote(HeaderInfo info, String idProfile, Integer page, Integer size) {
+
+        GetArrayResponse<NoteProfileEntity> resp = new GetArrayResponse<>();
+
+        Bson con = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
+
+        if(idProfileDocument == null){
+            resp.setFailed("Id profile không tồn tại");
+            return resp;
+        }
+
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.regex("idProfile", Pattern.compile(idProfile)));
@@ -60,7 +71,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
                 rows.add(noteProfile);
             }
         }
-        GetArrayResponse<NoteProfileEntity> resp = new GetArrayResponse<>();
+
         resp.setSuccess();
         resp.setTotal(total);
         resp.setRows(rows);

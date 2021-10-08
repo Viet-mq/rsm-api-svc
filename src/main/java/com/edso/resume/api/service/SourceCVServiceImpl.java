@@ -30,6 +30,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
     private final MongoDbOnlineSyncActions db;
 
     public SourceCVServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 

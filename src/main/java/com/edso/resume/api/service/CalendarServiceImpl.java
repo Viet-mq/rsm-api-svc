@@ -38,15 +38,26 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     private int nLoop;
 
     public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+        super(db);
         this.db = db;
         this.historyService = historyService;
     }
 
     @Override
     public GetArrayCalendarReponse<CalendarEntity> findAllCalendar(HeaderInfo info, String idProfile) {
+        GetArrayCalendarReponse<CalendarEntity> resp = new GetArrayCalendarReponse<>();
+
+        Bson con = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
+
+        if(idProfileDocument == null){
+            resp.setFailed("Id profile không tồn tại");
+            return resp;
+        }
+
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
-            c.add(Filters.regex("idProfile", Pattern.compile(idProfile)));
+            c.add(Filters.eq("idProfile", idProfile));
         }
         Bson cond = buildCondition(c);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, null, 0, 0);
@@ -73,7 +84,6 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
                 calendars.add(calendar);
             }
         }
-        GetArrayCalendarReponse<CalendarEntity> resp = new GetArrayCalendarReponse<>();
         resp.setSuccess();
         resp.setCalendars(calendars);
         return resp;

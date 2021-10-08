@@ -30,6 +30,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
     private final MongoDbOnlineSyncActions db;
 
     public SchoolServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 

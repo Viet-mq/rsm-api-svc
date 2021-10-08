@@ -30,6 +30,7 @@ public class JobServiceImpl extends BaseService implements JobService {
     private final MongoDbOnlineSyncActions db;
 
     public JobServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         this.db = db;
     }
 
