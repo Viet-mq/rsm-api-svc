@@ -6,6 +6,7 @@ import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -40,37 +41,28 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
     @Override
     public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, Integer page, Integer size) {
+
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
             c.add(Filters.regex("name_search", Pattern.compile(fullName.toLowerCase())));
         }
+
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_PROFILE, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<ProfileEntity> rows = new ArrayList<>();
+
         if (lst != null) {
             for (Document doc : lst) {
-
-                String idSchool = AppUtils.parseString(doc.get("school"));
-                Document schoolDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq("id", idSchool));
-
-                String job = AppUtils.parseString(doc.get("job"));
-                Document jobDocument = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq("id", job));
-
-                String jobLevel = AppUtils.parseString(doc.get("levelJob"));
-                Document jobLevelDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq("id", jobLevel));
-
-                String sourceCV = AppUtils.parseString(doc.get("sourceCV"));
-                Document sourceCVDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq("id", sourceCV));
-
                 ProfileEntity profile = ProfileEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .fullName(AppUtils.parseString(doc.get("fullName")))
-                        .dateOfBirth(AppUtils.parseLong(doc.get("dateOfBirth")))
-                        .hometown(AppUtils.parseString(doc.get("hometown")))
-                        .school(AppUtils.parseString(schoolDocument.get("name")))
-                        .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
+                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                        .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
+                        .dateOfBirth(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_BIRTH)))
+                        .hometown(AppUtils.parseString(doc.get(DbKeyConfig.HOMETOWN)))
+                        .schoolId(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_ID)))
+                        .schoolName(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_NAME)))
+                        .phoneNumber(AppUtils.parseString(doc.get(DbKeyConfig.PHONE_NUMBER)))
                         .email(AppUtils.parseString(doc.get("email")))
                         .job(AppUtils.parseString(jobDocument.get("name")))
                         .levelJob(AppUtils.parseString(jobLevelDocument.get("name")))
@@ -144,6 +136,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         String idProfile = UUID.randomUUID().toString();
 
+
         //Validate
         if (!validateDictionary(request.getJob(), CollectionNameDefs.COLL_JOB)) {
             response.setFailed("Công việc không tồn tại");
@@ -155,7 +148,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
-        if (!validateDictionary(request.getSchool(), CollectionNameDefs.COLL_SCHOOL)) {
+        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq("id", request.getSchool()));
+        if (school == null) {
             response.setFailed("Trường học không tồn tại");
             return response;
         }
@@ -165,16 +159,21 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
+        // conventions
         Document profile = new Document();
-        profile.append("id", idProfile);
-        profile.append("fullName", request.getFullName());
-        profile.append("dateOfBirth", request.getDateOfBirth());
-        profile.append("hometown", request.getHometown());
-        profile.append("school", request.getSchool());
-        profile.append("phoneNumber", request.getPhoneNumber());
+        profile.append(DbKeyConfig.ID, idProfile);
+        profile.append(DbKeyConfig.FULL_NAME, request.getFullName());
+        profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
+        profile.append(DbKeyConfig.HOMETOWN, request.getHometown());
+        profile.append(DbKeyConfig.SCHOOL_ID, request.getSchool());
+        profile.append(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.NAME));
+
+        profile.append("phone_number", request.getPhoneNumber());
         profile.append("email", request.getEmail());
         profile.append("job", request.getJob());
-        profile.append("levelJob", request.getLevelJob());
+
+        profile.append("level_job_id", request.getLevelJob());
+
         profile.append("cv", request.getCv());
         profile.append("sourceCV", request.getSourceCV());
         profile.append("hrRef", request.getHrRef());
