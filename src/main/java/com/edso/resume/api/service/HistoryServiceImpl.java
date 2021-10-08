@@ -22,11 +22,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class HistoryServiceImpl extends BaseService implements HistoryService{
+public class HistoryServiceImpl extends BaseService implements HistoryService {
 
     private final MongoDbOnlineSyncActions db;
 
-    public HistoryServiceImpl(MongoDbOnlineSyncActions db){
+    public HistoryServiceImpl(MongoDbOnlineSyncActions db) {
         this.db = db;
     }
 
@@ -46,7 +46,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService{
                 HistoryEntity history = HistoryEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .idProfile(AppUtils.parseString(doc.get("idProfile")))
-                        .time(parseDate(AppUtils.parseLong(doc.get("time"))))
+                        .time(AppUtils.parseLong(doc.get("time")))
                         .action(AppUtils.parseString(doc.get("action")))
                         .by(AppUtils.parseString(doc.get("by")))
                         .build();
@@ -61,19 +61,19 @@ public class HistoryServiceImpl extends BaseService implements HistoryService{
     }
 
     @Override
-    public BaseResponse createHistory(CreateHistoryRequest request)  {
+    public BaseResponse createHistory(CreateHistoryRequest request) {
 
         BaseResponse response = new BaseResponse();
 
-        Document profile = new Document();
-        profile.append("id", UUID.randomUUID().toString());
-        profile.append("idProfile", request.getIdProfile());
-        profile.append("time", request.getTime());
-        profile.append("action", request.getAction());
-        profile.append("by", request.getBy());
+        Document history = new Document();
+        history.append("id", UUID.randomUUID().toString());
+        history.append("idProfile", request.getIdProfile());
+        history.append("time", request.getTime());
+        history.append("action", request.getAction());
+        history.append("by", request.getBy());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, profile);
+        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
 
         response.setSuccess();
         return response;

@@ -2,7 +2,9 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.VillageEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateVillageRequest;
+import com.edso.resume.api.domain.request.DeleteVillageRequest;
+import com.edso.resume.api.domain.request.UpdateVillageRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -68,7 +70,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
         long count = db.countAll(CollectionNameDefs.COLL_VILLAGE, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 
@@ -108,7 +110,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));
             if (!objId.equals(id)) {
-                response.setFailed("Name already existed !");
+                response.setFailed("Tên này đã tồn tại");
                 return response;
             }
         }

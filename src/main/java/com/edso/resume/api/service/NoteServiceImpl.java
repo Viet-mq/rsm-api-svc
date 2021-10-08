@@ -20,18 +20,19 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.stereotype.Service;
 
+import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class NoteServiceImpl extends BaseService implements NoteService{
+public class NoteServiceImpl extends BaseService implements NoteService {
 
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
 
-    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService){
+    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
         this.db = db;
         this.historyService = historyService;
     }
@@ -53,7 +54,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
                         .id(AppUtils.parseString(doc.get("id")))
                         .idProfile(AppUtils.parseString(doc.get("idProfile")))
                         .note(AppUtils.parseString(doc.get("note")))
-                        .create_at(parseDate(AppUtils.parseLong(doc.get("create_at"))))
+                        .create_at(AppUtils.parseLong(doc.get("create_at")))
                         .create_by(AppUtils.parseString(doc.get("create_by")))
                         .build();
                 rows.add(noteProfile);
@@ -67,25 +68,31 @@ public class NoteServiceImpl extends BaseService implements NoteService{
     }
 
     @Override
-    public BaseResponse createNoteProfile(CreateNoteProfileRequest request)  {
+    public BaseResponse createNoteProfile(CreateNoteProfileRequest request) {
 
         BaseResponse response = new BaseResponse();
 
         String idProfile = request.getIdProfile();
+        Bson cond = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+        if(idProfileDocument == null){
+            response.setFailed("Id profile không tồn tại");
+            return response;
+        }
 
-        Document profile = new Document();
-        profile.append("id", UUID.randomUUID().toString());
-        profile.append("idProfile", idProfile);
-        profile.append("note", request.getNote());
-        profile.append("create_at", System.currentTimeMillis());
-        profile.append("create_by", request.getInfo().getUsername());
+        Document note = new Document();
+        note.append("id", UUID.randomUUID().toString());
+        note.append("idProfile", idProfile);
+        note.append("note", request.getNote());
+        note.append("create_at", System.currentTimeMillis());
+        note.append("create_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_NOTE_PROFILE, profile);
+        db.insertOne(CollectionNameDefs.COLL_NOTE_PROFILE, note);
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Create note",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Tạo chú ý", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -104,10 +111,17 @@ public class NoteServiceImpl extends BaseService implements NoteService{
         }
 
         String idProfile = request.getIdProfile();
+        Bson con = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
+
+        if(idProfileDocument == null){
+            response.setFailed("Id profile không tồn tại");
+            return  response;
+        }
 
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("ipProfile", idProfile),
+                Updates.set("idProfile", idProfile),
                 Updates.set("note", request.getNote()),
                 Updates.set("update_at", System.currentTimeMillis()),
                 Updates.set("update_by", request.getInfo().getUsername())
@@ -116,7 +130,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
         response.setSuccess();
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile,System.currentTimeMillis(),"Update note",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Sửa chú ý", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return response;
@@ -137,7 +151,7 @@ public class NoteServiceImpl extends BaseService implements NoteService{
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(),System.currentTimeMillis(),"Update note",request.getInfo().getUsername());
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(), System.currentTimeMillis(), "Xóa chú ý", request.getInfo().getFullName());
         historyService.createHistory(createHistoryRequest);
 
         return new BaseResponse(0, "OK");

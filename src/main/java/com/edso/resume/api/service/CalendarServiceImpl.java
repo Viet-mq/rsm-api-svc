@@ -4,6 +4,7 @@ import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
+import com.edso.resume.api.domain.request.CreateHistoryRequest;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
 import com.edso.resume.lib.common.AppUtils;
@@ -20,12 +21,15 @@ import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class CalendarServiceImpl extends BaseService implements CalendarService{
+public class CalendarServiceImpl extends BaseService implements CalendarService {
     private final MongoDbOnlineSyncActions db;
+    private final HistoryService historyService;
 
     @Value("${calendar.timeCheck}")
     private long timeCheck;
@@ -33,8 +37,9 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
     @Value("${calendar.nLoop}")
     private int nLoop;
 
-    public CalendarServiceImpl(MongoDbOnlineSyncActions db){
+    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
         this.db = db;
+        this.historyService = historyService;
     }
 
     @Override
@@ -51,19 +56,19 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
                 CalendarEntity calendar = CalendarEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .idProfile(AppUtils.parseString(doc.get("idProfile")))
-                        .time(AppUtils.parseString(doc.get("time")))
+                        .time(AppUtils.parseLong(doc.get("time")))
                         .address(AppUtils.parseString(doc.get("address")))
                         .form(AppUtils.parseString(doc.get("form")))
                         .interviewer(parseList(doc.get("interviewer")))
                         .interviewee(AppUtils.parseString(doc.get("interviewee")))
                         .content(AppUtils.parseString(doc.get("content")))
-                        .question(parseList(doc.get("question")))
-                        .comment(parseList(doc.get("comment")))
+                        .question(AppUtils.parseString(doc.get("question")))
+                        .comments(AppUtils.parseString(doc.get("comments")))
                         .evaluation(AppUtils.parseString(doc.get("evaluation")))
                         .status(AppUtils.parseString(doc.get("status")))
                         .reason(AppUtils.parseString(doc.get("reason")))
-                        .timeStart(AppUtils.parseString(doc.get("timeStart")))
-                        .timeFinish(AppUtils.parseString(doc.get("timeFinish")))
+                        .timeStart(AppUtils.parseLong(doc.get("timeStart")))
+                        .timeFinish(AppUtils.parseLong(doc.get("timeFinish")))
                         .build();
                 calendars.add(calendar);
             }
@@ -74,45 +79,50 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         return resp;
     }
 
-    @SuppressWarnings (value="unchecked")
-    public List<String> parseList(Object list){
-        return (List<String>) list;
-    }
-
     @Override
-    public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request)  {
-
+    public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request) {
         BaseResponse response = new BaseResponse();
 
         String idProfile = request.getIdProfile();
+        Bson cond = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        Document profile = new Document();
-        profile.append("id", UUID.randomUUID().toString());
-        profile.append("idProfile", idProfile);
-        profile.append("time", request.getTime());
-        profile.append("address", request.getAddress());
-        profile.append("form", request.getForm());
-        profile.append("interviewer", request.getInterviewer());
-        profile.append("interviewee", request.getInterviewee());
-        profile.append("content", request.getContent());
-        profile.append("question", request.getQuestion());
-        profile.append("comment", request.getComment());
-        profile.append("evaluation", request.getEvaluation());
-        profile.append("status", request.getStatus());
-        profile.append("reason", request.getReason());
-        profile.append("timeStart", request.getTimeStart());
-        profile.append("timeFinish", request.getTimeFinish());
-        profile.append("check", "0");
-        profile.append("nLoop", 0);
-        profile.append("create_at", System.currentTimeMillis());
-        profile.append("update_at", System.currentTimeMillis());
-        profile.append("create_by", request.getInfo().getUsername());
-        profile.append("update_by", request.getInfo().getUsername());
+        if(idProfileDocument == null){
+            response.setFailed("Id profile không tồn tại");
+            return response;
+        }
+
+        Document calendar = new Document();
+        calendar.append("id", UUID.randomUUID().toString());
+        calendar.append("idProfile", idProfile);
+        calendar.append("time", request.getTime());
+        calendar.append("address", request.getAddress());
+        calendar.append("form", request.getForm());
+        calendar.append("interviewer", request.getInterviewer());
+        calendar.append("interviewee", request.getInterviewee());
+        calendar.append("content", request.getContent());
+        calendar.append("question", request.getQuestion());
+        calendar.append("comments", request.getComments());
+        calendar.append("evaluation", request.getEvaluation());
+        calendar.append("status", request.getStatus());
+        calendar.append("reason", request.getReason());
+        calendar.append("timeStart", request.getTimeStart());
+        calendar.append("timeFinish", request.getTimeFinish());
+        calendar.append("check", "0");
+        calendar.append("nLoop", 0);
+        calendar.append("create_at", System.currentTimeMillis());
+        calendar.append("update_at", System.currentTimeMillis());
+        calendar.append("create_by", request.getInfo().getUsername());
+        calendar.append("update_by", request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, profile);
-
+        db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
         response.setSuccess();
+
+        //Insert history to DB
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Tạo lịch phỏng vấn", request.getInfo().getFullName());
+        historyService.createHistory(createHistoryRequest);
+
         return response;
 
     }
@@ -130,9 +140,18 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
             return response;
         }
 
+        String idProfile = request.getIdProfile();
+        Bson con = Filters.eq("id", idProfile);
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
+
+        if(idProfileDocument == null){
+            response.setFailed("Id profile không tồn tại");
+            return response;
+        }
+
         // update roles
         Bson updates = Updates.combine(
-                Updates.set("ipProfile", request.getIdProfile()),
+                Updates.set("ipProfile", idProfile),
                 Updates.set("time", request.getTime()),
                 Updates.set("address", request.getAddress()),
                 Updates.set("form", request.getForm()),
@@ -140,7 +159,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
                 Updates.set("interviewee", request.getInterviewee()),
                 Updates.set("content", request.getContent()),
                 Updates.set("question", request.getQuestion()),
-                Updates.set("comment", request.getComment()),
+                Updates.set("comments", request.getComments()),
                 Updates.set("evaluation", request.getEvaluation()),
                 Updates.set("status", request.getStatus()),
                 Updates.set("reason", request.getReason()),
@@ -150,8 +169,12 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
                 Updates.set("update_by", request.getInfo().getUsername())
         );
         db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, updates, true);
-
         response.setSuccess();
+
+        //Insert history to DB
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(idProfile, System.currentTimeMillis(), "Sửa lịch phỏng vấn", request.getInfo().getFullName());
+        historyService.createHistory(createHistoryRequest);
+
         return response;
 
     }
@@ -170,10 +193,14 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
 
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
+        //Insert history to DB
+        CreateHistoryRequest createHistoryRequest = new CreateHistoryRequest(request.getIdProfile(), System.currentTimeMillis(), "Xóa lịch phỏng vấn", request.getInfo().getFullName());
+        historyService.createHistory(createHistoryRequest);
+
         return new BaseResponse(0, "OK");
     }
 
-    public void alarmInterview() throws Exception {
+    public void alarmInterview() {
         Bson c = Filters.regex("check", Pattern.compile("0"));
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, c, null, 0, 0);
         List<TimeEntity> calendars = new ArrayList<>();
@@ -181,7 +208,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
             for (Document doc : lst) {
                 TimeEntity calendar = TimeEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
-                        .time(AppUtils.parseString(doc.get("time")))
+                        .time(AppUtils.parseLong(doc.get("time")))
                         .check(AppUtils.parseString(doc.get("check")))
                         .nLoop(AppUtils.parseInt(doc.get("nLoop")))
                         .build();
@@ -189,20 +216,19 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
             }
         }
         for (TimeEntity calendar : calendars) {
-            long differenceTime = parseMillisecond(calendar.getTime()) - System.currentTimeMillis();
+            long differenceTime = calendar.getTime() - System.currentTimeMillis();
             int n = calendar.getNLoop();
-            if(differenceTime <= timeCheck && differenceTime > 0 ){
+            if (differenceTime <= timeCheck && differenceTime > 0) {
                 Bson con = Filters.eq("id", calendar.getId());
-                if(n != nLoop){
+                if (n != nLoop) {
                     n++;
                     // update roles
                     Bson updates = Updates.combine(
                             Updates.set("nLoop", n)
                     );
                     db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, con, updates, true);
-                    sendEmail(calendar.getTime());
-                }
-                else {
+//                    sendEmail(calendar.getTime());
+                } else {
                     Bson updates = Updates.combine(
                             Updates.set("check", "1")
                     );
@@ -213,13 +239,13 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
         }
 
     }
-
-    @Value("${gmail.account}")
-    private String fromEmail;
-    @Value("${gmail.password}")
-    private String password;
-
-    public void sendEmail(String time) {
+//
+//    @Value("${gmail.account}")
+//    private String fromEmail;
+//    @Value("${gmail.password}")
+//    private String password;
+//
+//    public void sendEmail(Long time) {
 //        // dia chi email nguoi nhan
 //        final String toEmail = "quanbn69@gmail.com";
 //        final String subject = "ALARM INTERVIEW";
@@ -245,7 +271,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService{
 //        multipart.addBodyPart(messageBodyPart1);
 //        message.setContent(multipart);
 //        Transport.send(message);
-    }
+//    }
 
 
 }

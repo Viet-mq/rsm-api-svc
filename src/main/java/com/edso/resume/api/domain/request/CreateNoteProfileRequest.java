@@ -14,7 +14,7 @@ public class CreateNoteProfileRequest extends BaseAuthRequest {
     private String idProfile;
     private String note;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }

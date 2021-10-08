@@ -4,18 +4,17 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ToString(callSuper = true)
 public class UpdateDetailProfileRequest extends BaseAuthRequest {
+
     private String id;
     private String fullName;
     private String gender;
     private String phoneNumber;
     private String email;
-    private String dateOfBirth;
+    private Long dateOfBirth;
     private String hometown;
     private String school;
     private String job;
@@ -23,16 +22,19 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private String cv;
     private String sourceCV;
     private String hrRef;
-    private String dateOfApply;
+    private Long dateOfApply;
     private String cvType;
-    private String lastApply;
+    private Long lastApply;
     private String tags;
     private String note;
     private String evaluation;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(gender)) {
             return new BaseResponse(-1, "Vui lòng nhập giới tính");
+        }
+        if (!gender.equals("Nam") && !gender.equals("Nữ")) {
+            return new BaseResponse(-1, "Vui lòng nhập Nam hoặc Nữ");
         }
         if (Strings.isNullOrEmpty(tags)) {
             return new BaseResponse(-1, "Vui lòng nhập tags");
@@ -40,7 +42,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(note)) {
             return new BaseResponse(-1, "Vui lòng nhập note");
         }
-        if (Strings.isNullOrEmpty(lastApply)) {
+        if (lastApply <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian ứng tuyển gần nhất");
         }
         if (Strings.isNullOrEmpty(evaluation)) {
@@ -49,7 +51,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(-1, "Vui lòng nhập họ và tên");
         }
-        if (Strings.isNullOrEmpty(dateOfBirth)) {
+        if (dateOfBirth <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày tháng năm sinh");
         }
         if (Strings.isNullOrEmpty(hometown)) {
@@ -63,6 +65,9 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         }
         if (Strings.isNullOrEmpty(email)) {
             return new BaseResponse(-1, "Vui lòng nhập email");
+        }
+        if (!validateEmail(email)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(job)) {
             return new BaseResponse(-1, "Vui lòng nhập tên công việc");
@@ -79,7 +84,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(hrRef)) {
             return new BaseResponse(-1, "Vui lòng nhập HR ref");
         }
-        if (Strings.isNullOrEmpty(dateOfApply)) {
+        if (dateOfApply <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày apply");
         }
         if (Strings.isNullOrEmpty(cvType)) {

@@ -11,27 +11,27 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateCalendarProfileRequest extends BaseAuthRequest{
+public class CreateCalendarProfileRequest extends BaseAuthRequest {
     private String idProfile;
-    private String time;
+    private Long time;
     private String address;
     private String form;
     private List<String> interviewer;
     private String interviewee;
     private String content;
-    private List<String> question;
-    private List<String> comment;
+    private String question;
+    private String comments;
     private String evaluation;
     private String status;
     private String reason;
-    private String timeStart;
-    private String timeFinish;
+    private Long timeStart;
+    private Long timeFinish;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(time)) {
+        if (Strings.isNullOrEmpty(time.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian");
         }
         if (Strings.isNullOrEmpty(address)) {
@@ -40,7 +40,7 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(form)) {
             return new BaseResponse(-1, "Vui lòng nhập hình thức");
         }
-        if (interviewer.size()==0) {
+        if (interviewer.size() == 0) {
             return new BaseResponse(-1, "Vui lòng nhập người phỏng vấn");
         }
         if (Strings.isNullOrEmpty(interviewee)) {
@@ -49,10 +49,10 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(content)) {
             return new BaseResponse(-1, "Vui lòng nhập nội dung");
         }
-        if (question.size()==0) {
+        if (Strings.isNullOrEmpty(question)) {
             return new BaseResponse(-1, "Vui lòng nhập câu hỏi");
         }
-        if (comment.size()==0) {
+        if (Strings.isNullOrEmpty(comments)) {
             return new BaseResponse(-1, "Vui lòng nhập nhận xét");
         }
         if (Strings.isNullOrEmpty(evaluation)) {
@@ -64,10 +64,10 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(reason)) {
             return new BaseResponse(-1, "Vui lòng nhập lý do");
         }
-        if (Strings.isNullOrEmpty(timeStart)) {
+        if (Strings.isNullOrEmpty(timeStart.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian bắt đầu");
         }
-        if (Strings.isNullOrEmpty(timeFinish)) {
+        if (Strings.isNullOrEmpty(timeFinish.toString())) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian kết thúc");
         }
         return null;

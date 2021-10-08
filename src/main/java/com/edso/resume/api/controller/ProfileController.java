@@ -1,6 +1,5 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.entities.HistoryEntity;
 import com.edso.resume.api.domain.entities.ProfileDetailEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
@@ -41,11 +40,11 @@ public class ProfileController extends BaseController {
     public BaseResponse findOneProfile(
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "idProfile") String idProfile) {
-            HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-            logger.info("=>findOneProfile u: {}, idProfile: {}", headerInfo, idProfile);
-            GetReponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
-            logger.info("<=findOneProfile u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
-            return resp;
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>findOneProfile u: {}, idProfile: {}", headerInfo, idProfile);
+        GetReponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
+        logger.info("<=findOneProfile u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
+        return resp;
     }
 
     @PostMapping("/create")
@@ -88,7 +87,7 @@ public class ProfileController extends BaseController {
     public BaseResponse updateDetailProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateDetailProfileRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateProfile u: {}, req: {}", headerInfo, request);
+        logger.info("=>updateDetailProfile u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
@@ -98,7 +97,7 @@ public class ProfileController extends BaseController {
                 response = profileService.updateDetailProfile(request);
             }
         }
-        logger.info("<=updateProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=updateDetailProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 

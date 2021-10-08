@@ -2,7 +2,9 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.SchoolEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateSchoolRequest;
+import com.edso.resume.api.domain.request.DeleteSchoolRequest;
+import com.edso.resume.api.domain.request.UpdateSchoolRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -68,7 +70,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         long count = db.countAll(CollectionNameDefs.COLL_SCHOOL, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 
@@ -108,7 +110,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));
             if (!objId.equals(id)) {
-                response.setFailed("Name already existed !");
+                response.setFailed("Tên này đã tồn tại");
                 return response;
             }
         }

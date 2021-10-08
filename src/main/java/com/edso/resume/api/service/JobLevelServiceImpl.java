@@ -2,7 +2,9 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.JobLevelEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateJobLevelRequest;
+import com.edso.resume.api.domain.request.DeleteJobLevelRequest;
+import com.edso.resume.api.domain.request.UpdateJobLevelRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -67,7 +69,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         long count = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 
@@ -107,7 +109,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));
             if (!objId.equals(id)) {
-                response.setFailed("Name already existed !");
+                response.setFailed("Tên này đã tồn tại");
                 return response;
             }
         }

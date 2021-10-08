@@ -9,7 +9,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class DeleteStatusCVRequest extends BaseAuthRequest{
+public class DeleteStatusCVRequest extends BaseAuthRequest {
     private String id;
 
     public BaseResponse validate() {

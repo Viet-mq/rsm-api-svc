@@ -10,7 +10,7 @@ public class ProfileEntity {
     private String fullName;
     private String phoneNumber;
     private String email;
-    private String dateOfBirth;
+    private Long dateOfBirth;
     private String hometown;
     private String school;
     private String job;
@@ -18,7 +18,7 @@ public class ProfileEntity {
     private String cv;
     private String sourceCV;
     private String hrRef;
-    private String dateOfApply;
+    private Long dateOfApply;
     private String cvType;
     private String statusCV;
 }

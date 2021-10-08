@@ -9,12 +9,12 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class UpdateNoteProfileRequest extends BaseAuthRequest{
+public class UpdateNoteProfileRequest extends BaseAuthRequest {
     private String id;
     private String idProfile;
     private String note;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id)) {
             return new BaseResponse(-1, "Vui lòng nhập id");
         }

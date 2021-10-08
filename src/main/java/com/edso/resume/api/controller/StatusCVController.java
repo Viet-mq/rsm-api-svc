@@ -1,7 +1,9 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.entities.StatusCVEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateStatusCVRequest;
+import com.edso.resume.api.domain.request.DeleteStatusCVRequest;
+import com.edso.resume.api.domain.request.UpdateStatusCVRequest;
 import com.edso.resume.api.service.StatusCVService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;

@@ -10,10 +10,11 @@ import lombok.ToString;
 @Data
 @ToString(callSuper = true)
 public class UpdateStatusProfileRequest extends BaseAuthRequest {
+
     private String id;
     private String statusCV;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id)) {
             return new BaseResponse(-1, "Vui lòng nhập id");
         }

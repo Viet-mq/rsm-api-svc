@@ -2,7 +2,9 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.SourceCVEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateSourceCVRequest;
+import com.edso.resume.api.domain.request.DeleteSourceCVRequest;
+import com.edso.resume.api.domain.request.UpdateSourceCVRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -68,7 +70,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
         long count = db.countAll(CollectionNameDefs.COLL_SOURCE_CV, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 
@@ -108,7 +110,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));
             if (!objId.equals(id)) {
-                response.setFailed("Name already existed !");
+                response.setFailed("Tên này đã tồn tại");
                 return response;
             }
         }

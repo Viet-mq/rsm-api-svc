@@ -13,7 +13,7 @@ public class CreateStatusCVRequest extends BaseAuthRequest {
 
     private String name;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(-1, "Vui lòng nhập trạng thái CV");
         }

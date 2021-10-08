@@ -12,7 +12,7 @@ import lombok.ToString;
 public class CreateProfileRequest extends BaseAuthRequest {
 
     private String fullName;
-    private String dateOfBirth;
+    private Long dateOfBirth;
     private String hometown;
     private String school;
     private String phoneNumber;
@@ -22,14 +22,14 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private String cv;
     private String sourceCV;
     private String hrRef;
-    private String dateOfApply;
+    private Long dateOfApply;
     private String cvType;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(-1, "Vui lòng nhập họ và tên");
         }
-        if (Strings.isNullOrEmpty(dateOfBirth)) {
+        if (dateOfBirth <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày tháng năm sinh");
         }
         if (Strings.isNullOrEmpty(hometown)) {
@@ -43,6 +43,9 @@ public class CreateProfileRequest extends BaseAuthRequest {
         }
         if (Strings.isNullOrEmpty(email)) {
             return new BaseResponse(-1, "Vui lòng nhập email");
+        }
+        if (!validateEmail(email)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(job)) {
             return new BaseResponse(-1, "Vui lòng nhập tên công việc");
@@ -59,7 +62,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(hrRef)) {
             return new BaseResponse(-1, "Vui lòng nhập HR ref");
         }
-        if (Strings.isNullOrEmpty(dateOfApply)) {
+        if (dateOfApply <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày apply");
         }
         if (Strings.isNullOrEmpty(cvType)) {

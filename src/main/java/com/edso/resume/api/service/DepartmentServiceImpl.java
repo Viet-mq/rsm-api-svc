@@ -2,7 +2,9 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.DepartmentEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateDepartmentRequest;
+import com.edso.resume.api.domain.request.DeleteDepartmentRequest;
+import com.edso.resume.api.domain.request.UpdateDepartmentRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -67,7 +69,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         long count = db.countAll(CollectionNameDefs.COLL_DEPARTMENT, c);
 
         if (count > 0) {
-            response.setFailed("Name already existed !");
+            response.setFailed("Tên này đã tồn tại");
             return response;
         }
 
@@ -107,7 +109,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));
             if (!objId.equals(id)) {
-                response.setFailed("Name already existed !");
+                response.setFailed("Tên này đã tồn tại");
                 return response;
             }
         }
@@ -137,6 +139,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
             response.setFailed("Id này không tồn tại");
             return response;
         }
+
         db.delete(CollectionNameDefs.COLL_DEPARTMENT, cond);
         return new BaseResponse(0, "OK");
     }

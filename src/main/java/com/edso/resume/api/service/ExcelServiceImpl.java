@@ -25,12 +25,6 @@ import java.util.regex.Pattern;
 
 @Service
 public class ExcelServiceImpl extends BaseService implements ExcelService {
-    public final MongoDbOnlineSyncActions db;
-
-    public ExcelServiceImpl(MongoDbOnlineSyncActions db){
-        this.db = db;
-    }
-
     private static final int COLUMN_INDEX_FULLNAME = 0;
     private static final int COLUMN_INDEX_GENDER = 1;
     private static final int COLUMN_INDEX_PHONENUMBER = 2;
@@ -52,47 +46,10 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
     private static final int COLUMN_INDEX_NOTE = 18;
     private static final int COLUMN_INDEX_EVALUATION = 19;
     private static final int COLUMN_INDEX_STATUSCV = 20;
+    public final MongoDbOnlineSyncActions db;
 
-    @Override
-    public byte[] exportExcel(HeaderInfo info, String name) throws IOException {
-        final String excelFilePath = "D:\\Profiles.xlsx";
-        List<Bson> c = new ArrayList<>();
-        if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
-        }
-        Bson cond = buildCondition(c);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
-        List<ProfileExcelEntity> profiles = new ArrayList<>();
-        if (lst != null) {
-            for (Document doc : lst) {
-                ProfileExcelEntity profile = ProfileExcelEntity.builder()
-                        .id(AppUtils.parseString(doc.get("id")))
-                        .fullName(AppUtils.parseString(doc.get("fullName")))
-                        .dateOfBirth(AppUtils.parseString(doc.get("dateOfBirth")))
-                        .hometown(AppUtils.parseString(doc.get("hometown")))
-                        .school(AppUtils.parseString(doc.get("school")))
-                        .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
-                        .email(AppUtils.parseString(doc.get("email")))
-                        .job(AppUtils.parseString(doc.get("job")))
-                        .levelJob(AppUtils.parseString(doc.get("levelJob")))
-                        .cv(AppUtils.parseString(doc.get("cv")))
-                        .sourceCV(AppUtils.parseString(doc.get("sourceCV")))
-                        .hrRef(AppUtils.parseString(doc.get("hrRef")))
-                        .dateOfApply(AppUtils.parseString(doc.get("dateOfApply")))
-                        .cvType(AppUtils.parseString(doc.get("cvType")))
-                        .statusCV(AppUtils.parseString(doc.get("statusCV")))
-                        .lastApply(AppUtils.parseString(doc.get("lastApply")))
-                        .tags(AppUtils.parseString(doc.get("tags")))
-                        .gender(AppUtils.parseString(doc.get("gender")))
-                        .note(AppUtils.parseString(doc.get("note")))
-                        .dateOfCreate(parseDate(AppUtils.parseLong(doc.get("create_at"))))
-                        .dateOfUpdate(parseDate(AppUtils.parseLong(doc.get("update_at"))))
-                        .evaluation(AppUtils.parseString(doc.get("evaluation")))
-                        .build();
-                profiles.add(profile);
-            }
-        }
-        return writeExcel(profiles, excelFilePath);
+    public ExcelServiceImpl(MongoDbOnlineSyncActions db) {
+        this.db = db;
     }
 
     public static byte[] writeExcel(List<ProfileExcelEntity> profiles, String excelFilePath) throws IOException {
@@ -133,7 +90,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
 
     // Create workbook
     private static Workbook getWorkbook(String excelFilePath) {
-        Workbook workbook ;
+        Workbook workbook;
         if (excelFilePath.endsWith("xlsx")) {
             workbook = new XSSFWorkbook();
         } else if (excelFilePath.endsWith("xls")) {
@@ -324,5 +281,47 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         try (OutputStream os = new FileOutputStream(excelFilePath)) {
             workbook.write(os);
         }
+    }
+
+    @Override
+    public byte[] exportExcel(HeaderInfo info, String name) throws IOException {
+        final String excelFilePath = "D:\\Profiles.xlsx";
+        List<Bson> c = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(name)) {
+            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
+        }
+        Bson cond = buildCondition(c);
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
+        List<ProfileExcelEntity> profiles = new ArrayList<>();
+        if (lst != null) {
+            for (Document doc : lst) {
+                ProfileExcelEntity profile = ProfileExcelEntity.builder()
+                        .id(AppUtils.parseString(doc.get("id")))
+                        .fullName(AppUtils.parseString(doc.get("fullName")))
+                        .dateOfBirth(AppUtils.parseLong(doc.get("dateOfBirth")))
+                        .hometown(AppUtils.parseString(doc.get("hometown")))
+                        .school(AppUtils.parseString(doc.get("school")))
+                        .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
+                        .email(AppUtils.parseString(doc.get("email")))
+                        .job(AppUtils.parseString(doc.get("job")))
+                        .levelJob(AppUtils.parseString(doc.get("levelJob")))
+                        .cv(AppUtils.parseString(doc.get("cv")))
+                        .sourceCV(AppUtils.parseString(doc.get("sourceCV")))
+                        .hrRef(AppUtils.parseString(doc.get("hrRef")))
+                        .dateOfApply(AppUtils.parseLong(doc.get("dateOfApply")))
+                        .cvType(AppUtils.parseString(doc.get("cvType")))
+                        .statusCV(AppUtils.parseString(doc.get("statusCV")))
+                        .lastApply(AppUtils.parseLong(doc.get("lastApply")))
+                        .tags(AppUtils.parseString(doc.get("tags")))
+                        .gender(AppUtils.parseString(doc.get("gender")))
+                        .note(AppUtils.parseString(doc.get("note")))
+                        .dateOfCreate(AppUtils.parseLong(doc.get("create_at")))
+                        .dateOfUpdate(AppUtils.parseLong(doc.get("update_at")))
+                        .evaluation(AppUtils.parseString(doc.get("evaluation")))
+                        .build();
+                profiles.add(profile);
+            }
+        }
+        return writeExcel(profiles, excelFilePath);
     }
 }

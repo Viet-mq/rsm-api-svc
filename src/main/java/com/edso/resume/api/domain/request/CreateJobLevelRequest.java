@@ -9,10 +9,10 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateJobLevelRequest extends BaseAuthRequest{
+public class CreateJobLevelRequest extends BaseAuthRequest {
     private String name;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(-1, "Vui lòng nhập tên vị trí tuyển dụng");
         }
