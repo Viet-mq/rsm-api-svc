@@ -20,8 +20,17 @@ public class CreateBlacklistRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(email)){
             return new BaseResponse(-1, "Vui lòng nhập blacklist email");
         }
+        if (!validateEmail(email)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng email");
+        }
         if (Strings.isNullOrEmpty(name)){
             return new BaseResponse(-1, "Vui lòng nhập tên blacklist");
+        }
+        if(!Strings.isNullOrEmpty(phoneNumber) && !validatePhoneNumber(phoneNumber)){
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng số điện thoại");
+        }
+        if(!Strings.isNullOrEmpty(SSN) && !validateSSN(SSN)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng SSN");
         }
 
         return null;
