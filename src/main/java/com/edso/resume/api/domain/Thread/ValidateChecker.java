@@ -45,6 +45,7 @@ public class ValidateChecker implements IChecker {
                 e.printStackTrace();
             }
         }
+
         return countFalse >= 1;
     }
 
