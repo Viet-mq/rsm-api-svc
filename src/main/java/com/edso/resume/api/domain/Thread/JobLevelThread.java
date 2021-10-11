@@ -9,7 +9,7 @@ import org.bson.Document;
 public class JobLevelThread implements Runnable {
     private final MongoDbOnlineSyncActions db;
     private final IChecker checker;
-    private String id;
+    private final String id;
 
     public JobLevelThread(MongoDbOnlineSyncActions db, IChecker checker, String id) {
         this.db = db;
@@ -19,20 +19,8 @@ public class JobLevelThread implements Runnable {
 
     @Override
     public void run() {
-        boolean result = false;
-
-        try {
-            Document jobLevel = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.ID, id));
-            if (jobLevel != null) {
-                result = true;
-            } else {
-                result = false;
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }finally {
-            checker.onResult(result);
-        }
+        Document jobLevel = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.ID, id));
+        checker.onResult(jobLevel != null);
 
     }
 }

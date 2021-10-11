@@ -308,37 +308,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
-//        final CountDownLatch latch = new CountDownLatch(4);
-//        JobThread job = new JobThread(db, request.getJob(), latch);
-//        JobLevelThread jobLevel = new JobLevelThread(db, request.getLevelJob(), latch);
-//        SchoolThread school = new SchoolThread(db, request.getSchool(), latch);
-//        SourceCVThread sourceCV = new SourceCVThread(db, request.getSourceCV(), latch);
-//
-//        List<ICountValidate> arr = new ArrayList<>();
-//        arr.add(job);
-//        arr.add(jobLevel);
-//        arr.add(school);
-//        arr.add(sourceCV);
-//
-//        new Thread(job).start();
-//        new Thread(jobLevel).start();
-//        new Thread(school).start();
-//        new Thread(sourceCV).start();
-//
-//        // wait
-//        try {
-//            latch.await();
-//        } catch (Throwable ex) {
-//            ex.printStackTrace();
-//        }
-//
-//        // kiem tra ket qua
-//        for (ICountValidate processor : arr) {
-//            if (processor.count() != null) {
-//                response.setFailed(processor.count());
-//                return response;
-//            }
-//        }
         // update roles
         Bson updates = Updates.combine(
                 Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),

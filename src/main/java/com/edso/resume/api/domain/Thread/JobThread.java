@@ -20,20 +20,8 @@ public class JobThread implements Runnable {
 
     @Override
     public void run() {
-        boolean result = false;
-
-        try{
-            Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, id));
-            if (job != null) {
-                result = true;
-            } else {
-                result = false;
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }finally {
-            checker.onResult(result);
-        }
+        Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, id));
+        checker.onResult(job != null);
 
     }
 }

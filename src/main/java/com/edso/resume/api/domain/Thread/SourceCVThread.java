@@ -19,19 +19,8 @@ public class SourceCVThread implements Runnable {
 
     @Override
     public void run() {
-        boolean result = false;
-        try {
-            Document sourceCV = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.ID, id));
-            if (sourceCV != null) {
-                result = true;
-            } else {
-                result = false;
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }finally {
-            checker.onResult(result);
-        }
+        Document sourceCV = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.ID, id));
+        checker.onResult(sourceCV != null);
 
     }
 }

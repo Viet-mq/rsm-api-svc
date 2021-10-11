@@ -19,20 +19,8 @@ public class SchoolThread implements Runnable {
 
     @Override
     public void run() {
-        boolean result = false;
-
-        try{
-            Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.ID, id));
-            if (school != null) {
-                result = true;
-            } else {
-                result = false;
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }finally {
-            checker.onResult(result);
-        }
+        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.ID, id));
+        checker.onResult(school != null);
 
     }
 }
