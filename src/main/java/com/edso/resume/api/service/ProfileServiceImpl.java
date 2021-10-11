@@ -1,5 +1,6 @@
 package com.edso.resume.api.service;
 
+import com.edso.resume.api.domain.Thread.*;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.ProfileDetailEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
@@ -13,7 +14,6 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.response.GetReponse;
 import com.google.common.base.Strings;
-import com.mongodb.DB;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -32,12 +32,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
+    private final ValidateChecker validateChecker;
     private final BaseResponse response = new BaseResponse();
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
         super(db, rabbitTemplate);
         this.db = db;
         this.historyService = historyService;
+        validateChecker = new ValidateChecker(db);
     }
 
     @Override
@@ -149,7 +151,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         //Validate
         Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, request.getJob()));
-        if (job ==  null) {
+        if (job == null) {
             response.setFailed("Công việc không tồn tại");
             return response;
         }
@@ -181,14 +183,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
         profile.append(DbKeyConfig.HOMETOWN, request.getHometown());
         profile.append(DbKeyConfig.SCHOOL_ID, request.getSchool());
-        profile.append(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.SCHOOL_NAME));
+        profile.append(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.NAME));
         profile.append(DbKeyConfig.JOB_ID, request.getJob());
-        profile.append(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.JOB_NAME));
+        profile.append(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.NAME));
         profile.append(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob());
-        profile.append(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.LEVEL_JOB_NAME));
+        profile.append(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.NAME));
         profile.append(DbKeyConfig.CV, request.getCv());
         profile.append(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV());
-        profile.append(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.SOURCE_CV_NAME));
+        profile.append(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.NAME));
         profile.append(DbKeyConfig.HR_REF, request.getHrRef());
         profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
         profile.append(DbKeyConfig.CV_TYPE, request.getCvType());
@@ -227,7 +229,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         }
 
         Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, request.getJob()));
-        if (job ==  null) {
+        if (job == null) {
             response.setFailed("Công việc không tồn tại");
             return response;
         }
@@ -256,16 +258,16 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
                 Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
                 Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                Updates.set(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.SCHOOL_NAME)),
+                Updates.set(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
                 Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
                 Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                Updates.set(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.JOB_NAME)),
+                Updates.set(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.LEVEL_JOB_NAME)),
+                Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.CV, request.getCv()),
                 Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.SOURCE_CV_NAME)),
+                Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                 Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
                 Updates.set(DbKeyConfig.CV_TYPE, request.getCvType()),
@@ -300,43 +302,56 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
             return response;
         }
 
-        Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, request.getJob()));
-        if (job ==  null) {
-            response.setFailed("Công việc không tồn tại");
+        boolean check = validateChecker.validate(request.getLevelJob(), request.getJob(), request.getSchool(), request.getSourceCV());
+        if(check){
+            response.setFailed("Vui lòng chọn tất cả các mục");
             return response;
         }
 
-        Document levelJob = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.ID, request.getLevelJob()));
-        if (levelJob == null) {
-            response.setFailed("Vị trí tuyển dụng không tồn tại");
-            return response;
-        }
-
-        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.ID, request.getSchool()));
-        if (school == null) {
-            response.setFailed("Trường học không tồn tại");
-            return response;
-        }
-
-        Document sourceCV = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.ID, request.getSourceCV()));
-        if (sourceCV == null) {
-            response.setFailed("Nguồn cv không tồn tại");
-            return response;
-        }
-
+//        final CountDownLatch latch = new CountDownLatch(4);
+//        JobThread job = new JobThread(db, request.getJob(), latch);
+//        JobLevelThread jobLevel = new JobLevelThread(db, request.getLevelJob(), latch);
+//        SchoolThread school = new SchoolThread(db, request.getSchool(), latch);
+//        SourceCVThread sourceCV = new SourceCVThread(db, request.getSourceCV(), latch);
+//
+//        List<ICountValidate> arr = new ArrayList<>();
+//        arr.add(job);
+//        arr.add(jobLevel);
+//        arr.add(school);
+//        arr.add(sourceCV);
+//
+//        new Thread(job).start();
+//        new Thread(jobLevel).start();
+//        new Thread(school).start();
+//        new Thread(sourceCV).start();
+//
+//        // wait
+//        try {
+//            latch.await();
+//        } catch (Throwable ex) {
+//            ex.printStackTrace();
+//        }
+//
+//        // kiem tra ket qua
+//        for (ICountValidate processor : arr) {
+//            if (processor.count() != null) {
+//                response.setFailed(processor.count());
+//                return response;
+//            }
+//        }
         // update roles
         Bson updates = Updates.combine(
                 Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
                 Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
                 Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
                 Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                Updates.set(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.SCHOOL_NAME)),
+//                    Updates.set(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
                 Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
                 Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                Updates.set(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.JOB_NAME)),
+//                    Updates.set(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.LEVEL_JOB_NAME)),
+//                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.CV, request.getCv()),
                 Updates.set(DbKeyConfig.TAGS, request.getTags()),
                 Updates.set(DbKeyConfig.NOTE, request.getNote()),
@@ -344,7 +359,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
                 Updates.set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
                 Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
                 Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.SOURCE_CV_NAME)),
+//                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                 Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
                 Updates.set(DbKeyConfig.CV_TYPE, request.getCvType()),
@@ -364,7 +379,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         historyService.createHistory(id, "Sửa chi tiết profile", request.getInfo().getFullName());
 
         return response;
-
     }
 
     @Override
@@ -411,7 +425,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         // update roles
         Bson updates = Updates.combine(
                 Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatusCV()),
-                Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCV.get(DbKeyConfig.STATUS_CV_NAME)),
+                Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCV.get(DbKeyConfig.NAME)),
                 Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
                 Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
         );
@@ -426,6 +440,5 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
 
         return response;
     }
-
 
 }
