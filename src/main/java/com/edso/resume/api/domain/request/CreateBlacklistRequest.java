@@ -12,7 +12,7 @@ import lombok.ToString;
 public class CreateBlacklistRequest extends BaseAuthRequest {
     private String email;
     private String phoneNumber;
-    private String SSN;
+    private String ssn;
     private String name;
     private String reason;
 
@@ -29,7 +29,7 @@ public class CreateBlacklistRequest extends BaseAuthRequest {
         if(!Strings.isNullOrEmpty(phoneNumber) && !validatePhoneNumber(phoneNumber)){
             return new BaseResponse(-1, "Vui lòng nhập đúng định dạng số điện thoại");
         }
-        if(!Strings.isNullOrEmpty(SSN) && !validateSSN(SSN)) {
+        if(!Strings.isNullOrEmpty(ssn) && !validateSSN(ssn)) {
             return new BaseResponse(-1, "Vui lòng nhập đúng định dạng SSN");
         }
 

@@ -50,7 +50,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
                         .id(AppUtils.parseString(doc.get("id")))
                         .email(AppUtils.parseString(doc.get("email")))
                         .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
-                        .SSN(AppUtils.parseString(doc.get("SSN")))
+                        .ssn(AppUtils.parseString(doc.get("ssn")))
                         .name(AppUtils.parseString(doc.get("name")))
                         .reason(AppUtils.parseString(doc.get("reason")))
                         .build();
@@ -85,7 +85,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         blacklist.append("name", name);
         blacklist.append("email", request.getEmail());
         blacklist.append("phoneNumber", request.getPhoneNumber());
-        blacklist.append("SSN", request.getSSN());
+        blacklist.append("ssn", request.getSsn());
         blacklist.append("reason", request.getReason());
         blacklist.append("name_search", name.toLowerCase());
         blacklist.append("create_at", System.currentTimeMillis());
@@ -122,11 +122,14 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         }
 
         //update roles
+        String reason = AppUtils.parseString(idDocument.get("reason"));
+        logger.info(reason);
+        if(request.getReason() != null) reason = request.getReason();
         Bson updates = Updates.combine(
                 Updates.set("email", request.getEmail()),
                 Updates.set("phoneNumber", request.getPhoneNumber()),
-                Updates.set("SSN", request.getSSN()),
-                Updates.set("reason", request.getReason()),
+                Updates.set("ssn", request.getSsn()),
+                Updates.set("reason", reason),
                 Updates.set("name", request.getName()),
                 Updates.set("name_search", request.getName().toLowerCase()),
                 Updates.set("update_at", System.currentTimeMillis()),
