@@ -1,13 +1,13 @@
 package com.edso.resume.api.service;
 
-import com.edso.resume.api.domain.Thread.*;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.ProfileDetailEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.request.*;
-import com.edso.resume.lib.common.AppUtils;
-import com.edso.resume.lib.common.CollectionNameDefs;
-import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
+import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
+import com.edso.resume.api.domain.validator.IDictionaryValidator;
+import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -24,22 +24,22 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
 @Service
-public class ProfileServiceImpl extends BaseService implements ProfileService {
+public class ProfileServiceImpl extends BaseService implements ProfileService, IDictionaryValidator {
 
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
-    private final ValidateChecker validateChecker;
-    private final BaseResponse response = new BaseResponse();
+    private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
         super(db, rabbitTemplate);
         this.db = db;
         this.historyService = historyService;
-        validateChecker = new ValidateChecker(db);
     }
 
     @Override
@@ -98,7 +98,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         GetReponse<ProfileDetailEntity> response = new GetReponse<>();
 
         //Validate
-        if (!validateDictionary(idProfile, CollectionNameDefs.COLL_PROFILE)) {
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
+
+        if (idProfileDocument != null) {
             response.setFailed("Id profile này không tồn tại");
             return response;
         }
@@ -138,7 +140,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         response.setSuccess(profile);
 
         //Insert history to DB
-        historyService.createHistory(idProfile, "Xem chi tiết profile", info.getFullName());
+        historyService.createHistory(idProfile, TypeConfig.SELECT, "Xem chi tiết profile", info.getUsername());
 
         return response;
     }
@@ -146,217 +148,398 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     @Override
     public BaseResponse createProfile(CreateProfileRequest request) {
 
+        BaseResponse response = new BaseResponse();
+
         String idProfile = UUID.randomUUID().toString();
+        String key = UUID.randomUUID().toString();
+        try {
 
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SCHOOL, request.getSchool(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
+            int total = rs.size();
 
-        //Validate
-        Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, request.getJob()));
-        if (job == null) {
-            response.setFailed("Công việc không tồn tại");
+            for (DictionaryValidateProcessor p : rs) {
+                Thread t = new Thread(p);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult result = queue.poll();
+                if (result != null) {
+                    if (result.getKey().equals(key)) {
+                        if (!result.isResult()) {
+                            response.setFailed(result.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(result);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            String schoolName = null;
+            String jobName = null;
+            String levelJobName = null;
+            String sourceCVName = null;
+
+            for (DictionaryValidateProcessor r : rs) {
+                switch (r.getResult().getType()) {
+                    case ThreadConfig.JOB: {
+                        jobName = r.getResult().getName();
+                    }
+                    case ThreadConfig.JOB_LEVEL: {
+                        levelJobName = r.getResult().getName();
+                    }
+                    case ThreadConfig.SCHOOL: {
+                        schoolName = r.getResult().getName();
+                    }
+                    case ThreadConfig.SOURCE_CV: {
+                        sourceCVName = r.getResult().getName();
+                    }
+                }
+            }
+
+            // conventions
+            Document profile = new Document();
+            profile.append(DbKeyConfig.ID, idProfile);
+            profile.append(DbKeyConfig.FULL_NAME, request.getFullName());
+            profile.append(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber());
+            profile.append(DbKeyConfig.EMAIL, request.getEmail());
+            profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
+            profile.append(DbKeyConfig.HOMETOWN, request.getHometown());
+            profile.append(DbKeyConfig.SCHOOL_ID, request.getSchool());
+            profile.append(DbKeyConfig.SCHOOL_NAME, schoolName);
+            profile.append(DbKeyConfig.JOB_ID, request.getJob());
+            profile.append(DbKeyConfig.JOB_NAME, jobName);
+            profile.append(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob());
+            profile.append(DbKeyConfig.LEVEL_JOB_NAME, levelJobName);
+            profile.append(DbKeyConfig.CV, request.getCv());
+            profile.append(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV());
+            profile.append(DbKeyConfig.SOURCE_CV_NAME, sourceCVName);
+            profile.append(DbKeyConfig.HR_REF, request.getHrRef());
+            profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
+            profile.append(DbKeyConfig.CV_TYPE, request.getCvType());
+            profile.append(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase());
+            profile.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+            profile.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+            profile.append(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis());
+            profile.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            profile.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+            profile.append(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername());
+
+            // insert to database
+            db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
+
+            // insert to rabbitmq
+            insertToRabbitMQ("create profile", profile);
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo().getUsername());
+
+            response.setSuccess();
             return response;
-        }
+        } catch (Throwable ex) {
 
-        Document levelJob = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.ID, request.getLevelJob()));
-        if (levelJob == null) {
-            response.setFailed("Vị trí tuyển dụng không tồn tại");
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
         }
-
-        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.ID, request.getSchool()));
-        if (school == null) {
-            response.setFailed("Trường học không tồn tại");
-            return response;
-        }
-
-        Document sourceCV = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.ID, request.getSourceCV()));
-        if (sourceCV == null) {
-            response.setFailed("Nguồn cv không tồn tại");
-            return response;
-        }
-
-        // conventions
-        Document profile = new Document();
-        profile.append(DbKeyConfig.ID, idProfile);
-        profile.append(DbKeyConfig.FULL_NAME, request.getFullName());
-        profile.append(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber());
-        profile.append(DbKeyConfig.EMAIL, request.getEmail());
-        profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
-        profile.append(DbKeyConfig.HOMETOWN, request.getHometown());
-        profile.append(DbKeyConfig.SCHOOL_ID, request.getSchool());
-        profile.append(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.NAME));
-        profile.append(DbKeyConfig.JOB_ID, request.getJob());
-        profile.append(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.NAME));
-        profile.append(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob());
-        profile.append(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.NAME));
-        profile.append(DbKeyConfig.CV, request.getCv());
-        profile.append(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV());
-        profile.append(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.NAME));
-        profile.append(DbKeyConfig.HR_REF, request.getHrRef());
-        profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
-        profile.append(DbKeyConfig.CV_TYPE, request.getCvType());
-        profile.append(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase());
-        profile.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-        profile.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
-        profile.append(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis());
-        profile.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-        profile.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
-        profile.append(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername());
-
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
-
-        // insert to rabbitmq
-        insertToRabbitMQ("create profile", profile);
-
-        //Insert history to DB
-        historyService.createHistory(idProfile, "Tạo profile", request.getInfo().getFullName());
-
-        response.setSuccess();
-        return response;
 
     }
 
     @Override
     public BaseResponse updateProfile(UpdateProfileRequest request) {
 
-        //Validate
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
 
-        if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
-            response.setFailed("Id này không tồn tại");
+        try {
+
+            //Validate
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, id, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SCHOOL, request.getSchool(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed(validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            String schoolName = null;
+            String jobName = null;
+            String levelJobName = null;
+            String sourceCVName = null;
+
+            for (DictionaryValidateProcessor r : rs) {
+                switch (r.getResult().getType()) {
+                    case ThreadConfig.JOB: {
+                        jobName = r.getResult().getName();
+                    }
+                    case ThreadConfig.JOB_LEVEL: {
+                        levelJobName = r.getResult().getName();
+                    }
+                    case ThreadConfig.SCHOOL: {
+                        schoolName = r.getResult().getName();
+                    }
+                    case ThreadConfig.SOURCE_CV: {
+                        sourceCVName = r.getResult().getName();
+                    }
+                }
+            }
+
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                    Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
+                    Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                    Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
+                    Updates.set(DbKeyConfig.SCHOOL_NAME, schoolName),
+                    Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
+                    Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
+                    Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
+                    Updates.set(DbKeyConfig.JOB_NAME, jobName),
+                    Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
+                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJobName),
+                    Updates.set(DbKeyConfig.CV, request.getCv()),
+                    Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
+                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCVName),
+                    Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
+                    Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
+                    Updates.set(DbKeyConfig.CV_TYPE, request.getCvType()),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
+                    Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
+                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+            response.setSuccess();
+
+            // insert to rabbitmq
+            insertToRabbitMQ("update profile", request);
+
+            //Insert history to DB
+            historyService.createHistory(id, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
+
             return response;
-        }
 
-        Document job = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.ID, request.getJob()));
-        if (job == null) {
-            response.setFailed("Công việc không tồn tại");
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
         }
-
-        Document levelJob = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.ID, request.getLevelJob()));
-        if (levelJob == null) {
-            response.setFailed("Vị trí tuyển dụng không tồn tại");
-            return response;
-        }
-
-        Document school = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.ID, request.getSchool()));
-        if (school == null) {
-            response.setFailed("Trường học không tồn tại");
-            return response;
-        }
-
-        Document sourceCV = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.ID, request.getSourceCV()));
-        if (sourceCV == null) {
-            response.setFailed("Nguồn cv không tồn tại");
-            return response;
-        }
-
-        // update roles
-        Bson updates = Updates.combine(
-                Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
-                Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
-                Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                Updates.set(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
-                Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                Updates.set(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.CV, request.getCv()),
-                Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
-                Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                Updates.set(DbKeyConfig.CV_TYPE, request.getCvType()),
-                Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
-                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
-                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
-        );
-        db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
-        response.setSuccess();
-
-        // insert to rabbitmq
-        insertToRabbitMQ("update profile", request);
-
-        //Insert history to DB
-        historyService.createHistory(id, "Sửa profile", request.getInfo().getFullName());
-
-        return response;
-
     }
 
     @Override
     public BaseResponse updateDetailProfile(UpdateDetailProfileRequest request) {
 
-        //Validate
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
 
-        if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
-            response.setFailed("Id này không tồn tại");
+        try {
+
+            //Validate
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, id, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SCHOOL, request.getSchool(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed(validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            String schoolName = null;
+            String jobName = null;
+            String levelJobName = null;
+            String sourceCVName = null;
+
+            for (DictionaryValidateProcessor r : rs) {
+                switch (r.getResult().getType()) {
+                    case ThreadConfig.JOB: {
+                        jobName = r.getResult().getName();
+                    }
+                    case ThreadConfig.JOB_LEVEL: {
+                        levelJobName = r.getResult().getName();
+                    }
+                    case ThreadConfig.SCHOOL: {
+                        schoolName = r.getResult().getName();
+                    }
+                    case ThreadConfig.SOURCE_CV: {
+                        sourceCVName = r.getResult().getName();
+                    }
+                }
+            }
+
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                    Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
+                    Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                    Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
+                    Updates.set(DbKeyConfig.SCHOOL_NAME, schoolName),
+                    Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
+                    Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
+                    Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
+                    Updates.set(DbKeyConfig.JOB_NAME, jobName),
+                    Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
+                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJobName),
+                    Updates.set(DbKeyConfig.CV, request.getCv()),
+                    Updates.set(DbKeyConfig.TAGS, request.getTags()),
+                    Updates.set(DbKeyConfig.NOTE, request.getNote()),
+                    Updates.set(DbKeyConfig.GENDER, request.getGender()),
+                    Updates.set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
+                    Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
+                    Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
+                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCVName),
+                    Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
+                    Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
+                    Updates.set(DbKeyConfig.CV_TYPE, request.getCvType()),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
+                    Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
+                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+            response.setSuccess();
+
+            // insert to rabbitmq
+            insertToRabbitMQ("update detail profile", request);
+
+            //Insert history to DB
+            historyService.createHistory(id, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
+
             return response;
+
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
         }
 
-        boolean check = validateChecker.validate(request.getLevelJob(), request.getJob(), request.getSchool(), request.getSourceCV());
-        if(check){
-            response.setFailed("Vui lòng chọn tất cả các mục");
-            return response;
-        }
+    }
 
-        // update roles
-        Bson updates = Updates.combine(
-                Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
-                Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
-                Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-//                    Updates.set(DbKeyConfig.SCHOOL_NAME, school.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
-                Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-//                    Updates.set(DbKeyConfig.JOB_NAME, job.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-//                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJob.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.CV, request.getCv()),
-                Updates.set(DbKeyConfig.TAGS, request.getTags()),
-                Updates.set(DbKeyConfig.NOTE, request.getNote()),
-                Updates.set(DbKeyConfig.GENDER, request.getGender()),
-                Updates.set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
-                Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
-                Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-//                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCV.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
-                Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                Updates.set(DbKeyConfig.CV_TYPE, request.getCvType()),
-                Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
-                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
-                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
-        );
-        db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
-        response.setSuccess();
-
-        // insert to rabbitmq
-        insertToRabbitMQ("update detail profile", request);
-
-        //Insert history to DB
-        historyService.createHistory(id, "Sửa chi tiết profile", request.getInfo().getFullName());
-
-        return response;
+    @Override
+    public void onValidatorResult(String key, DictionaryValidatorResult result) {
+        result.setKey(key);
+        queue.offer(result);
     }
 
     @Override
     public BaseResponse deleteProfile(DeleteProfileRequest request) {
+
+        BaseResponse response = new BaseResponse();
+
         //Validate
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
+        if (idDocument == null) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
@@ -367,7 +550,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
         insertToRabbitMQ("delete profile", request);
 
         //Insert history to DB
-        historyService.createHistory(id, "Xóa profile", request.getInfo().getFullName());
+        historyService.createHistory(id, TypeConfig.DELETE, "Xóa profile", request.getInfo().getUsername());
         response.setSuccess();
 
         return response;
@@ -376,38 +559,91 @@ public class ProfileServiceImpl extends BaseService implements ProfileService {
     @Override
     public BaseResponse updateStatusProfile(UpdateStatusProfileRequest request) {
 
-        //Validate
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
 
-        if (!validateDictionary(id, CollectionNameDefs.COLL_PROFILE)) {
-            response.setFailed("Id này không tồn tại");
+        try {
+
+            //Validate
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, id, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatusCV(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed(validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            String statusCVName = null;
+
+            for (DictionaryValidateProcessor r : rs) {
+                if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
+                    statusCVName = r.getResult().getName();
+                }
+            }
+
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatusCV()),
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCVName),
+                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+            response.setSuccess();
+
+            // insert to rabbitmq
+            insertToRabbitMQ("update status profile", request);
+
+            //Insert history to DB
+            historyService.createHistory(id, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());
+
             return response;
-        }
 
-        Document statusCV = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, request.getStatusCV()));
-        if (statusCV == null) {
-            response.setFailed("Trạng thái cv không tồn tại");
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
         }
-
-        // update roles
-        Bson updates = Updates.combine(
-                Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatusCV()),
-                Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCV.get(DbKeyConfig.NAME)),
-                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
-        );
-        db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
-        response.setSuccess();
-
-        // insert to rabbitmq
-        insertToRabbitMQ("update status profile", request);
-
-        //Insert history to DB
-        historyService.createHistory(id, "Cập nhật trạng thái profile", request.getInfo().getFullName());
-
-        return response;
     }
+
 
 }

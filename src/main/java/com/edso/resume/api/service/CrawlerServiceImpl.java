@@ -7,7 +7,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CrawlerServiceImpl extends BaseService implements CrawlerService{
+public class CrawlerServiceImpl extends BaseService implements CrawlerService {
 
     public CrawlerServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
         super(db, rabbitTemplate);

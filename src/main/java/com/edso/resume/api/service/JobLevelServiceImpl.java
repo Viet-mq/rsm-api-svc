@@ -21,7 +21,6 @@ import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
-import java.awt.image.DataBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -116,6 +115,19 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
                 response.setFailed("Tên này đã tồn tại");
                 return response;
             }
+        }
+
+        Bson idJobLevel = Filters.eq(DbKeyConfig.LEVEL_JOB_ID, request.getId());
+
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idJobLevel, null,0,0);
+        for (Document doc: list) {
+            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+
+            Bson updateProfile = Updates.combine(
+                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, request.getName())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
         }
 
         // update roles

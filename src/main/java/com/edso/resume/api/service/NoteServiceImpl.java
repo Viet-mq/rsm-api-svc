@@ -8,6 +8,7 @@ import com.edso.resume.api.domain.request.UpdateNoteProfileRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.common.TypeConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -104,7 +105,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         response.setSuccess();
 
         //Insert history to DB
-        historyService.createHistory(idProfile, "Tạo chú ý", request.getInfo().getFullName());
+        historyService.createHistory(idProfile, TypeConfig.CREATE,"Tạo chú ý", request.getInfo().getUsername());
 
         return response;
     }
@@ -141,7 +142,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         response.setSuccess();
 
         //Insert history to DB
-        historyService.createHistory(idProfile, "Sửa chú ý", request.getInfo().getFullName());
+        historyService.createHistory(idProfile, TypeConfig.UPDATE,"Sửa chú ý", request.getInfo().getUsername());
 
         return response;
     }
@@ -161,7 +162,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        historyService.createHistory(request.getIdProfile(), "Xóa chú ý", request.getInfo().getFullName());
+        historyService.createHistory(request.getIdProfile(), TypeConfig.DELETE,"Xóa chú ý", request.getInfo().getUsername());
 
         return new BaseResponse(0, "OK");
     }

@@ -21,7 +21,6 @@ import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.xml.bind.DataBindingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -117,6 +116,19 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
                 response.setFailed("Tên này đã tồn tại");
                 return response;
             }
+        }
+
+        Bson idSchool = Filters.eq(DbKeyConfig.SCHOOL_ID, request.getId());
+
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idSchool, null,0,0);
+        for (Document doc: list) {
+            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+
+            Bson updateProfile = Updates.combine(
+                    Updates.set(DbKeyConfig.SCHOOL_NAME, request.getName())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
         }
 
         // update roles

@@ -9,6 +9,7 @@ import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.common.TypeConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayCalendarReponse;
@@ -31,7 +32,6 @@ import java.util.regex.Pattern;
 public class CalendarServiceImpl extends BaseService implements CalendarService {
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
-    private final BaseResponse response;
 
     @Value("${calendar.timeCheck}")
     private long timeCheck;
@@ -43,17 +43,16 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         super(db, rabbitTemplate);
         this.db = db;
         this.historyService = historyService;
-        this.response = new BaseResponse();
     }
 
     @Override
     public GetArrayCalendarReponse<CalendarEntity> findAllCalendar(HeaderInfo info, String idProfile) {
         GetArrayCalendarReponse<CalendarEntity> resp = new GetArrayCalendarReponse<>();
-        if (!validateDictionary(idProfile, CollectionNameDefs.COLL_PROFILE)) {
+        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
+        if (idProfileDocument == null) {
             resp.setFailed("Id profile không tồn tại");
             return resp;
         }
-
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
@@ -90,6 +89,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
 
     @Override
     public BaseResponse createCalendarProfile(CreateCalendarProfileRequest request) {
+
+        BaseResponse response = new BaseResponse();
 
         String idProfile = request.getIdProfile();
         Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
@@ -128,7 +129,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         response.setSuccess();
 
         //Insert history to DB
-        historyService.createHistory(idProfile, "Tạo lịch phỏng vấn", request.getInfo().getFullName());
+        historyService.createHistory(idProfile, TypeConfig.CREATE,"Tạo lịch phỏng vấn", request.getInfo().getUsername());
 
         return response;
 
@@ -137,6 +138,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
     @Override
     public BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest request) {
 
+        BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
@@ -178,7 +180,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         response.setSuccess();
 
         //Insert history to DB
-        historyService.createHistory(idProfile, "Sửa lịch phỏng vấn", request.getInfo().getFullName());
+        historyService.createHistory(idProfile, TypeConfig.UPDATE,"Sửa lịch phỏng vấn", request.getInfo().getUsername());
 
         return response;
 
@@ -186,6 +188,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
 
     @Override
     public BaseResponse deleteCalendarProfile(DeleteCalendarProfileRequest request) {
+        BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
@@ -198,7 +201,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
         //Insert history to DB
-        historyService.createHistory(request.getIdProfile(), "Xóa lịch phỏng vấn", request.getInfo().getFullName());
+        historyService.createHistory(request.getIdProfile(), TypeConfig.DELETE,"Xóa lịch phỏng vấn", request.getInfo().getUsername());
         response.setSuccess();
 
         return response;

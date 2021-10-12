@@ -40,7 +40,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
 
-        if(idProfileDocument == null){
+        if (idProfileDocument == null) {
             resp.setFailed("Id profile không tồn tại");
             return resp;
         }
@@ -61,7 +61,9 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
                         .idProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)))
                         .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
                         .action(AppUtils.parseString(doc.get(DbKeyConfig.ACTION)))
-                        .by(AppUtils.parseString(doc.get(DbKeyConfig.BY)))
+                        .type(AppUtils.parseString(doc.get(DbKeyConfig.TYPE)))
+                        .username(AppUtils.parseString(doc.get(DbKeyConfig.USERNAME)))
+                        .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
                         .build();
                 rows.add(history);
             }
@@ -74,16 +76,19 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     }
 
     @Override
-    public BaseResponse createHistory(String idProfile, String action, String by) {
+    public BaseResponse createHistory(String idProfile,String type, String action, String username) {
 
         BaseResponse response = new BaseResponse();
+        Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
 
         Document history = new Document();
         history.append(DbKeyConfig.ID, UUID.randomUUID().toString());
         history.append(DbKeyConfig.ID_PROFILE, idProfile);
+        history.append(DbKeyConfig.TYPE, type);
         history.append(DbKeyConfig.TIME, System.currentTimeMillis());
         history.append(DbKeyConfig.ACTION, action);
-        history.append(DbKeyConfig.BY, by);
+        history.append(DbKeyConfig.USERNAME, username);
+        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);

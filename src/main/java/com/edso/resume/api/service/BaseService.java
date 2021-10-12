@@ -42,12 +42,6 @@ public abstract class BaseService {
         return (List<String>) list;
     }
 
-    public boolean validateDictionary(String id, String coll) {
-        Bson con = Filters.eq("id", id);
-        Document idDocument = db.findOne(coll, con);
-        return idDocument != null;
-    }
-
     public void insertToRabbitMQ(String type, Object obj){
         EventEntity event = new EventEntity(type, obj);
         rabbitTemplate.convertAndSend(exchange, routingkey, event);

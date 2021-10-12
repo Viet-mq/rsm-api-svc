@@ -31,7 +31,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
 
     private final MongoDbOnlineSyncActions db;
 
-    public  BlacklistServiceImpl (MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate){
+    public BlacklistServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
         super(db, rabbitTemplate);
         this.db = db;
     }
@@ -39,7 +39,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
     @Override
     public GetArrayResponse<BlacklistEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
-        if(!Strings.isNullOrEmpty(name)) {
+        if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
@@ -47,9 +47,9 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_BLACKLIST, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<BlacklistEntity> rows = new ArrayList<>();
-        if(lst != null){
-            for (Document doc : lst){
-                BlacklistEntity blacklist =  BlacklistEntity.builder()
+        if (lst != null) {
+            for (Document doc : lst) {
+                BlacklistEntity blacklist = BlacklistEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .email(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)))
                         .phoneNumber(AppUtils.parseString(doc.get(DbKeyConfig.PHONE_NUMBER)))

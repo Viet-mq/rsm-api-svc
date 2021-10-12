@@ -8,7 +8,9 @@ import lombok.Data;
 public class HistoryEntity {
     private String id;
     private String idProfile;
+    private String type;
     private Long time;
     private String action;
-    private String by;
+    private String username;
+    private String fullName;
 }

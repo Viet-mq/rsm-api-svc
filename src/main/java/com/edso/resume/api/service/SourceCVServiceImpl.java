@@ -13,7 +13,6 @@ import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.google.common.base.Strings;
-import com.mongodb.DB;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -22,7 +21,6 @@ import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
-import java.awt.image.DataBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -118,6 +116,19 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
                 response.setFailed("Tên này đã tồn tại");
                 return response;
             }
+        }
+
+        Bson idSourceCV = Filters.eq(DbKeyConfig.SOURCE_CV_ID, request.getId());
+
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idSourceCV, null,0,0);
+        for (Document doc: list) {
+            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+
+            Bson updateProfile = Updates.combine(
+                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, request.getName())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
         }
 
         // update roles
