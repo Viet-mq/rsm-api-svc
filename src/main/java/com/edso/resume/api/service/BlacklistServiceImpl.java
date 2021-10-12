@@ -80,6 +80,9 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
             return response;
         }
 
+        response = check(request.getEmail(), request.getPhoneNumber(), request.getSsn());
+        if(response != null) return response;
+
         Document blacklist = new Document();
         blacklist.append("id", UUID.randomUUID().toString());
         blacklist.append("name", name);
@@ -95,8 +98,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
 
         db.insertOne(CollectionNameDefs.COLL_BLACKLIST, blacklist);
 
-        response.setSuccess();
-        return response;
+        return new BaseResponse(0, "OK");
     }
 
     @Override
@@ -158,5 +160,43 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         }
         db.delete(CollectionNameDefs.COLL_BLACKLIST, cond);
         return new BaseResponse(0, "OK");
+    }
+
+    @Override
+    public BaseResponse check(String email, String phoneNumber, String ssn) {
+        BaseResponse response = new BaseResponse();
+        Bson emailCond = Filters.eq("email", email);
+        Bson phoneCond = Filters.eq("phoneNumber", phoneNumber);
+        Bson ssnCond = Filters.eq("ssn", ssn);
+        Document emailDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, emailCond);
+        Document phoneDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, phoneCond);
+        Document ssDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, ssnCond);
+
+        if(emailDocument != null) {
+            response.setFailed("email đã tồn tại");
+            return response;
+        }
+        if(phoneDocument != null) {
+            response.setFailed("Số điện thoại đã tồn tại");
+            return response;
+        }
+        if(ssDocument != null) {
+            response.setFailed("Số CMND đã tồn tại");
+            return response;
+        }
+
+        return new BaseResponse(0, "OK");
+    }
+
+    @Override
+    public Boolean checkBlacklist(String email, String phoneNumber, String ssn) {
+        Bson emailCond = Filters.eq("email", email);
+        Bson phoneCond = Filters.eq("phoneNumber", phoneNumber);
+        Bson ssnCond = Filters.eq("ssn", ssn);
+        Document emailDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, emailCond);
+        Document phoneDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, phoneCond);
+        Document ssDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, ssnCond);
+
+        return emailDocument == null && phoneDocument == null && ssDocument == null;
     }
 }

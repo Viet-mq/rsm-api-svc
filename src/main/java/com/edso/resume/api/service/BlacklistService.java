@@ -16,4 +16,9 @@ public interface BlacklistService {
     BaseResponse updateBlacklist(UpdateBlacklistRequest request);
 
     BaseResponse deleteBlacklist(DeleteBlacklistRequest request);
+
+    BaseResponse check(String email, String phoneNumber, String ssn);
+
+    Boolean checkBlacklist(String email, String phoneNumber, String ssn);
+
 }
