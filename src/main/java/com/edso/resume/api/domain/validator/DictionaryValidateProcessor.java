@@ -78,6 +78,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.DEPARTMENT: {
                 return "phòng ban";
             }
+            case ThreadConfig.CALENDAR: {
+                return "id calendar";
+            }
             default: {
                 return null;
             }
@@ -106,6 +109,9 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.DEPARTMENT: {
                 return CollectionNameDefs.COLL_DEPARTMENT;
+            }
+            case ThreadConfig.CALENDAR: {
+                return CollectionNameDefs.COLL_CALENDAR_PROFILE;
             }
             default: {
                 return null;

@@ -3,6 +3,7 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.ProfileDetailEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
+import com.edso.resume.api.domain.entities.ProfileRabbitMQEntity;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
@@ -99,8 +100,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         //Validate
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
-
-        if (idProfileDocument != null) {
+        if (idProfileDocument == null) {
             response.setFailed("Id profile này không tồn tại");
             return response;
         }
@@ -203,15 +203,19 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 switch (r.getResult().getType()) {
                     case ThreadConfig.JOB: {
                         jobName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.JOB_LEVEL: {
                         levelJobName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.SCHOOL: {
                         schoolName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.SOURCE_CV: {
                         sourceCVName = r.getResult().getName();
+                        break;
                     }
                 }
             }
@@ -247,8 +251,28 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
 
+            ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+            profileEntity.setId(idProfile);
+            profileEntity.setFullName(request.getFullName());
+            profileEntity.setPhoneNumber(request.getPhoneNumber());
+            profileEntity.setEmail(request.getEmail());
+            profileEntity.setDateOfBirth(request.getDateOfBirth());
+            profileEntity.setHometown(request.getHometown());
+            profileEntity.setSchoolId(request.getSchool());
+            profileEntity.setSchoolName(schoolName);
+            profileEntity.setJobId(request.getJob());
+            profileEntity.setJobName(jobName);
+            profileEntity.setLevelJobId(request.getLevelJob());
+            profileEntity.setLevelJobName(levelJobName);
+            profileEntity.setCv(request.getCv());
+            profileEntity.setSourceCVId(request.getSourceCV());
+            profileEntity.setSourceCVName(sourceCVName);
+            profileEntity.setHrRef(request.getHrRef());
+            profileEntity.setDateOfApply(request.getDateOfApply());
+            profileEntity.setCvType(request.getCvType());
+
             // insert to rabbitmq
-            insertToRabbitMQ("create profile", profile);
+            insertToRabbitMQ("create", profileEntity);
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo().getUsername());
@@ -331,15 +355,19 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 switch (r.getResult().getType()) {
                     case ThreadConfig.JOB: {
                         jobName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.JOB_LEVEL: {
                         levelJobName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.SCHOOL: {
                         schoolName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.SOURCE_CV: {
                         sourceCVName = r.getResult().getName();
+                        break;
                     }
                 }
             }
@@ -372,8 +400,28 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
 
+            ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+            profileEntity.setId(id);
+            profileEntity.setFullName(request.getFullName());
+            profileEntity.setPhoneNumber(request.getPhoneNumber());
+            profileEntity.setEmail(request.getEmail());
+            profileEntity.setDateOfBirth(request.getDateOfBirth());
+            profileEntity.setHometown(request.getHometown());
+            profileEntity.setSchoolId(request.getSchool());
+            profileEntity.setSchoolName(schoolName);
+            profileEntity.setJobId(request.getJob());
+            profileEntity.setJobName(jobName);
+            profileEntity.setLevelJobId(request.getLevelJob());
+            profileEntity.setLevelJobName(levelJobName);
+            profileEntity.setCv(request.getCv());
+            profileEntity.setSourceCVId(request.getSourceCV());
+            profileEntity.setSourceCVName(sourceCVName);
+            profileEntity.setHrRef(request.getHrRef());
+            profileEntity.setDateOfApply(request.getDateOfApply());
+            profileEntity.setCvType(request.getCvType());
+
             // insert to rabbitmq
-            insertToRabbitMQ("update profile", request);
+            insertToRabbitMQ("update", profileEntity);
 
             //Insert history to DB
             historyService.createHistory(id, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
@@ -400,7 +448,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         String key = UUID.randomUUID().toString();
 
         try {
-
             //Validate
             String id = request.getId();
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
@@ -455,15 +502,19 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 switch (r.getResult().getType()) {
                     case ThreadConfig.JOB: {
                         jobName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.JOB_LEVEL: {
                         levelJobName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.SCHOOL: {
                         schoolName = r.getResult().getName();
+                        break;
                     }
                     case ThreadConfig.SOURCE_CV: {
                         sourceCVName = r.getResult().getName();
+                        break;
                     }
                 }
             }
@@ -500,6 +551,26 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
+
+            ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+            profileEntity.setId(id);
+            profileEntity.setFullName(request.getFullName());
+            profileEntity.setPhoneNumber(request.getPhoneNumber());
+            profileEntity.setEmail(request.getEmail());
+            profileEntity.setDateOfBirth(request.getDateOfBirth());
+            profileEntity.setHometown(request.getHometown());
+            profileEntity.setSchoolId(request.getSchool());
+            profileEntity.setSchoolName(schoolName);
+            profileEntity.setJobId(request.getJob());
+            profileEntity.setJobName(jobName);
+            profileEntity.setLevelJobId(request.getLevelJob());
+            profileEntity.setLevelJobName(levelJobName);
+            profileEntity.setCv(request.getCv());
+            profileEntity.setSourceCVId(request.getSourceCV());
+            profileEntity.setSourceCVName(sourceCVName);
+            profileEntity.setHrRef(request.getHrRef());
+            profileEntity.setDateOfApply(request.getDateOfApply());
+            profileEntity.setCvType(request.getCvType());
 
             // insert to rabbitmq
             insertToRabbitMQ("update detail profile", request);
@@ -547,7 +618,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         db.delete(CollectionNameDefs.COLL_PROFILE, cond);
 
         // insert to rabbitmq
-        insertToRabbitMQ("delete profile", request);
+        insertToRabbitMQ("delete", request);
 
         //Insert history to DB
         historyService.createHistory(id, TypeConfig.DELETE, "Xóa profile", request.getInfo().getUsername());
@@ -624,8 +695,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
 
+            ProfileRabbitMQEntity profileRabbitMQ = new ProfileRabbitMQEntity();
+            profileRabbitMQ.setStatusCVId(request.getStatusCV());
+            profileRabbitMQ.setStatusCVName(statusCVName);
+
             // insert to rabbitmq
-            insertToRabbitMQ("update status profile", request);
+            insertToRabbitMQ("updateStatus", profileRabbitMQ);
 
             //Insert history to DB
             historyService.createHistory(id, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());

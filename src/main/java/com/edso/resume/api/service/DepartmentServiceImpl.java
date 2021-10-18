@@ -117,6 +117,19 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
             }
         }
 
+        Bson idJobLevel = Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId());
+
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idJobLevel, null,0,0);
+        for (Document doc: list) {
+            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+
+            Bson updateProfile = Updates.combine(
+                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, request.getName())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
+        }
+
         // update roles
         Bson updates = Updates.combine(
                 Updates.set(DbKeyConfig.NAME, name),

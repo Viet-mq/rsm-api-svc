@@ -6,10 +6,10 @@ import com.edso.resume.api.domain.entities.TimeEntity;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
-import com.edso.resume.lib.common.AppUtils;
-import com.edso.resume.lib.common.CollectionNameDefs;
-import com.edso.resume.lib.common.DbKeyConfig;
-import com.edso.resume.lib.common.TypeConfig;
+import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
+import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
+import com.edso.resume.api.domain.validator.IDictionaryValidator;
+import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayCalendarReponse;
@@ -25,13 +25,16 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
 @Service
-public class CalendarServiceImpl extends BaseService implements CalendarService {
+public class CalendarServiceImpl extends BaseService implements CalendarService, IDictionaryValidator {
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
+    private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
 
     @Value("${calendar.timeCheck}")
     private long timeCheck;
@@ -74,7 +77,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
                         .question(AppUtils.parseString(doc.get(DbKeyConfig.QUESTION)))
                         .comments(AppUtils.parseString(doc.get(DbKeyConfig.COMMENTS)))
                         .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
-                        .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
+                        .statusId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
+                        .statusName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
                         .reason(AppUtils.parseString(doc.get(DbKeyConfig.REASON)))
                         .timeStart(AppUtils.parseLong(doc.get(DbKeyConfig.TIME_START)))
                         .timeFinish(AppUtils.parseLong(doc.get(DbKeyConfig.TIME_FINISH)))
@@ -93,45 +97,100 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         BaseResponse response = new BaseResponse();
 
         String idProfile = request.getIdProfile();
-        Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+        String key = UUID.randomUUID().toString();
 
-        if (idProfileDocument == null) {
-            response.setFailed("Id profile không tồn tại");
+        try {
+
+            //Validate
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatus(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed(validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            String statusCVName = null;
+
+            for (DictionaryValidateProcessor r : rs) {
+                if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
+                    statusCVName = r.getResult().getName();
+                }
+            }
+
+            Document calendar = new Document();
+            calendar.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            calendar.append(DbKeyConfig.ID_PROFILE, idProfile);
+            calendar.append(DbKeyConfig.TIME, request.getTime());
+            calendar.append(DbKeyConfig.ADDRESS, request.getAddress());
+            calendar.append(DbKeyConfig.FORM, request.getForm());
+            calendar.append(DbKeyConfig.INTERVIEWER, request.getInterviewer());
+            calendar.append(DbKeyConfig.INTERVIEWEE, request.getInterviewee());
+            calendar.append(DbKeyConfig.CONTENT, request.getContent());
+            calendar.append(DbKeyConfig.QUESTION, request.getQuestion());
+            calendar.append(DbKeyConfig.COMMENTS, request.getComments());
+            calendar.append(DbKeyConfig.EVALUATION, request.getEvaluation());
+            calendar.append(DbKeyConfig.STATUS_CV_ID, request.getStatus());
+            calendar.append(DbKeyConfig.STATUS_CV_NAME, statusCVName);
+            calendar.append(DbKeyConfig.REASON, request.getReason());
+            calendar.append(DbKeyConfig.TIME_START, request.getTimeStart());
+            calendar.append(DbKeyConfig.TIME_FINISH, request.getTimeFinish());
+            calendar.append(DbKeyConfig.CHECK, "0");
+            calendar.append(DbKeyConfig.N_LOOP, 0);
+            calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+            calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+            calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            calendar.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+
+            // insert to database
+            db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
+            response.setSuccess();
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo().getUsername());
+
             return response;
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
         }
-
-        Document calendar = new Document();
-        calendar.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-        calendar.append(DbKeyConfig.ID_PROFILE, idProfile);
-        calendar.append(DbKeyConfig.TIME, request.getTime());
-        calendar.append(DbKeyConfig.ADDRESS, request.getAddress());
-        calendar.append(DbKeyConfig.FORM, request.getForm());
-        calendar.append(DbKeyConfig.INTERVIEWER, request.getInterviewer());
-        calendar.append(DbKeyConfig.INTERVIEWEE, request.getInterviewee());
-        calendar.append(DbKeyConfig.CONTENT, request.getContent());
-        calendar.append(DbKeyConfig.QUESTION, request.getQuestion());
-        calendar.append(DbKeyConfig.COMMENTS, request.getComments());
-        calendar.append(DbKeyConfig.EVALUATION, request.getEvaluation());
-        calendar.append(DbKeyConfig.STATUS, request.getStatus());
-        calendar.append(DbKeyConfig.REASON, request.getReason());
-        calendar.append(DbKeyConfig.TIME_START, request.getTimeStart());
-        calendar.append(DbKeyConfig.TIME_FINISH, request.getTimeFinish());
-        calendar.append(DbKeyConfig.CHECK, "0");
-        calendar.append(DbKeyConfig.N_LOOP, 0);
-        calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-        calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
-        calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-        calendar.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
-
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
-        response.setSuccess();
-
-        //Insert history to DB
-        historyService.createHistory(idProfile, TypeConfig.CREATE,"Tạo lịch phỏng vấn", request.getInfo().getUsername());
-
-        return response;
 
     }
 
@@ -141,49 +200,97 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
-
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
-            return response;
-        }
-
         String idProfile = request.getIdProfile();
-        Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
+        String key = UUID.randomUUID().toString();
 
-        if (idProfileDocument == null) {
-            response.setFailed("Id profile không tồn tại");
+        try {
+
+            //Validate
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR, id, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatus(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed(validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            String statusCVName = null;
+
+            for (DictionaryValidateProcessor r : rs) {
+                if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
+                    statusCVName = r.getResult().getName();
+                }
+            }
+
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.ID_PROFILE, idProfile),
+                    Updates.set(DbKeyConfig.TIME, request.getTime()),
+                    Updates.set(DbKeyConfig.ADDRESS, request.getAddress()),
+                    Updates.set(DbKeyConfig.FORM, request.getForm()),
+                    Updates.set(DbKeyConfig.INTERVIEWER, request.getInterviewer()),
+                    Updates.set(DbKeyConfig.INTERVIEWEE, request.getInterviewee()),
+                    Updates.set(DbKeyConfig.CONTENT, request.getContent()),
+                    Updates.set(DbKeyConfig.QUESTION, request.getQuestion()),
+                    Updates.set(DbKeyConfig.COMMENTS, request.getComments()),
+                    Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
+                    Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatus()),
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCVName),
+                    Updates.set(DbKeyConfig.REASON, request.getReason()),
+                    Updates.set(DbKeyConfig.TIME_START, request.getTimeStart()),
+                    Updates.set(DbKeyConfig.TIME_FINISH, request.getTimeFinish()),
+                    Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+            );
+            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, updates, true);
+            response.setSuccess();
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo().getUsername());
+
             return response;
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
         }
-
-        // update roles
-        Bson updates = Updates.combine(
-                Updates.set(DbKeyConfig.ID_PROFILE, idProfile),
-                Updates.set(DbKeyConfig.TIME, request.getTime()),
-                Updates.set(DbKeyConfig.ADDRESS, request.getAddress()),
-                Updates.set(DbKeyConfig.FORM, request.getForm()),
-                Updates.set(DbKeyConfig.INTERVIEWER, request.getInterviewer()),
-                Updates.set(DbKeyConfig.INTERVIEWEE, request.getInterviewee()),
-                Updates.set(DbKeyConfig.CONTENT, request.getContent()),
-                Updates.set(DbKeyConfig.QUESTION, request.getQuestion()),
-                Updates.set(DbKeyConfig.COMMENTS, request.getComments()),
-                Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
-                Updates.set(DbKeyConfig.STATUS, request.getStatus()),
-                Updates.set(DbKeyConfig.REASON, request.getReason()),
-                Updates.set(DbKeyConfig.TIME_START, request.getTimeStart()),
-                Updates.set(DbKeyConfig.TIME_FINISH, request.getTimeFinish()),
-                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
-        );
-        db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, updates, true);
-        response.setSuccess();
-
-        //Insert history to DB
-        historyService.createHistory(idProfile, TypeConfig.UPDATE,"Sửa lịch phỏng vấn", request.getInfo().getUsername());
-
-        return response;
-
     }
 
     @Override
@@ -201,7 +308,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
         //Insert history to DB
-        historyService.createHistory(request.getIdProfile(), TypeConfig.DELETE,"Xóa lịch phỏng vấn", request.getInfo().getUsername());
+        historyService.createHistory(request.getIdProfile(), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo().getUsername());
         response.setSuccess();
 
         return response;
@@ -245,6 +352,12 @@ public class CalendarServiceImpl extends BaseService implements CalendarService 
             }
         }
 
+    }
+
+    @Override
+    public void onValidatorResult(String key, DictionaryValidatorResult result) {
+        result.setKey(key);
+        queue.offer(result);
     }
 //
 //    @Value("${gmail.account}")

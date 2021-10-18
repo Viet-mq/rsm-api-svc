@@ -19,7 +19,8 @@ public class CalendarEntity {
     private String question;
     private String comments;
     private String evaluation;
-    private String status;
+    private String statusId;
+    private String statusName;
     private String reason;
     private Long timeStart;
     private Long timeFinish;
