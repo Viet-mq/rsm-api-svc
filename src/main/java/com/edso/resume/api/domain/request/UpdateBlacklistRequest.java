@@ -33,9 +33,16 @@ public class UpdateBlacklistRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(-1, "Vui lòng nhập tên");
         }
+        if (!validatePhoneNumber(phoneNumber)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng số điện thoại");
+        }
+        if (!validateSSN(ssn)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng SSN");
+        }
         if (!validateEmail(email)) {
             return new BaseResponse(-1, "Vui lòng nhập đúng định dạng email");
         }
+
         return null;
     }
 }

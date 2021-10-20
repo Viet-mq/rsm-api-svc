@@ -26,10 +26,10 @@ public class CreateBlacklistRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(-1, "Vui lòng nhập tên blacklist");
         }
-        if (!Strings.isNullOrEmpty(phoneNumber)) {
+        if (!Strings.isNullOrEmpty(phoneNumber) && !validatePhoneNumber(phoneNumber)) {
             return new BaseResponse(-1, "Vui lòng nhập đúng định dạng số điện thoại");
         }
-        if (!Strings.isNullOrEmpty(ssn)) {
+        if (!Strings.isNullOrEmpty(ssn) && !validateSSN(ssn)) {
             return new BaseResponse(-1, "Vui lòng nhập đúng định dạng SSN");
         }
 
