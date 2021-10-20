@@ -11,13 +11,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateTalentPoolRequest extends BaseAuthRequest{
+public class CreateTalentPoolRequest extends BaseAuthRequest {
 
     private String name;
     private List<String> managers;
     private String description;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(-1, "Vui lòng nhập tên Talent Pool");
         }

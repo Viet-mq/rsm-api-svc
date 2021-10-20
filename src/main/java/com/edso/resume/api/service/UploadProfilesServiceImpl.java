@@ -15,7 +15,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,7 +43,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     @Value("${excel.serverPath}")
     private String serverPath;
 
-    public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db ) {
+    public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
     }
 
@@ -78,7 +77,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         List<ProfilesEntity> listProfile = new ArrayList<>();
 
         File file = convertToFile(excelFile);
-        if(file == null){
+        if (file == null) {
             return null;
         }
 

@@ -23,7 +23,7 @@ public class BlacklistController extends BaseController {
 
     private final BlacklistExcelService blacklistExcelService;
 
-    public BlacklistController (BlacklistService blacklistService, BlacklistExcelService blacklistExcelService) {
+    public BlacklistController(BlacklistService blacklistService, BlacklistExcelService blacklistExcelService) {
         this.blacklistService = blacklistService;
         this.blacklistExcelService = blacklistExcelService;
     }
@@ -99,12 +99,12 @@ public class BlacklistController extends BaseController {
 
     @GetMapping("/export")
     public byte[] exportExcel(@RequestHeader Map<String, String> headers,
-                              @RequestParam (value = "name", required = false) String name) throws IOException {
+                              @RequestParam(value = "name", required = false) String name) throws IOException {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>Export blacklist u: {}, name: {}", headerInfo, name);
         byte[] response = blacklistExcelService.export(headerInfo, name);
         logger.info("<=Export blacklist u: {}, name: {}, response: {}", headerInfo, name, response);
 
         return response;
-     }
+    }
 }

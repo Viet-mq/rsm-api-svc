@@ -43,8 +43,8 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest {
         if (interviewer.size() == 0) {
             return new BaseResponse(-1, "Vui lòng nhập người phỏng vấn");
         }
-        for (String s: interviewer) {
-            if(Strings.isNullOrEmpty(s)){
+        for (String s : interviewer) {
+            if (Strings.isNullOrEmpty(s)) {
                 return new BaseResponse(-1, "Vui lòng nhập người phỏng vấn");
             }
         }
