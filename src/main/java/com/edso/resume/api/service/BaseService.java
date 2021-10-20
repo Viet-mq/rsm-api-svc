@@ -13,9 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 
 public abstract class BaseService {
+
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final MongoDbOnlineSyncActions db;
-    private final RabbitTemplate rabbitTemplate;
+    protected final MongoDbOnlineSyncActions db;
+    protected final RabbitTemplate rabbitTemplate;
 
     @Value("${spring.rabbitmq.exchange}")
     private String exchange;
@@ -42,7 +43,7 @@ public abstract class BaseService {
         return (List<String>) list;
     }
 
-    public void insertToRabbitMQ(String type, Object obj){
+    public void insertToRabbitMQ(String type, Object obj) {
         EventEntity event = new EventEntity(type, obj);
         rabbitTemplate.convertAndSend(exchange, routingkey, event);
     }

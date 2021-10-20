@@ -17,6 +17,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,16 +28,14 @@ import java.util.regex.Pattern;
 @Service
 public class BlacklistServiceImpl extends BaseService implements BlacklistService {
 
-    private final MongoDbOnlineSyncActions db;
-
-    public  BlacklistServiceImpl (MongoDbOnlineSyncActions db){
-        this.db = db;
+    public BlacklistServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
+        super(db, rabbitTemplate);
     }
 
     @Override
     public GetArrayResponse<BlacklistEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
-        if(!Strings.isNullOrEmpty(name)) {
+        if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
@@ -44,9 +43,9 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_BLACKLIST, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<BlacklistEntity> rows = new ArrayList<>();
-        if(lst != null){
-            for (Document doc : lst){
-                BlacklistEntity blacklist =  BlacklistEntity.builder()
+        if (lst != null) {
+            for (Document doc : lst) {
+                BlacklistEntity blacklist = BlacklistEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .email(AppUtils.parseString(doc.get("email")))
                         .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
@@ -81,7 +80,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         }
 
         response = check(request.getEmail(), request.getPhoneNumber(), request.getSsn());
-        if(response != null) return response;
+        if (response != null) return response;
 
         Document blacklist = new Document();
         blacklist.append("id", UUID.randomUUID().toString());
@@ -126,7 +125,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         //update roles
         String reason = AppUtils.parseString(idDocument.get("reason"));
         logger.info(reason);
-        if(request.getReason() != null) reason = request.getReason();
+        if (request.getReason() != null) reason = request.getReason();
         Bson updates = Updates.combine(
                 Updates.set("email", request.getEmail()),
                 Updates.set("phoneNumber", request.getPhoneNumber()),
@@ -172,15 +171,15 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         Document phoneDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, phoneCond);
         Document ssDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, ssnCond);
 
-        if(emailDocument != null) {
+        if (emailDocument != null) {
             response.setFailed("email đã tồn tại");
             return response;
         }
-        if(phoneDocument != null) {
+        if (phoneDocument != null) {
             response.setFailed("Số điện thoại đã tồn tại");
             return response;
         }
-        if(ssDocument != null) {
+        if (ssDocument != null) {
             response.setFailed("Số CMND đã tồn tại");
             return response;
         }
