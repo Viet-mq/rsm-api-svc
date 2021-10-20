@@ -19,7 +19,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,12 +29,10 @@ import java.util.regex.Pattern;
 @Service
 public class NoteServiceImpl extends BaseService implements NoteService {
 
-    private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
 
-    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+        super(db);
         this.historyService = historyService;
     }
 
@@ -47,7 +44,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
 
-        if(idProfileDocument == null){
+        if (idProfileDocument == null) {
             resp.setFailed("Id profile không tồn tại");
             return resp;
         }
@@ -88,7 +85,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         String idProfile = request.getIdProfile();
         Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-        if(idProfileDocument == null){
+        if (idProfileDocument == null) {
             response.setFailed("Id profile không tồn tại");
             return response;
         }
@@ -105,7 +102,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         response.setSuccess();
 
         //Insert history to DB
-        historyService.createHistory(idProfile, TypeConfig.CREATE,"Tạo chú ý", request.getInfo().getUsername());
+        historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo chú ý", request.getInfo().getUsername());
 
         return response;
     }
@@ -126,9 +123,9 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
 
-        if(idProfileDocument == null){
+        if (idProfileDocument == null) {
             response.setFailed("Id profile không tồn tại");
-            return  response;
+            return response;
         }
 
         // update roles
@@ -142,7 +139,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         response.setSuccess();
 
         //Insert history to DB
-        historyService.createHistory(idProfile, TypeConfig.UPDATE,"Sửa chú ý", request.getInfo().getUsername());
+        historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo().getUsername());
 
         return response;
     }
@@ -162,7 +159,7 @@ public class NoteServiceImpl extends BaseService implements NoteService {
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        historyService.createHistory(request.getIdProfile(), TypeConfig.DELETE,"Xóa chú ý", request.getInfo().getUsername());
+        historyService.createHistory(request.getIdProfile(), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
 
         return new BaseResponse(0, "OK");
     }

@@ -30,7 +30,7 @@ public class RabbitMQAccess extends BaseAction {
         factory.setPort(port);
         factory.setUsername(username);
         factory.setPassword(password);
-        Connection connection =factory.newConnection();
+        Connection connection = factory.newConnection();
 
         logger.info("RabbitMQ server: {}:{}", host, port);
         logger.info("RabbitMQ user: {}", username);

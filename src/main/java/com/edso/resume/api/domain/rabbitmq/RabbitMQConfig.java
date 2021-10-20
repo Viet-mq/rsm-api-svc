@@ -1,7 +1,6 @@
 package com.edso.resume.api.domain.rabbitmq;
 
 import com.edso.resume.api.domain.db.BaseAction;
-import com.mongodb.MongoClientURI;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -13,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RabbitMQConfig  extends BaseAction {
+public class RabbitMQConfig extends BaseAction {
 
     @Value("${spring.rabbitmq.profile.queue}")
     private String queue;

@@ -8,17 +8,13 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerService{
+public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerService {
 
-    private final MongoDbOnlineSyncActions db;
-
-    protected UrlConsumerServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    protected UrlConsumerServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override
@@ -27,7 +23,7 @@ public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerSe
         Bson cond = Filters.eq(DbKeyConfig.ID, url.getId());
         Document idProfile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if(idProfile == null) return;
+        if (idProfile == null) return;
 
         Bson update = Updates.combine(
                 Updates.set(DbKeyConfig.URL_CV, url.getUrl()),

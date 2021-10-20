@@ -11,7 +11,7 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DictionaryNameValidateProcessor implements Runnable{
+public class DictionaryNameValidateProcessor implements Runnable {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DictionaryNameValidatorResult result;

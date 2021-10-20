@@ -1,10 +1,6 @@
 package com.edso.resume.api;
 
 import com.rabbitmq.client.*;
-import org.springframework.beans.factory.annotation.Value;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 public class Consumer {
 

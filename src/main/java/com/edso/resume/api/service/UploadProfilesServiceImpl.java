@@ -16,7 +16,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,7 +43,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     public static final int COLUMN_SOURCE_CV = 11;
 
     private final Queue<DictionaryNameValidatorResult> queue = new LinkedBlockingQueue<>();
-    private final MongoDbOnlineSyncActions db;
     private static final String EMAIL_REGEX = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])";
     private static Pattern patternEmail;
     @JsonIgnore
@@ -53,10 +51,9 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     @Value("${excel.serverPath}")
     private String serverPath;
 
-    public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
+    public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
         patternEmail = Pattern.compile(EMAIL_REGEX);
-        this.db = db;
     }
 
     // Get cell value

@@ -1,9 +1,9 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.rabbitmq.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
+import com.edso.resume.api.domain.rabbitmq.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
@@ -20,7 +20,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Service
 public class CalendarServiceImpl extends BaseService implements CalendarService, IDictionaryValidator {
-    private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
     @Autowired
@@ -43,9 +41,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
     @Value("${calendar.nLoop}")
     private int nLoop;
 
-    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+        super(db);
         this.historyService = historyService;
     }
 

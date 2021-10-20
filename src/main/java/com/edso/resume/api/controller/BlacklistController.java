@@ -4,6 +4,7 @@ import com.edso.resume.api.domain.entities.BlacklistEntity;
 import com.edso.resume.api.domain.request.CreateBlacklistRequest;
 import com.edso.resume.api.domain.request.DeleteBlacklistRequest;
 import com.edso.resume.api.domain.request.UpdateBlacklistRequest;
+import com.edso.resume.api.service.BlacklistExcelService;
 import com.edso.resume.api.service.BlacklistService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -11,6 +12,7 @@ import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -19,8 +21,11 @@ public class BlacklistController extends BaseController {
 
     private final BlacklistService blacklistService;
 
-    public BlacklistController (BlacklistService blacklistService) {
+    private final BlacklistExcelService blacklistExcelService;
+
+    public BlacklistController(BlacklistService blacklistService, BlacklistExcelService blacklistExcelService) {
         this.blacklistService = blacklistService;
+        this.blacklistExcelService = blacklistExcelService;
     }
 
     @GetMapping("/list")
@@ -89,6 +94,17 @@ public class BlacklistController extends BaseController {
             }
         }
         logger.info("<=deleteBlacklist req: {}, resp: {}", request, response);
+        return response;
+    }
+
+    @GetMapping("/export")
+    public byte[] exportExcel(@RequestHeader Map<String, String> headers,
+                              @RequestParam(value = "name", required = false) String name) throws IOException {
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>Export blacklist u: {}, name: {}", headerInfo, name);
+        byte[] response = blacklistExcelService.export(headerInfo, name);
+        logger.info("<=Export blacklist u: {}, name: {}, response: {}", headerInfo, name, response);
+
         return response;
     }
 }

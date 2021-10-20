@@ -1,6 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.edso.resume.api.domain.entities.EventEntity;
 import com.edso.resume.api.domain.entities.ProfileDetailEntity;
 import com.edso.resume.api.domain.entities.ProfileEntity;
 import com.edso.resume.api.domain.entities.ProfileRabbitMQEntity;
@@ -21,6 +22,7 @@ import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -33,14 +35,24 @@ import java.util.regex.Pattern;
 @Service
 public class ProfileServiceImpl extends BaseService implements ProfileService, IDictionaryValidator {
 
-    private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value("${spring.rabbitmq.exchange}")
+    private String exchange;
+    @Value("${spring.rabbitmq.routingkey}")
+    private String routingkey;
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+        super(db);
+        this.rabbitTemplate = rabbitTemplate;
         this.historyService = historyService;
+    }
+
+    private void insertToRabbitMQ(String type, Object obj) {
+        EventEntity event = new EventEntity(type, obj);
+        rabbitTemplate.convertAndSend(exchange, routingkey, event);
     }
 
     @Override

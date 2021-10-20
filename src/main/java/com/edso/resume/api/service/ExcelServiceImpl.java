@@ -14,7 +14,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.FileOutputStream;
@@ -27,6 +26,7 @@ import java.util.regex.Pattern;
 
 @Service
 public class ExcelServiceImpl extends BaseService implements ExcelService {
+
     private static final int COLUMN_INDEX_FULLNAME = 0;
     private static final int COLUMN_INDEX_GENDER = 1;
     private static final int COLUMN_INDEX_PHONENUMBER = 2;
@@ -48,11 +48,9 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
     private static final int COLUMN_INDEX_NOTE = 18;
     private static final int COLUMN_INDEX_EVALUATION = 19;
     private static final int COLUMN_INDEX_STATUSCV = 20;
-    public final MongoDbOnlineSyncActions db;
 
-    public ExcelServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public ExcelServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     public static byte[] writeExcel(List<ProfileExcelEntity> profiles, String excelFilePath) throws IOException {

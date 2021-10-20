@@ -71,7 +71,6 @@ public class MongoDbAccess {
         MongoClientURI uri = new MongoClientURI(clientUrl, options);
 
 
-
         logger.info("Connect to MongoDB information: {}", uri);
 
         return new MongoClient(uri);

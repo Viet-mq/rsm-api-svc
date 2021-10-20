@@ -13,7 +13,7 @@ public class UpdateBlacklistRequest extends BaseAuthRequest {
     private String id;
     private String email;
     private String phoneNumber;
-    private String SSN;
+    private String ssn;
     private String name;
     private String reason;
 
@@ -27,13 +27,15 @@ public class UpdateBlacklistRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(phoneNumber)) {
             return new BaseResponse(-1, "Vui lòng nhập số điện thoại");
         }
-        if (Strings.isNullOrEmpty(SSN)) {
+        if (Strings.isNullOrEmpty(ssn)) {
             return new BaseResponse(-1, "Vui lòng nhập số CMND, CCCD");
         }
         if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(-1, "Vui lòng nhập tên");
         }
-
+        if (!validateEmail(email)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng email");
+        }
         return null;
     }
 }

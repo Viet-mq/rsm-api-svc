@@ -2,7 +2,7 @@ package com.edso.resume.api.domain.rabbitmq;
 
 import com.edso.resume.api.domain.db.BaseAction;
 import com.edso.resume.api.domain.entities.EmailMessageEntity;
-import com.rabbitmq.client.AMQP.*;
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,11 +39,11 @@ public class RabbitMQOnlineActions extends BaseAction {
         messageEntity.setToEmail(email);
         messageEntity.setMessage("Bạn có cuộc phỏng tại công ty Edsolabs\n" +
                 "Tại: No 9, Lane 4, Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội\n" +
-                "Thời gian: "+ time);
+                "Thời gian: " + time);
         BasicProperties messageProperties = new BasicProperties.Builder()
                 .contentType("application/json")
                 .build();
-        channel.basicPublish(exchange,routingKey, messageProperties, messageEntity.toString().getBytes());
+        channel.basicPublish(exchange, routingKey, messageProperties, messageEntity.toString().getBytes());
     }
 
 }

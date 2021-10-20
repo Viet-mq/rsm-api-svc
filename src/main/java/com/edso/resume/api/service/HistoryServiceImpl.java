@@ -7,14 +7,12 @@ import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
-import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,11 +23,9 @@ import java.util.regex.Pattern;
 @Service
 public class HistoryServiceImpl extends BaseService implements HistoryService {
 
-    private final MongoDbOnlineSyncActions db;
 
-    public HistoryServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public HistoryServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override

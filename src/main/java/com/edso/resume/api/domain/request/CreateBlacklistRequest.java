@@ -12,16 +12,25 @@ import lombok.ToString;
 public class CreateBlacklistRequest extends BaseAuthRequest {
     private String email;
     private String phoneNumber;
-    private String SSN;
+    private String ssn;
     private String name;
     private String reason;
 
-    public BaseResponse validate(){
-        if (Strings.isNullOrEmpty(email)){
+    public BaseResponse validate() {
+        if (Strings.isNullOrEmpty(email)) {
             return new BaseResponse(-1, "Vui lòng nhập blacklist email");
         }
-        if (Strings.isNullOrEmpty(name)){
+        if (!validateEmail(email)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng email");
+        }
+        if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(-1, "Vui lòng nhập tên blacklist");
+        }
+        if (!Strings.isNullOrEmpty(phoneNumber)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng số điện thoại");
+        }
+        if (!Strings.isNullOrEmpty(ssn)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng SSN");
         }
 
         return null;

@@ -9,7 +9,8 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class DeleteBlacklistRequest extends BaseAuthRequest {
+public class DeleteTalentPoolRequest extends BaseAuthRequest {
+
     private String id;
 
     public BaseResponse validate() {

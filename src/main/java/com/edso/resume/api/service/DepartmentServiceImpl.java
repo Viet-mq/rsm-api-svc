@@ -18,7 +18,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -28,11 +27,9 @@ import java.util.regex.Pattern;
 
 @Service
 public class DepartmentServiceImpl extends BaseService implements DepartmentService {
-    private final MongoDbOnlineSyncActions db;
 
-    public DepartmentServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public DepartmentServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override
@@ -119,8 +116,8 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
 
         Bson idJobLevel = Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId());
 
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idJobLevel, null,0,0);
-        for (Document doc: list) {
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idJobLevel, null, 0, 0);
+        for (Document doc : list) {
             Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
 
             Bson updateProfile = Updates.combine(

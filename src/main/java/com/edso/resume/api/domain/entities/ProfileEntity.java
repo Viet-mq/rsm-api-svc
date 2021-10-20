@@ -2,7 +2,6 @@ package com.edso.resume.api.domain.entities;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
