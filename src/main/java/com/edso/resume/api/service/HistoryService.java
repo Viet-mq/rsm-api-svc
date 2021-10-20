@@ -7,7 +7,7 @@ import com.edso.resume.lib.response.GetArrayResponse;
 
 public interface HistoryService {
 
-    BaseResponse createHistory(String idProfile,String type, String action, String by);
+    void createHistory(String idProfile,String type, String action, String by);
 
     GetArrayResponse<HistoryEntity> findAllHistory(HeaderInfo info, String idProfile, Integer page, Integer size);
 }

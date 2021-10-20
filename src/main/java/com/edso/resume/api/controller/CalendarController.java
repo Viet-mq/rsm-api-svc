@@ -9,6 +9,7 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayCalendarReponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -88,9 +89,9 @@ public class CalendarController extends BaseController {
         return response;
     }
 
-//    @Scheduled(fixedRate = 60000)
-//    public void alarmInterview() throws Exception {
-//        calendarService.alarmInterview();
-//    }
+    @Scheduled(fixedRate = 1000)
+    public void alarmInterview() {
+        calendarService.alarmInterview();
+    }
 
 }

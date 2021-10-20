@@ -17,9 +17,19 @@ spring:
     port: 5672
     username: admin
     password: rabb@t@7911
-    exchange: event.exchange
-    queue: event.queue
-    routingkey: event.routingkey
+    queue: cv.queue
+    profile:
+      exchange: event.exchange
+      queue: event.queue
+      routingkey: event.routingkey
+    email:
+      exchange: email.exchange
+      queue: email.queue
+      routingkey: email.routingkey
+    cv:
+      exchange: cv.exchange
+      queue: cv.queue
+      routingkey: cv.routingkey
 
 server:
   port: ${API_SVC_PORT:30003}
@@ -62,4 +72,5 @@ calendar:
   nLoop: 3 #canh bao 3 lan
 
 excel:
-  serverPath: D:\
+  serverPath: /home/resume/file-profiles/
+#  serverPath: D:\

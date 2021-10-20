@@ -76,9 +76,8 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     }
 
     @Override
-    public BaseResponse createHistory(String idProfile,String type, String action, String username) {
+    public void createHistory(String idProfile, String type, String action, String username) {
 
-        BaseResponse response = new BaseResponse();
         Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
 
         Document history = new Document();
@@ -88,12 +87,10 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         history.append(DbKeyConfig.TIME, System.currentTimeMillis());
         history.append(DbKeyConfig.ACTION, action);
         history.append(DbKeyConfig.USERNAME, username);
-        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+//        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
 
-        response.setSuccess();
-        return response;
     }
 }

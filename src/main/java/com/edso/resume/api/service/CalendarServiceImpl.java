@@ -1,6 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.edso.resume.api.domain.rabbitmq.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
@@ -20,21 +21,21 @@ import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.regex.Pattern;
 
 @Service
 public class CalendarServiceImpl extends BaseService implements CalendarService, IDictionaryValidator {
     private final MongoDbOnlineSyncActions db;
     private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
+    @Autowired
+    private RabbitMQOnlineActions rabbitMQOnlineActions;
 
     @Value("${calendar.timeCheck}")
     private long timeCheck;
@@ -141,16 +142,24 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             }
 
             String statusCVName = null;
+            String email = null;
 
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
                     statusCVName = r.getResult().getName();
                 }
+                if (r.getResult().getType().equals(ThreadConfig.PROFILE)) {
+                    email = r.getResult().getName();
+                }
             }
-
+            String checkTime = "0";
+            if (request.getTime() < System.currentTimeMillis()) {
+                checkTime = "1";
+            }
             Document calendar = new Document();
             calendar.append(DbKeyConfig.ID, UUID.randomUUID().toString());
             calendar.append(DbKeyConfig.ID_PROFILE, idProfile);
+            calendar.append(DbKeyConfig.EMAIL, email);
             calendar.append(DbKeyConfig.TIME, request.getTime());
             calendar.append(DbKeyConfig.ADDRESS, request.getAddress());
             calendar.append(DbKeyConfig.FORM, request.getForm());
@@ -165,7 +174,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             calendar.append(DbKeyConfig.REASON, request.getReason());
             calendar.append(DbKeyConfig.TIME_START, request.getTimeStart());
             calendar.append(DbKeyConfig.TIME_FINISH, request.getTimeFinish());
-            calendar.append(DbKeyConfig.CHECK, "0");
+            calendar.append(DbKeyConfig.CHECK, checkTime);
             calendar.append(DbKeyConfig.N_LOOP, 0);
             calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
@@ -246,16 +255,24 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             }
 
             String statusCVName = null;
+            String email = null;
 
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
                     statusCVName = r.getResult().getName();
                 }
+                if (r.getResult().getType().equals(ThreadConfig.PROFILE)) {
+                    email = r.getResult().getName();
+                }
             }
-
+            String check = "0";
+            if (request.getTime() < System.currentTimeMillis()) {
+                check = "1";
+            }
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.ID_PROFILE, idProfile),
+                    Updates.set(DbKeyConfig.EMAIL, email),
                     Updates.set(DbKeyConfig.TIME, request.getTime()),
                     Updates.set(DbKeyConfig.ADDRESS, request.getAddress()),
                     Updates.set(DbKeyConfig.FORM, request.getForm()),
@@ -268,6 +285,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                     Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatus()),
                     Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCVName),
                     Updates.set(DbKeyConfig.REASON, request.getReason()),
+                    Updates.set(DbKeyConfig.CHECK, check),
                     Updates.set(DbKeyConfig.TIME_START, request.getTimeStart()),
                     Updates.set(DbKeyConfig.TIME_FINISH, request.getTimeFinish()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
@@ -315,7 +333,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
     }
 
     public void alarmInterview() {
-        Bson c = Filters.regex(DbKeyConfig.CHECK, Pattern.compile("0"));
+        Bson c = Filters.eq(DbKeyConfig.CHECK, "0");
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, c, null, 0, 0);
         List<TimeEntity> calendars = new ArrayList<>();
         if (lst != null) {
@@ -325,23 +343,31 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                         .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
                         .check(AppUtils.parseString(doc.get(DbKeyConfig.CHECK)))
                         .nLoop(AppUtils.parseInt(doc.get(DbKeyConfig.N_LOOP)))
+                        .email(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)))
                         .build();
                 calendars.add(calendar);
             }
         }
+
         for (TimeEntity calendar : calendars) {
             long differenceTime = calendar.getTime() - System.currentTimeMillis();
             int n = calendar.getNLoop();
-            if (differenceTime <= timeCheck && differenceTime > 0) {
+            if (differenceTime <= timeCheck) {
                 Bson con = Filters.eq(DbKeyConfig.ID, calendar.getId());
-                if (n != nLoop) {
+                if (n < nLoop) {
                     n++;
-                    // update roles
                     Bson updates = Updates.combine(
                             Updates.set(DbKeyConfig.N_LOOP, n)
                     );
                     db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, con, updates, true);
-//                    sendEmail(calendar.getTime());
+                    try {
+                        Date date = new Date(calendar.getTime());
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm dd-MM-yyyy");
+                        String dateTime = dateFormat.format(date);
+                        rabbitMQOnlineActions.insertEmailToRabbit(calendar.getEmail(), dateTime);
+                    } catch (Throwable e) {
+                        logger.error("Exception: ", e);
+                    }
                 } else {
                     Bson updates = Updates.combine(
                             Updates.set(DbKeyConfig.CHECK, "1")
@@ -359,39 +385,5 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
         result.setKey(key);
         queue.offer(result);
     }
-//
-//    @Value("${gmail.account}")
-//    private String fromEmail;
-//    @Value("${gmail.password}")
-//    private String password;
-//
-//    public void sendEmail(Long time) {
-//        // dia chi email nguoi nhan
-//        final String toEmail = "quanbn69@gmail.com";
-//        final String subject = "ALARM INTERVIEW";
-//        final String body = "You have an interview at "+time;
-//        Properties props = new Properties();
-//        props.put("mail.smtp.host", "smtp.gmail.com"); //SMTP Host
-//        props.put("mail.smtp.port", "587"); //TLS Port
-//        props.put("mail.smtp.auth", "true"); //enable authentication
-//        props.put("mail.smtp.starttls.enable", "true"); //enable STARTTLS
-//        Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
-//            protected PasswordAuthentication getPasswordAuthentication() {
-//                return new PasswordAuthentication(fromEmail, password);
-//            }
-//        });
-//        MimeMessage message = new MimeMessage(session);
-//        message.setFrom(new InternetAddress(fromEmail));
-//        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
-//        message.setSubject(subject);
-//        // Phan 1 gom doan tin nhan
-//        BodyPart messageBodyPart1 = new MimeBodyPart();
-//        messageBodyPart1.setText(body);
-//        Multipart multipart = new MimeMultipart();
-//        multipart.addBodyPart(messageBodyPart1);
-//        message.setContent(multipart);
-//        Transport.send(message);
-//    }
-
 
 }

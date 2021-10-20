@@ -18,5 +18,5 @@ public interface CalendarService {
 
     BaseResponse deleteCalendarProfile(DeleteCalendarProfileRequest request);
 
-    void alarmInterview() throws Exception;
+    void alarmInterview();
 }
