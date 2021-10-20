@@ -39,9 +39,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
     private final RabbitTemplate rabbitTemplate;
 
-    @Value("${spring.rabbitmq.exchange}")
+    @Value("${spring.rabbitmq.profile.exchange}")
     private String exchange;
-    @Value("${spring.rabbitmq.routingkey}")
+    @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {

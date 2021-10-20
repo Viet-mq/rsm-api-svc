@@ -19,7 +19,6 @@ public class Consumer {
 
     @RabbitListener(queues = "${spring.rabbitmq.queue}")
     public void consumeUrl(UrlConsumerEntity url) {
-        System.out.println("?????????????????????????");
         logger.info("Event from queue " + url);
         urlConsumerService.insertUrlToProfile(url);
     }
