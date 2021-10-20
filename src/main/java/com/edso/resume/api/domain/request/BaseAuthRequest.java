@@ -31,6 +31,10 @@ public class BaseAuthRequest {
         return matcher.matches();
     }
 
+    public boolean validateSmt() {
+        return true;
+    }
+
     public boolean validatePhoneNumber(String phoneNumber) {
         matcher = phoneNumPattern.matcher(phoneNumber);
         return matcher.matches();
