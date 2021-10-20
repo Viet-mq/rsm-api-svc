@@ -1,5 +1,6 @@
-package com.edso.resume.api.domain.db;
+package com.edso.resume.api.domain.rabbitmq;
 
+import com.edso.resume.api.domain.db.BaseAction;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -13,13 +14,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig extends BaseAction {
 
-    @Value("${spring.rabbitmq.queue}")
+    @Value("${spring.rabbitmq.profile.queue}")
     private String queue;
 
-    @Value("${spring.rabbitmq.exchange}")
+    @Value("${spring.rabbitmq.profile.exchange}")
     private String exchange;
 
-    @Value("${spring.rabbitmq.routingkey}")
+    @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingKey;
 
     @Value("${spring.rabbitmq.username}")

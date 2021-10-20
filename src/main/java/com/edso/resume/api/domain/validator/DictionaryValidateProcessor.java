@@ -41,7 +41,11 @@ public class DictionaryValidateProcessor implements Runnable {
                 return;
             }
             result.setResult(true);
-            result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
+            if (type.equals(ThreadConfig.PROFILE)) {
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
+            } else {
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
+            }
         } catch (Throwable ex) {
             logger.error("Ex: ", ex);
             result.setResult(false);

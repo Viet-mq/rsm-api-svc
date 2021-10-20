@@ -10,6 +10,7 @@ import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.common.ThreadConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -22,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class UploadProfilesServiceImpl extends BaseService implements UploadProfilesService, IDictionaryNameValidator {
@@ -40,11 +43,17 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     public static final int COLUMN_SOURCE_CV = 11;
 
     private final Queue<DictionaryNameValidatorResult> queue = new LinkedBlockingQueue<>();
+    private static final String EMAIL_REGEX = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])";
+    private static Pattern patternEmail;
+    @JsonIgnore
+    protected HeaderInfo info;
+
     @Value("${excel.serverPath}")
     private String serverPath;
 
     public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
+        patternEmail = Pattern.compile(EMAIL_REGEX);
     }
 
     // Get cell value
@@ -178,7 +187,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         try {
             profiles = readExcel(request);
         } catch (Throwable e) {
-            logger.info("Exception: {}", e);
+            logger.error("Exception: ", e);
         }
 
         if (profiles == null || profiles.isEmpty()) {
@@ -187,10 +196,14 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         }
         for (ProfilesEntity profile : profiles) {
 
-            //validate
             if (Strings.isNullOrEmpty(profile.getFullName())) {
-                response.setFailed("Vui lòng nhập tên ứng viên!");
-                return response;
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profile.getEmail())) {
+                continue;
+            }
+            if (!validateEmail(profile.getEmail())) {
+                continue;
             }
 
             String key = UUID.randomUUID().toString();
@@ -208,13 +221,14 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 
                 long time = System.currentTimeMillis();
                 int count = 0;
+                int count2 = 0;
                 while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
                     DictionaryNameValidatorResult validatorResult = queue.poll();
                     if (validatorResult != null) {
                         if (validatorResult.getKey().equals(key)) {
                             if (!validatorResult.isResult()) {
-                                response.setFailed(validatorResult.getId());
-                                return response;
+                                count2++;
+                                break;
                             } else {
                                 count++;
                             }
@@ -224,14 +238,12 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         }
                     }
                 }
+                if (count2 != 0) {
+                    continue;
+                }
 
                 if (count != rs.size()) {
-                    for (DictionaryNameValidateProcessor r : rs) {
-                        if (!r.getResult().isResult()) {
-                            response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
-                            return response;
-                        }
-                    }
+                    continue;
                 }
 
                 String schoolId = null;
@@ -270,12 +282,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
 
                 db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
-            } catch (Throwable ex) {
-
-                logger.error("Exception: ", ex);
-                response.setFailed("Hệ thống đang bận");
-                return response;
-
             } finally {
                 synchronized (queue) {
                     queue.removeIf(s -> s.getKey().equals(key));
@@ -296,6 +302,11 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         fos.write(file.getBytes());
         fos.close();
         return convFile;
+    }
+
+    public boolean validateEmail(String email) {
+        Matcher matcher = patternEmail.matcher(email);
+        return matcher.matches();
     }
 
     @Override

@@ -10,4 +10,12 @@ import lombok.*;
 public class EventEntity {
     private String type;
     private Object profile;
+
+    @Override
+    public String toString() {
+        return "{" +
+                "\"type\"=\"" + type + '\"' +
+                ", \"profile\"= " + profile +
+                '}';
+    }
 }

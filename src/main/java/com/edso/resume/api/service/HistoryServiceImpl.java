@@ -7,7 +7,6 @@ import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
-import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
@@ -23,6 +22,7 @@ import java.util.regex.Pattern;
 
 @Service
 public class HistoryServiceImpl extends BaseService implements HistoryService {
+
 
     public HistoryServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
@@ -72,9 +72,8 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     }
 
     @Override
-    public BaseResponse createHistory(String idProfile, String type, String action, String username) {
+    public void createHistory(String idProfile, String type, String action, String username) {
 
-        BaseResponse response = new BaseResponse();
         Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
 
         Document history = new Document();
@@ -84,12 +83,10 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         history.append(DbKeyConfig.TIME, System.currentTimeMillis());
         history.append(DbKeyConfig.ACTION, action);
         history.append(DbKeyConfig.USERNAME, username);
-        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+//        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
 
-        response.setSuccess();
-        return response;
     }
 }

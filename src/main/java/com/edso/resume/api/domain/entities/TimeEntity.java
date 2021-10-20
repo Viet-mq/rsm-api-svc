@@ -10,4 +10,5 @@ public class TimeEntity {
     private Long time;
     private String check;
     private int nLoop;
+    private String email;
 }

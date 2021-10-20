@@ -127,6 +127,17 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
         }
 
+        FindIterable<Document> listCalendar = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, idStatusCV, null, 0, 0);
+        for (Document doc : listCalendar) {
+            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+
+            Bson updateProfile = Updates.combine(
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
+        }
+
         // update roles
         Bson updates = Updates.combine(
                 Updates.set(DbKeyConfig.NAME, name),
