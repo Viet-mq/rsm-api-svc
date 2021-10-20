@@ -25,11 +25,8 @@ import java.util.regex.Pattern;
 @Service
 public class HistoryServiceImpl extends BaseService implements HistoryService {
 
-    private final MongoDbOnlineSyncActions db;
-
-    public HistoryServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public HistoryServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override
@@ -76,7 +73,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     }
 
     @Override
-    public BaseResponse createHistory(String idProfile,String type, String action, String username) {
+    public BaseResponse createHistory(String idProfile, String type, String action, String username) {
 
         BaseResponse response = new BaseResponse();
         Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));

@@ -29,11 +29,8 @@ import java.util.regex.Pattern;
 @Service
 public class StatusCVServiceImpl extends BaseService implements StatusCVService {
 
-    private final MongoDbOnlineSyncActions db;
-
-    public StatusCVServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public StatusCVServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override
@@ -120,8 +117,8 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
 
         Bson idStatusCV = Filters.eq(DbKeyConfig.STATUS_CV_ID, request.getId());
 
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idStatusCV, null,0,0);
-        for (Document doc: list) {
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idStatusCV, null, 0, 0);
+        for (Document doc : list) {
             Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
 
             Bson updateProfile = Updates.combine(

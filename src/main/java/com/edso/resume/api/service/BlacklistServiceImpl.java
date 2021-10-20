@@ -28,8 +28,8 @@ import java.util.regex.Pattern;
 @Service
 public class BlacklistServiceImpl extends BaseService implements BlacklistService {
 
-    public BlacklistServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
+    public BlacklistServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override

@@ -28,11 +28,9 @@ import java.util.regex.Pattern;
 
 @Service
 public class JobLevelServiceImpl extends BaseService implements JobLevelService {
-    private final MongoDbOnlineSyncActions db;
 
-    public JobLevelServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public JobLevelServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override
@@ -119,8 +117,8 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
 
         Bson idJobLevel = Filters.eq(DbKeyConfig.LEVEL_JOB_ID, request.getId());
 
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idJobLevel, null,0,0);
-        for (Document doc: list) {
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idJobLevel, null, 0, 0);
+        for (Document doc : list) {
             Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
 
             Bson updateProfile = Updates.combine(

@@ -27,10 +27,8 @@ import java.util.regex.Pattern;
 @Service
 public class TalentPoolServiceImpl extends BaseService implements TalentPoolService {
 
-    private final MongoDbOnlineSyncActions db;
-
-    public TalentPoolServiceImpl (MongoDbOnlineSyncActions db){
-        this.db = db;
+    public TalentPoolServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override

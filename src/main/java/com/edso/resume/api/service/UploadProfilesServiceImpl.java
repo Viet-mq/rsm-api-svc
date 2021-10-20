@@ -41,13 +41,11 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     public static final int COLUMN_SOURCE_CV = 11;
 
     private final Queue<DictionaryNameValidatorResult> queue = new LinkedBlockingQueue<>();
-    private final MongoDbOnlineSyncActions db;
     @Value("${excel.serverPath}")
     private String serverPath;
 
-    public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db ) {
+        super(db);
     }
 
     // Get cell value

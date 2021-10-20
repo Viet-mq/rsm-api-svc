@@ -29,11 +29,8 @@ import java.util.regex.Pattern;
 @Service
 public class SourceCVServiceImpl extends BaseService implements SourceCVService {
 
-    private final MongoDbOnlineSyncActions db;
-
-    public SourceCVServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public SourceCVServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override
@@ -120,8 +117,8 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
 
         Bson idSourceCV = Filters.eq(DbKeyConfig.SOURCE_CV_ID, request.getId());
 
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idSourceCV, null,0,0);
-        for (Document doc: list) {
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idSourceCV, null, 0, 0);
+        for (Document doc : list) {
             Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
 
             Bson updateProfile = Updates.combine(

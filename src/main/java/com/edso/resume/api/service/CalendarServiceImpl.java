@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 @Service
 public class CalendarServiceImpl extends BaseService implements CalendarService, IDictionaryValidator {
-    private final MongoDbOnlineSyncActions db;
+
     private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
 
@@ -42,9 +42,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
     @Value("${calendar.nLoop}")
     private int nLoop;
 
-    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+        super(db);
         this.historyService = historyService;
     }
 

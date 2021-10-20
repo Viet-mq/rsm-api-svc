@@ -29,11 +29,8 @@ import java.util.regex.Pattern;
 @Service
 public class VillageServiceImpl extends BaseService implements VillageService {
 
-    private final MongoDbOnlineSyncActions db;
-
-    public VillageServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
-        super(db, rabbitTemplate);
-        this.db = db;
+    public VillageServiceImpl(MongoDbOnlineSyncActions db) {
+        super(db);
     }
 
     @Override

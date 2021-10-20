@@ -16,16 +16,9 @@ public abstract class BaseService {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     protected final MongoDbOnlineSyncActions db;
-    protected final RabbitTemplate rabbitTemplate;
 
-    @Value("${spring.rabbitmq.exchange}")
-    private String exchange;
-    @Value("${spring.rabbitmq.routingkey}")
-    private String routingkey;
-
-    protected BaseService(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
+    protected BaseService(MongoDbOnlineSyncActions db) {
         this.db = db;
-        this.rabbitTemplate = rabbitTemplate;
     }
 
     protected Bson buildCondition(List<Bson> lst) {
@@ -41,11 +34,6 @@ public abstract class BaseService {
     @SuppressWarnings(value = "unchecked")
     public List<String> parseList(Object list) {
         return (List<String>) list;
-    }
-
-    public void insertToRabbitMQ(String type, Object obj) {
-        EventEntity event = new EventEntity(type, obj);
-        rabbitTemplate.convertAndSend(exchange, routingkey, event);
     }
 
 }

@@ -26,16 +26,14 @@ import java.util.regex.Pattern;
 @Service
 public class BlacklistExcelServiceImpl extends BaseService implements BlacklistExcelService {
 
-    private static final int  COLUMN_INDEX_NAME = 0;
-    private static final int  COLUMN_INDEX_EMAIL = 1;
-    private static final int  COLUMN_INDEX_PHONE = 2;
-    private static final int  COLUMN_INDEX_SSN = 3;
-    private static final int  COLUMN_INDEX_REASON = 4;
-
-    public final MongoDbOnlineSyncActions db;
+    private static final int COLUMN_INDEX_NAME = 0;
+    private static final int COLUMN_INDEX_EMAIL = 1;
+    private static final int COLUMN_INDEX_PHONE = 2;
+    private static final int COLUMN_INDEX_SSN = 3;
+    private static final int COLUMN_INDEX_REASON = 4;
 
     public BlacklistExcelServiceImpl(MongoDbOnlineSyncActions db) {
-        this.db = db;
+        super(db);
     }
 
     @Override
