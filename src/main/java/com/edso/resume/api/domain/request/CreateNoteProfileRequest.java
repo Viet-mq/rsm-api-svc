@@ -12,14 +12,16 @@ import lombok.ToString;
 public class CreateNoteProfileRequest extends BaseAuthRequest {
 
     private String idProfile;
-    private String note;
+    private String username;
+    private String comment;
+    private String evaluation;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(note)) {
-            return new BaseResponse(-1, "Vui lòng nhập lưu ý");
+        if (Strings.isNullOrEmpty(username)) {
+            return new BaseResponse(-1, "Vui lòng nhập username");
         }
         return null;
     }

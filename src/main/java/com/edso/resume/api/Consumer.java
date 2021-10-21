@@ -4,7 +4,7 @@ import com.rabbitmq.client.*;
 
 public class Consumer {
 
-    private final static String QUEUE_NAME = "email.queue";
+    private final static String QUEUE_NAME = "event.queue";
 
     public static void main(String[] argv) throws Exception {
         System.out.println("Create a ConnectionFactory");

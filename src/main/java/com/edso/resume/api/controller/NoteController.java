@@ -10,6 +10,7 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -36,17 +37,20 @@ public class NoteController extends BaseController {
     }
 
     @PostMapping("/create")
-    public BaseResponse createNoteProfile(@RequestHeader Map<String, String> headers, @RequestBody CreateNoteProfileRequest request) {
+    public BaseResponse createNoteProfile(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            CreateNoteProfileRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>createNoteProfile u: {}, req: {}", headerInfo, request);
+        logger.info("=>createNoteProfile u: {}, req: {}, file: {}", headerInfo, request, file);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = noteService.createNoteProfile(request);
+                response = noteService.createNoteProfile(request, file);
             }
         }
         logger.info("<=createNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
@@ -64,7 +68,7 @@ public class NoteController extends BaseController {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = noteService.updateNoteProfile(request);
+//                response = noteService.updateNoteProfile(request);
             }
         }
         logger.info("<=updateNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);

@@ -11,14 +11,14 @@ public class EmailMessageEntity {
     private String message;
     private byte[] file;
 
-    @Override
-    public String toString() {
-        return
-                "{\"toEmail\":\"" + toEmail + '\"' +
-                        ", \"subject\":\"" + subject + '\"' +
-                        ", \"message\":\"" + message + '\"' +
-                        ", \"file\":\"" + Arrays.toString(file) + '\"' +
-                        '}';
-    }
+//    @Override
+//    public String toString() {
+//        return
+//                "{\"toEmail\":\"" + toEmail + '\"' +
+//                        ", \"subject\":\"" + subject + '\"' +
+//                        ", \"message\":\"" + message + '\"' +
+//                        ", \"file\":\"" + Arrays.toString(file) + '\"' +
+//                        '}';
+//    }
 
 }

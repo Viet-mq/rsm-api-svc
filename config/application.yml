@@ -74,3 +74,9 @@ calendar:
 excel:
   serverPath: /home/resume/file-profiles/
 #  serverPath: D:\
+
+note:
+  domain: http://file-rs.edsolabs.com/
+  localpath: fileupload/
+#  serverpath: /usr/share/nginx/file-rs/
+  serverPath: D:\

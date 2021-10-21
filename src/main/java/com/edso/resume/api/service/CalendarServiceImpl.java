@@ -3,7 +3,7 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
-import com.edso.resume.api.domain.rabbitmq.RabbitMQOnlineActions;
+import com.edso.resume.api.domain.rabbitmq.publish.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
@@ -361,7 +361,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                         Date date = new Date(calendar.getTime());
                         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm dd-MM-yyyy");
                         String dateTime = dateFormat.format(date);
-                        rabbitMQOnlineActions.insertEmailToRabbit(calendar.getEmail(), dateTime);
+                        rabbitMQOnlineActions.publishEmailToRabbit(calendar.getEmail(), dateTime);
                     } catch (Throwable e) {
                         logger.error("Exception: ", e);
                     }

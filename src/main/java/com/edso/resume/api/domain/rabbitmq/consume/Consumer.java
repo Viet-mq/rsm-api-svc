@@ -1,4 +1,4 @@
-package com.edso.resume.api.domain.rabbitmq;
+package com.edso.resume.api.domain.rabbitmq.consume;
 
 import com.edso.resume.api.domain.entities.UrlConsumerEntity;
 import com.edso.resume.api.service.UrlConsumerService;
@@ -17,9 +17,12 @@ public class Consumer {
         this.urlConsumerService = urlConsumerService;
     }
 
+
     @RabbitListener(queues = "${spring.rabbitmq.queue}")
     public void consumeUrl(UrlConsumerEntity url) {
-        logger.info("Event from queue " + url);
-        urlConsumerService.insertUrlToProfile(url);
+
+        logger.info("=>consumeUrl url: {}", url);
+        urlConsumerService.updateUrlToProfile(url);
+
     }
 }

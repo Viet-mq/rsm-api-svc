@@ -18,12 +18,15 @@ public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerSe
     }
 
     @Override
-    public void insertUrlToProfile(UrlConsumerEntity url) {
+    public void updateUrlToProfile(UrlConsumerEntity url) {
 
         Bson cond = Filters.eq(DbKeyConfig.ID, url.getId());
         Document idProfile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-
-        if (idProfile == null) return;
+        logger.info("=>updateUrlToProfile url: {}", url);
+        if (idProfile == null){
+            logger.info("Id profile không tồn tại");
+            return;
+        }
 
         Bson update = Updates.combine(
                 Updates.set(DbKeyConfig.URL_CV, url.getUrl()),
@@ -32,6 +35,6 @@ public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerSe
         );
 
         db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
-        logger.info("Insert url to profile with id: {}", url.getId());
+        logger.info("<=updateUrlToProfile url: {}", url);
     }
 }

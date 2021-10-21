@@ -33,7 +33,17 @@ public class DictionaryValidateProcessor implements Runnable {
     @Override
     public void run() {
         try {
-            Bson cond = Filters.eq(DbKeyConfig.ID, this.id);
+            Bson cond;
+            switch (type){
+                case ThreadConfig.USER:{
+                    cond = Filters.eq(DbKeyConfig.USERNAME, this.id);
+                    break;
+                }
+                default:{
+                    cond = Filters.eq(DbKeyConfig.ID, this.id);
+                    break;
+                }
+            }
             Document doc = db.findOne(getCollectionName(), cond);
             if (doc == null) {
                 result.setResult(false);
@@ -41,10 +51,23 @@ public class DictionaryValidateProcessor implements Runnable {
                 return;
             }
             result.setResult(true);
-            if (type.equals(ThreadConfig.PROFILE)) {
-                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
-            } else {
-                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
+            switch (type){
+                case ThreadConfig.PROFILE:{
+                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
+                    break;
+                }
+                case ThreadConfig.USER:{
+                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
+                    break;
+                }
+                case ThreadConfig.NOTE:{
+                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.PATH)));
+                    break;
+                }
+                default:{
+                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
+                    break;
+                }
             }
         } catch (Throwable ex) {
             logger.error("Ex: ", ex);
@@ -85,6 +108,12 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.CALENDAR: {
                 return "id calendar";
             }
+            case ThreadConfig.USER: {
+                return "username";
+            }
+            case ThreadConfig.NOTE: {
+                return "id note";
+            }
             default: {
                 return null;
             }
@@ -116,6 +145,12 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.CALENDAR: {
                 return CollectionNameDefs.COLL_CALENDAR_PROFILE;
+            }
+            case ThreadConfig.USER: {
+                return CollectionNameDefs.COLL_USER;
+            }
+            case ThreadConfig.NOTE: {
+                return CollectionNameDefs.COLL_NOTE_PROFILE;
             }
             default: {
                 return null;

@@ -46,13 +46,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
         super(db);
-        this.rabbitTemplate = rabbitTemplate;
         this.historyService = historyService;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
-    private void insertToRabbitMQ(String type, Object obj) {
+    private void publishActionToRabbitMQ(String type, Object obj) {
         EventEntity event = new EventEntity(type, obj);
         rabbitTemplate.convertAndSend(exchange, routingkey, event);
+        logger.info("=>publishActionToRabbitMQ type: {}, profile: {}", type, obj);
     }
 
     @Override
@@ -284,7 +285,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profileEntity.setCvType(request.getCvType());
 
             // insert to rabbitmq
-            insertToRabbitMQ("create", profileEntity);
+            publishActionToRabbitMQ("create", profileEntity);
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo().getUsername());
@@ -433,7 +434,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profileEntity.setCvType(request.getCvType());
 
             // insert to rabbitmq
-            insertToRabbitMQ("update", profileEntity);
+            publishActionToRabbitMQ("update", profileEntity);
 
             //Insert history to DB
             historyService.createHistory(id, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
@@ -585,7 +586,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profileEntity.setCvType(request.getCvType());
 
             // insert to rabbitmq
-            insertToRabbitMQ("update detail profile", request);
+            publishActionToRabbitMQ("update detail profile", profileEntity);
 
             //Insert history to DB
             historyService.createHistory(id, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
@@ -630,7 +631,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         db.delete(CollectionNameDefs.COLL_PROFILE, cond);
 
         // insert to rabbitmq
-        insertToRabbitMQ("delete", request);
+        publishActionToRabbitMQ("delete", request);
 
         //Insert history to DB
         historyService.createHistory(id, TypeConfig.DELETE, "Xóa profile", request.getInfo().getUsername());
@@ -712,7 +713,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profileRabbitMQ.setStatusCVName(statusCVName);
 
             // insert to rabbitmq
-            insertToRabbitMQ("updateStatus", profileRabbitMQ);
+            publishActionToRabbitMQ("update-status", profileRabbitMQ);
 
             //Insert history to DB
             historyService.createHistory(id, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());

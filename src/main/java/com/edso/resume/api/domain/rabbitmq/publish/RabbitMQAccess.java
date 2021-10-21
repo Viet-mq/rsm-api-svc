@@ -1,17 +1,26 @@
-package com.edso.resume.api.domain.rabbitmq;
+package com.edso.resume.api.domain.rabbitmq.publish;
 
 
-import com.edso.resume.api.domain.db.BaseAction;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import lombok.Getter;
+import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-@Component
-public class RabbitMQAccess extends BaseAction {
+@Configuration
+@Getter
+@Setter
+public class RabbitMQAccess {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Value("${spring.rabbitmq.username}")
     private String username;
 
@@ -24,7 +33,8 @@ public class RabbitMQAccess extends BaseAction {
     @Value("${spring.rabbitmq.port}")
     private int port;
 
-    public Connection getConnection() throws IOException, TimeoutException {
+    @Bean("myRabbitMQ")
+    public Channel getChannel() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(host);
         factory.setPort(port);
@@ -39,6 +49,6 @@ public class RabbitMQAccess extends BaseAction {
         logger.info("RabbitMQ info: {}", uri);
         logger.info("Connect to RabbitMQ information: {}", uri);
 
-        return connection;
+        return connection.createChannel();
     }
 }

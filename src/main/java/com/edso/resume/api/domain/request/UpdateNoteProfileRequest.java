@@ -12,7 +12,10 @@ import lombok.ToString;
 public class UpdateNoteProfileRequest extends BaseAuthRequest {
     private String id;
     private String idProfile;
-    private String note;
+    private String username;
+    private String fullName;
+    private String comment;
+    private String evaluation;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id)) {
@@ -21,7 +24,10 @@ public class UpdateNoteProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(note)) {
+        if (Strings.isNullOrEmpty(username)) {
+            return new BaseResponse(-1, "Vui lòng nhập lưu ý");
+        }
+        if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(-1, "Vui lòng nhập lưu ý");
         }
         return null;

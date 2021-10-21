@@ -87,6 +87,6 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
-
+        logger.info("<=createHistory ");
     }
 }
