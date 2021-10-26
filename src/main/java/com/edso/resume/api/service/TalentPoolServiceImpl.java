@@ -11,6 +11,7 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
+import com.github.slugify.Slugify;
 import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -84,8 +86,9 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
             }
         }
 
+        Slugify slugify = new Slugify();
         Document talentPool = new Document();
-        talentPool.append("id", UUID.randomUUID().toString());
+        talentPool.append("id", slugify.slugify(name) + new Random().nextInt(10000));
         talentPool.append("name", name);
         talentPool.append("managers", request.getManagers());
         talentPool.append("description", request.getDescription());
