@@ -9,9 +9,19 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 @RestController
@@ -26,7 +36,7 @@ public class NoteController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAllNoteProfile(
             @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "idProfile", required = false) String idProfile,
+            @RequestParam(value = "idProfile") String idProfile,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
@@ -40,36 +50,39 @@ public class NoteController extends BaseController {
     public BaseResponse createNoteProfile(
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "file", required = false) MultipartFile file,
-            CreateNoteProfileRequest request) {
-        BaseResponse response = new BaseResponse();
+            @RequestParam(value = "idProfile") String idProfile,
+            @RequestParam(value = "username") String username,
+            @RequestParam(value = "comment", required = false) String comment,
+            @RequestParam(value = "evaluation", required = false) String evaluation) {
+        BaseResponse response;
+        CreateNoteProfileRequest request = new CreateNoteProfileRequest(idProfile, username, comment, evaluation, file);
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>createNoteProfile u: {}, req: {}, file: {}", headerInfo, request, file);
-        if (request == null) {
-            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
-        } else {
-            response = request.validate();
-            if (response == null) {
-                request.setInfo(headerInfo);
-                response = noteService.createNoteProfile(request, file);
-            }
+        logger.info("=>createNoteProfile u: {}, req: {}", headerInfo, request);
+        response = request.validate();
+        if (response == null) {
+            request.setInfo(headerInfo);
+            response = noteService.createNoteProfile(request);
         }
         logger.info("<=createNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 
     @PostMapping("/update")
-    public BaseResponse updateNoteProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateNoteProfileRequest request) {
-        BaseResponse response = new BaseResponse();
+    public BaseResponse updateNoteProfile(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "id") String id,
+            @RequestParam(value = "username") String username,
+            @RequestParam(value = "comment", required = false) String comment,
+            @RequestParam(value = "evaluation", required = false) String evaluation) {
+        BaseResponse response;
+        UpdateNoteProfileRequest request = new UpdateNoteProfileRequest(id, username, comment, evaluation);
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>updateNoteProfile u: {}, req: {}", headerInfo, request);
-        if (request == null) {
-            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
-        } else {
-            response = request.validate();
-            if (response == null) {
-                request.setInfo(headerInfo);
-//                response = noteService.updateNoteProfile(request);
-            }
+        response = request.validate();
+        if (response == null) {
+            request.setInfo(headerInfo);
+            response = noteService.updateNoteProfile(request, file);
         }
         logger.info("<=updateNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
@@ -91,6 +104,24 @@ public class NoteController extends BaseController {
         }
         logger.info("<=deleteNoteProfile req: {}, resp: {}", request, response);
         return response;
+    }
+
+    @Value("${note.serverpath}")
+    private String serverPath;
+
+    @GetMapping("/export/file/{file-name}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable("file-name") String fileName) throws IOException {
+        logger.info("export file");
+        File file = new File(serverPath + fileName);
+        Path path = Paths.get(file.getAbsolutePath());
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=" + fileName);
+
+        return ResponseEntity.ok()
+                .contentLength(file.length())
+                .headers(headers)
+                .body(resource);
     }
 
 }

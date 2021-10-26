@@ -8,7 +8,6 @@ import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.GetArrayResponse;
-import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Service
 public class HistoryServiceImpl extends BaseService implements HistoryService {
@@ -41,14 +39,12 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
             return resp;
         }
 
-        List<Bson> c = new ArrayList<>();
-        if (!Strings.isNullOrEmpty(idProfile)) {
-            c.add(Filters.regex(DbKeyConfig.ID_PROFILE, Pattern.compile(idProfile)));
-        }
-        Bson cond = buildCondition(c);
+        Bson cond = Filters.eq(DbKeyConfig.ID_PROFILE, idProfile);
+        Bson sort = Filters.eq(DbKeyConfig.TIME, -1);
+
         long total = db.countAll(CollectionNameDefs.COLL_HISTORY_PROFILE, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_HISTORY_PROFILE, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_HISTORY_PROFILE, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<HistoryEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
@@ -72,7 +68,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     }
 
     @Override
-    public void createHistory(String idProfile, String type, String action, String username) {
+    public void createHistoryProfile(String idProfile, String type, String action, String username) {
 
         Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
 
@@ -87,6 +83,37 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
-        logger.info("<=createHistory ");
+        logger.info("createHistoryProfile history: {}", history);
+    }
+
+    @Override
+    public void createHistoryCalendar(String idProfile, String idCalendar, String type, String action, String username) {
+        Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
+
+        Document history = new Document();
+        history.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+        history.append(DbKeyConfig.ID_PROFILE, idProfile);
+        history.append(DbKeyConfig.ID_CALENDAR, idCalendar);
+        history.append(DbKeyConfig.TYPE, type);
+        history.append(DbKeyConfig.TIME, System.currentTimeMillis());
+        history.append(DbKeyConfig.ACTION, action);
+        history.append(DbKeyConfig.USERNAME, username);
+//        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+
+        // insert to database
+        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
+        logger.info("createHistoryProfile history: {}", history);
+    }
+
+    @Override
+    public void deleteHistoryProfile(String idProfile) {
+        db.delete(CollectionNameDefs.COLL_HISTORY_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
+        logger.info("deleteHistoryProfile idProfile: {}", idProfile);
+    }
+
+    @Override
+    public void deleteHistoryCalendar(String idCalendar) {
+        db.delete(CollectionNameDefs.COLL_HISTORY_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, idCalendar));
+        logger.info("deleteHistoryCalendar idCalendar: {}", idCalendar);
     }
 }

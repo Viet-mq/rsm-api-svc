@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface NoteService {
     GetArrayResponse<NoteProfileEntity> findAllNote(HeaderInfo info, String idProfile, Integer page, Integer size);
 
-    BaseResponse createNoteProfile(CreateNoteProfileRequest request, MultipartFile file);
+    BaseResponse createNoteProfile(CreateNoteProfileRequest request);
 
     BaseResponse updateNoteProfile(UpdateNoteProfileRequest request, MultipartFile file);
 

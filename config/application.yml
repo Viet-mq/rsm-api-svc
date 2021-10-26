@@ -72,11 +72,12 @@ calendar:
   nLoop: 3 #canh bao 3 lan
 
 excel:
-  serverPath: /home/resume/file-profiles/
+  serverPath: /home/resume/api-svc/file/file-profiles/
 #  serverPath: D:\
+  path: /home/resume/api-svc/file/Profiles.xlsx
+#  path: D:\
 
 note:
-  domain: http://file-rs.edsolabs.com/
-  localpath: fileupload/
-#  serverpath: /usr/share/nginx/file-rs/
-  serverPath: D:\
+  serverpath: /home/resume/api-svc/file/file-notes/
+#  serverPath: D:\
+  fileSize: 1048576 #Byte 1MB

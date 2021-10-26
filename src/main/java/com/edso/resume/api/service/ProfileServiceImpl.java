@@ -25,6 +25,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -38,16 +39,20 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
     private final RabbitTemplate rabbitTemplate;
+    private final CalendarService calendarService;
+    private final NoteService noteService;
 
     @Value("${spring.rabbitmq.profile.exchange}")
     private String exchange;
     @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
 
-    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate) {
+    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService) {
         super(db);
         this.historyService = historyService;
         this.rabbitTemplate = rabbitTemplate;
+        this.calendarService = calendarService;
+        this.noteService = noteService;
     }
 
     private void publishActionToRabbitMQ(String type, Object obj) {
@@ -153,7 +158,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         response.setSuccess(profile);
 
         //Insert history to DB
-        historyService.createHistory(idProfile, TypeConfig.SELECT, "Xem chi tiết profile", info.getUsername());
+        historyService.createHistoryProfile(idProfile, TypeConfig.SELECT, "Xem chi tiết profile", info.getUsername());
 
         return response;
     }
@@ -172,6 +177,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
             int total = rs.size();
 
             for (DictionaryValidateProcessor p : rs) {
@@ -288,7 +295,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ("create", profileEntity);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo().getUsername());
+            historyService.createHistoryProfile(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo().getUsername());
 
             response.setSuccess();
             return response;
@@ -313,7 +320,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         String key = UUID.randomUUID().toString();
 
         try {
-
             //Validate
             String id = request.getId();
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
@@ -324,6 +330,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SCHOOL, request.getSchool(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -383,6 +391,18 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         break;
                     }
                 }
+            }
+
+            //Update coll calendar
+            FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, request.getId()), null, 0, 0);
+            for (Document doc : list) {
+                Bson idCalendar = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+
+                Bson updateProfile = Updates.combine(
+                        Updates.set(DbKeyConfig.EMAIL, request.getEmail())
+                );
+
+                db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, idCalendar, updateProfile, true);
             }
 
             // update roles
@@ -437,7 +457,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ("update", profileEntity);
 
             //Insert history to DB
-            historyService.createHistory(id, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
+            historyService.createHistoryProfile(id, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
 
             return response;
 
@@ -471,6 +491,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SCHOOL, request.getSchool(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -530,6 +552,18 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         break;
                     }
                 }
+            }
+
+            //Update coll calendar
+            FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, request.getId()), null, 0, 0);
+            for (Document doc : list) {
+                Bson idCalendar = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+
+                Bson updateProfile = Updates.combine(
+                        Updates.set(DbKeyConfig.EMAIL, request.getEmail())
+                );
+
+                db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, idCalendar, updateProfile, true);
             }
 
             // update roles
@@ -589,7 +623,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ("update detail profile", profileEntity);
 
             //Insert history to DB
-            historyService.createHistory(id, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
+            historyService.createHistoryProfile(id, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
 
             return response;
 
@@ -608,12 +642,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public void onValidatorResult(String key, DictionaryValidatorResult result) {
-        result.setKey(key);
-        queue.offer(result);
-    }
-
-    @Override
     public BaseResponse deleteProfile(DeleteProfileRequest request) {
 
         BaseResponse response = new BaseResponse();
@@ -623,18 +651,15 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
-            return response;
-        }
-
+        deleteFile(AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV)));
         db.delete(CollectionNameDefs.COLL_PROFILE, cond);
+//        calendarService.deleteCalendarProfile()
+
+        historyService.deleteHistoryProfile(id);
 
         // insert to rabbitmq
         publishActionToRabbitMQ("delete", request);
 
-        //Insert history to DB
-        historyService.createHistory(id, TypeConfig.DELETE, "Xóa profile", request.getInfo().getUsername());
         response.setSuccess();
 
         return response;
@@ -716,7 +741,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ("update-status", profileRabbitMQ);
 
             //Insert history to DB
-            historyService.createHistory(id, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());
+            historyService.createHistoryProfile(id, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());
 
             return response;
 
@@ -733,5 +758,17 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         }
     }
 
+    public void deleteFile(String path) {
+        File file = new File(path);
+        if (file.delete()) {
+            logger.info("deleteFile filePath:{}", path);
+        }
+    }
+
+    @Override
+    public void onValidatorResult(String key, DictionaryValidatorResult result) {
+        result.setKey(key);
+        queue.offer(result);
+    }
 
 }

@@ -11,7 +11,7 @@ public class ProfileExcelEntity {
     private String gender;
     private String phoneNumber;
     private String email;
-    private Long dateOfBirth;
+    private String dateOfBirth;
     private String hometown;
     private String schoolName;
     private String jobName;
@@ -19,12 +19,12 @@ public class ProfileExcelEntity {
     private String cv;
     private String sourceCVName;
     private String hrRef;
-    private Long dateOfApply;
+    private String dateOfApply;
     private String cvType;
-    private Long lastApply;
+    private String lastApply;
     private String tags;
-    private Long dateOfCreate;
-    private Long dateOfUpdate;
+    private String dateOfCreate;
+    private String dateOfUpdate;
     private String note;
     private String evaluation;
     private String statusCVName;

@@ -1,7 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.ProfilesEntity;
+import com.edso.resume.api.domain.entities.ProfileUploadEntity;
 import com.edso.resume.api.domain.validator.DictionaryNameValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryNameValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryNameValidator;
@@ -82,8 +82,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         return cellValue;
     }
 
-    public List<ProfilesEntity> readExcel(MultipartFile excelFile) throws IOException {
-        List<ProfilesEntity> listProfile = new ArrayList<>();
+    public List<ProfileUploadEntity> readExcel(MultipartFile excelFile) throws IOException {
+        List<ProfileUploadEntity> listProfile = new ArrayList<>();
 
         File file = convertToFile(excelFile);
         if (file == null) {
@@ -110,7 +110,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             Iterator<Cell> cellIterator = nextRow.cellIterator();
 
             // Read cells and set value for book object
-            ProfilesEntity profiles = new ProfilesEntity();
+            ProfileUploadEntity profiles = new ProfileUploadEntity();
             while (cellIterator.hasNext()) {
                 //Read cell
                 Cell cell = cellIterator.next();
@@ -183,7 +183,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     @Override
     public BaseResponse uploadProfiles(MultipartFile request, HeaderInfo info) {
         BaseResponse response = new BaseResponse();
-        List<ProfilesEntity> profiles = null;
+        List<ProfileUploadEntity> profiles = null;
         try {
             profiles = readExcel(request);
         } catch (Throwable e) {
@@ -194,7 +194,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             response.setFailed("Vui lòng nhập đúng file excel!");
             return response;
         }
-        for (ProfilesEntity profile : profiles) {
+        for (ProfileUploadEntity profile : profiles) {
 
             if (Strings.isNullOrEmpty(profile.getFullName())) {
                 continue;

@@ -25,11 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
@@ -39,11 +35,10 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
 
-    @Value("${note.domain}")
-    private String domain;
-
     @Value("${note.serverpath}")
     private String serverPath;
+    @Value("${note.fileSize}")
+    private long fileSize;
 
     public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
         super(db);
@@ -68,18 +63,23 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             c.add(Filters.regex(DbKeyConfig.ID_PROFILE, Pattern.compile(idProfile)));
         }
         Bson cond = buildCondition(c);
+        Bson sort = Filters.eq(DbKeyConfig.FULL_NAME, 1);
         long total = db.countAll(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_NOTE_PROFILE, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_NOTE_PROFILE, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<NoteProfileEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
                 NoteProfileEntity noteProfile = NoteProfileEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .idProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)))
-                        .note(AppUtils.parseString(doc.get(DbKeyConfig.NOTE)))
-                        .createAt(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
-                        .createBy(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)))
+                        .username(AppUtils.parseString(doc.get(DbKeyConfig.USERNAME)))
+                        .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
+                        .comment(AppUtils.parseString(doc.get(DbKeyConfig.COMMENT)))
+                        .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
+                        .path(AppUtils.parseString(doc.get(DbKeyConfig.PATH_SERVER)))
+                        .filePath(AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE)))
+                        .fileName(AppUtils.parseString(doc.get(DbKeyConfig.FILE_NAME)))
                         .build();
                 rows.add(noteProfile);
             }
@@ -92,10 +92,14 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     }
 
     @Override
-    public BaseResponse createNoteProfile(CreateNoteProfileRequest request, MultipartFile file) {
+    public BaseResponse createNoteProfile(CreateNoteProfileRequest request) {
 
+        MultipartFile file = request.getFile();
         BaseResponse response = new BaseResponse();
-
+        if (file != null && file.getSize() > fileSize) {
+            response.setFailed("Dung lượng file quá lớn");
+            return response;
+        }
         String key = UUID.randomUUID().toString();
         try {
 
@@ -144,15 +148,16 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                 }
             }
 
-            String url = null;
+            String fileName = null;
             String path = null;
+            String pathFile = null;
             if (file != null) {
                 try {
-                    saveFile(file);
-                    url = domain + file.getOriginalFilename();
-                    path = serverPath + file.getOriginalFilename();
+                    fileName = saveFile(file);
+                    path = serverPath;
+                    pathFile = serverPath + fileName;
                 } catch (Throwable ex) {
-                    logger.info("Exception: ", ex);
+                    logger.error("Exception: ", ex);
                 }
             }
 
@@ -163,8 +168,9 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             note.append(DbKeyConfig.FULL_NAME, fullName);
             note.append(DbKeyConfig.EVALUATION, request.getEvaluation());
             note.append(DbKeyConfig.COMMENT, request.getComment());
-            note.append(DbKeyConfig.URL, url);
-            note.append(DbKeyConfig.PATH, path);
+            note.append(DbKeyConfig.FILE_NAME, fileName);
+            note.append(DbKeyConfig.PATH_SERVER, path);
+            note.append(DbKeyConfig.PATH_FILE, pathFile);
             note.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             note.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -173,7 +179,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo().getUsername());
+            historyService.createHistoryProfile(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -192,12 +198,15 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     @Override
     public BaseResponse updateNoteProfile(UpdateNoteProfileRequest request, MultipartFile file) {
         BaseResponse response = new BaseResponse();
+        if (file != null && file.getSize() > fileSize) {
+            response.setFailed("Dung lượng file quá lớn");
+            return response;
+        }
         String key = UUID.randomUUID().toString();
         Bson cond = Filters.eq(DbKeyConfig.ID, request.getId());
         try {
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getIdProfile(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.NOTE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getUsername(), db, this));
             int total = rs.size();
@@ -236,43 +245,46 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             }
 
             String fullName = null;
-            String path = null;
+            String pathFile = null;
+            String idProfile = null;
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.USER)) {
                     fullName = r.getResult().getName();
                 }
                 if (r.getResult().getType().equals(ThreadConfig.NOTE)) {
-                    path = r.getResult().getName();
+                    pathFile = r.getResult().getName();
+                    idProfile = r.getResult().getIdProfile()
+                    ;
                 }
             }
-            String url = null;
-            String newPath = null;
-            if(path != null){
-                if(file != null){
-                    if(!path.equals(serverPath+file.getOriginalFilename())){
-                        try {
-                            deleteFile(path);
-                            saveFile(file);
-                            newPath = serverPath + file.getOriginalFilename();
-                            url = domain + file.getOriginalFilename();
-                        } catch (Throwable ex) {
-                            logger.info("Exception: ", ex);
-                        }
-                    }else url = file.getOriginalFilename();
-                }else {
-                    deleteFile(path);
+
+            String fileName = null;
+            String path = null;
+            String pathFile1 = null;
+            if (file != null) {
+                try {
+                    deleteFile(pathFile);
+                    fileName = saveFile(file);
+                    path = serverPath;
+                    pathFile1 = serverPath + fileName;
+                } catch (Throwable ex) {
+                    logger.error("Exception: ", ex);
+                }
+            } else {
+                if (pathFile != null) {
+                    deleteFile(pathFile);
                 }
             }
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.ID_PROFILE, request.getIdProfile()),
                     Updates.set(DbKeyConfig.USERNAME, request.getUsername()),
                     Updates.set(DbKeyConfig.FULL_NAME, fullName),
                     Updates.set(DbKeyConfig.COMMENT, request.getComment()),
                     Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
-                    Updates.set(DbKeyConfig.URL, url),
-                    Updates.set(DbKeyConfig.PATH, newPath),
+                    Updates.set(DbKeyConfig.PATH_SERVER, path),
+                    Updates.set(DbKeyConfig.FILE_NAME, fileName),
+                    Updates.set(DbKeyConfig.PATH_FILE, pathFile1),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
@@ -280,7 +292,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Sửa chú ý", request.getInfo().getUsername());
+            historyService.createHistoryProfile(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -308,24 +320,52 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             return response;
         }
 
+        //Xóa file
+        String path = AppUtils.parseString(idDocument.get(DbKeyConfig.PATH_FILE));
+        deleteFile(path);
+
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        historyService.createHistory(request.getIdProfile(), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
+        historyService.createHistoryProfile(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
 
         return new BaseResponse(0, "OK");
     }
 
-    public void saveFile(MultipartFile file) throws IOException {
-        File convFile = new File(serverPath + file.getOriginalFilename());
-        FileOutputStream fos = new FileOutputStream(convFile);
-        fos.write(file.getBytes());
-        fos.close();
+    public String saveFile(MultipartFile file) {
+        FileOutputStream fos = null;
+        try {
+            String fileName = file.getOriginalFilename();
+            File file1 = new File(serverPath + fileName);
+            int i = 0;
+            while (file1.exists()) {
+                i++;
+                String[] arr = Objects.requireNonNull(file.getOriginalFilename()).split("\\.");
+                fileName = arr[0] + " (" + i + ")."+ arr[1];
+                file1 = new File(serverPath + fileName);
+            }
+            fos = new FileOutputStream(file1);
+            fos.write(file.getBytes());
+            return fileName;
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (Throwable ex) {
+                    logger.error("Exception: ", ex);
+                }
+            }
+        }
+        return null;
     }
 
     public void deleteFile(String path) {
         File file = new File(path);
-        file.delete();
+        if (file.delete()) {
+            logger.info("deleteFile filePath:{}", path);
+        }
     }
 
     @Override

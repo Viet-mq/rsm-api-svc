@@ -5,5 +5,5 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import java.io.IOException;
 
 public interface ExcelService {
-    byte[] exportExcel(HeaderInfo info, String fullName) throws IOException;
+    String exportExcel(HeaderInfo info) throws IOException;
 }

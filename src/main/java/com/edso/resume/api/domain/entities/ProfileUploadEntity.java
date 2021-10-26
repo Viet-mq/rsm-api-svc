@@ -3,7 +3,7 @@ package com.edso.resume.api.domain.entities;
 import lombok.Data;
 
 @Data
-public class ProfilesEntity {
+public class ProfileUploadEntity {
     private String fullName;
     private String phoneNumber;
     private String email;

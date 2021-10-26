@@ -14,7 +14,6 @@ import java.util.List;
 public class UpdateCalendarProfileRequest extends BaseAuthRequest {
 
     private String id;
-    private String idProfile;
     private Long time;
     private String address;
     private String form;
@@ -32,9 +31,6 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest {
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id)) {
             return new BaseResponse(-1, "Vui lòng nhập id");
-        }
-        if (Strings.isNullOrEmpty(idProfile)) {
-            return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
         if (time <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian");

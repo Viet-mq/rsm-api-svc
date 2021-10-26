@@ -7,6 +7,8 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public abstract class BaseService {
@@ -31,6 +33,18 @@ public abstract class BaseService {
     @SuppressWarnings(value = "unchecked")
     public List<String> parseList(Object list) {
         return (List<String>) list;
+    }
+
+    public String parseDate(Long time){
+        Date dateTime = new Date(time);
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm dd-MM-yyyy");
+        return format.format(dateTime);
+    }
+
+    public String parseDateMonthYear(Long time){
+        Date dateTime = new Date(time);
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+        return format.format(dateTime);
     }
 
 }

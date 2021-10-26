@@ -2,6 +2,7 @@ package com.edso.resume.api.domain.request;
 
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -9,11 +10,10 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
+@AllArgsConstructor
 public class UpdateNoteProfileRequest extends BaseAuthRequest {
     private String id;
-    private String idProfile;
     private String username;
-    private String fullName;
     private String comment;
     private String evaluation;
 
@@ -21,14 +21,8 @@ public class UpdateNoteProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(id)) {
             return new BaseResponse(-1, "Vui lòng nhập id");
         }
-        if (Strings.isNullOrEmpty(idProfile)) {
-            return new BaseResponse(-1, "Vui lòng nhập id profile");
-        }
         if (Strings.isNullOrEmpty(username)) {
-            return new BaseResponse(-1, "Vui lòng nhập lưu ý");
-        }
-        if (Strings.isNullOrEmpty(fullName)) {
-            return new BaseResponse(-1, "Vui lòng nhập lưu ý");
+            return new BaseResponse(-1, "Vui lòng nhập username");
         }
         return null;
     }

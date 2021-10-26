@@ -34,37 +34,60 @@ public class DictionaryValidateProcessor implements Runnable {
     public void run() {
         try {
             Bson cond;
-            switch (type){
-                case ThreadConfig.USER:{
+            switch (type) {
+                case ThreadConfig.USER: {
                     cond = Filters.eq(DbKeyConfig.USERNAME, this.id);
                     break;
                 }
-                default:{
+                case ThreadConfig.BLACKLIST_EMAIL:{
+                    cond = Filters.eq(DbKeyConfig.EMAIL, this.id);
+                    break;
+                }
+                case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
+                    cond = Filters.eq(DbKeyConfig.PHONE_NUMBER, this.id);
+                    break;
+                }
+                default: {
                     cond = Filters.eq(DbKeyConfig.ID, this.id);
                     break;
                 }
             }
             Document doc = db.findOne(getCollectionName(), cond);
             if (doc == null) {
+                if(type.equals(ThreadConfig.BLACKLIST_EMAIL)||type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER)){
+                    result.setResult(true);
+                    return;
+                }
                 result.setResult(false);
                 result.setName("Không tồn tại " + getDictionaryName() + " này!");
                 return;
             }
             result.setResult(true);
-            switch (type){
-                case ThreadConfig.PROFILE:{
+            switch (type) {
+                case ThreadConfig.PROFILE: {
                     result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                     break;
                 }
-                case ThreadConfig.USER:{
+                case ThreadConfig.USER: {
                     result.setName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
                     break;
                 }
-                case ThreadConfig.NOTE:{
-                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.PATH)));
+                case ThreadConfig.NOTE: {
+                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE)));
+                    result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
                     break;
                 }
-                default:{
+                case ThreadConfig.CALENDAR: {
+                    result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
+                    break;
+                }
+                case ThreadConfig.BLACKLIST_EMAIL:
+                case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
+                    result.setResult(false);
+                    result.setName("Ứng viên này đang trong blacklist!");
+                    break;
+                }
+                default: {
                     result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
                     break;
                 }
@@ -151,6 +174,10 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.NOTE: {
                 return CollectionNameDefs.COLL_NOTE_PROFILE;
+            }
+            case ThreadConfig.BLACKLIST_EMAIL:
+            case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
+                return CollectionNameDefs.COLL_BLACKLIST;
             }
             default: {
                 return null;

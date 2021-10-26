@@ -6,23 +6,19 @@ import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
-import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.model.Filters;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
-import org.bson.conversions.Bson;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 @Service
 public class ExcelServiceImpl extends BaseService implements ExcelService {
@@ -53,7 +49,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         super(db);
     }
 
-    public static byte[] writeExcel(List<ProfileExcelEntity> profiles, String excelFilePath) throws IOException {
+    public static String writeExcel(List<ProfileExcelEntity> profiles, String excelFilePath) throws IOException {
         // Create Workbook
         Workbook workbook = getWorkbook(excelFilePath);
 
@@ -71,23 +67,23 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
             // Create row
             Row row = sheet.createRow(rowIndex);
             // Write data on row
-            writeBook(profile, row);
+            writeBook(profile, sheet, row);
             rowIndex++;
         }
 
         // Create file excel
         createOutputFile(workbook, excelFilePath);
 
-        return openFile(excelFilePath);
+        return excelFilePath;
     }
 
-    private static byte[] openFile(String excelFilePath) throws IOException {
-        RandomAccessFile f = new RandomAccessFile(excelFilePath, "r");
-        byte[] b = new byte[(int) f.length()];
-        f.readFully(b);
-        f.close();
-        return b;
-    }
+//    private static byte[] openFile(String excelFilePath) throws IOException {
+//        RandomAccessFile f = new RandomAccessFile(excelFilePath, "r");
+//        byte[] b = new byte[(int) f.length()];
+//        f.readFully(b);
+//        f.close();
+//        return b;
+//    }
 
     // Create workbook
     private static Workbook getWorkbook(String excelFilePath) {
@@ -197,69 +193,92 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
     }
 
     // Write data
-    private static void writeBook(ProfileExcelEntity profile, Row row) {
+    private static void writeBook(ProfileExcelEntity profile, Sheet sheet, Row row) {
+
+        CellStyle cellStyle = createStyleForRow(sheet);
 
         Cell cell = row.createCell(COLUMN_INDEX_FULLNAME);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getFullName());
 
         cell = row.createCell(COLUMN_INDEX_EMAIL);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getEmail());
 
         cell = row.createCell(COLUMN_INDEX_PHONENUMBER);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getPhoneNumber());
 
         cell = row.createCell(COLUMN_INDEX_JOB);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getJobName());
 
         cell = row.createCell(COLUMN_INDEX_LASTAPPLY);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getLastApply());
 
         cell = row.createCell(COLUMN_INDEX_SOURCECV);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getSourceCVName());
 
         cell = row.createCell(COLUMN_INDEX_TAGS);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getTags());
 
         cell = row.createCell(COLUMN_INDEX_DATEOFBIRTH);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getDateOfBirth());
 
         cell = row.createCell(COLUMN_INDEX_GENDER);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getGender());
 
         cell = row.createCell(COLUMN_INDEX_HOMETOWN);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getHometown());
 
         cell = row.createCell(COLUMN_INDEX_NOTE);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getNote());
 
         cell = row.createCell(COLUMN_INDEX_DATEOFCREATE);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getDateOfCreate());
 
         cell = row.createCell(COLUMN_INDEX_DATEOFAPPLY);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getDateOfApply());
 
         cell = row.createCell(COLUMN_INDEX_DATEOFUPDATE);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getDateOfUpdate());
 
         cell = row.createCell(COLUMN_INDEX_EVALUATION);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getEvaluation());
 
         cell = row.createCell(COLUMN_INDEX_SCHOOL);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getSchoolName());
 
         cell = row.createCell(COLUMN_INDEX_LEVELJOB);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getLevelJobName());
 
         cell = row.createCell(COLUMN_INDEX_CV);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getCv());
 
         cell = row.createCell(COLUMN_INDEX_HRREF);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getHrRef());
 
         cell = row.createCell(COLUMN_INDEX_CVTYPE);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getCvType());
 
         cell = row.createCell(COLUMN_INDEX_STATUSCV);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(profile.getStatusCVName());
     }
 
@@ -277,6 +296,17 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         return cellStyle;
     }
 
+    private static CellStyle createStyleForRow(Sheet sheet) {
+        // Create font
+        Font font = sheet.getWorkbook().createFont();
+        font.setFontName("Times New Roman");
+        font.setFontHeightInPoints((short) 11); // font size
+        // Create CellStyle
+        CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+        cellStyle.setFont(font);
+        return cellStyle;
+    }
+
     // Create output file
     private static void createOutputFile(Workbook workbook, String excelFilePath) throws IOException {
         try (OutputStream os = new FileOutputStream(excelFilePath)) {
@@ -284,22 +314,19 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
         }
     }
 
+    @Value("${excel.path}")
+    private String path;
+
     @Override
-    public byte[] exportExcel(HeaderInfo info, String name) throws IOException {
-        final String excelFilePath = "D:\\Profiles.xlsx";
-        List<Bson> c = new ArrayList<>();
-        if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
-        }
-        Bson cond = buildCondition(c);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
+    public String exportExcel(HeaderInfo info) throws IOException {
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, null, null, 0, 0);
         List<ProfileExcelEntity> profiles = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
                 ProfileExcelEntity profile = ProfileExcelEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
-                        .dateOfBirth(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_BIRTH)))
+                        .dateOfBirth(parseDateMonthYear(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_BIRTH))))
                         .hometown(AppUtils.parseString(doc.get(DbKeyConfig.HOMETOWN)))
                         .schoolName(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_NAME)))
                         .phoneNumber(AppUtils.parseString(doc.get(DbKeyConfig.PHONE_NUMBER)))
@@ -309,20 +336,20 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
                         .cv(AppUtils.parseString(doc.get(DbKeyConfig.CV)))
                         .sourceCVName(AppUtils.parseString(doc.get(DbKeyConfig.SOURCE_CV_NAME)))
                         .hrRef(AppUtils.parseString(doc.get(DbKeyConfig.HR_REF)))
-                        .dateOfApply(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY)))
+                        .dateOfApply(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY))))
                         .cvType(AppUtils.parseString(doc.get(DbKeyConfig.CV_TYPE)))
                         .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
-                        .lastApply(AppUtils.parseLong(doc.get(DbKeyConfig.LAST_APPLY)))
+                        .lastApply(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.LAST_APPLY))))
                         .tags(AppUtils.parseString(doc.get(DbKeyConfig.TAGS)))
                         .gender(AppUtils.parseString(doc.get(DbKeyConfig.GENDER)))
                         .note(AppUtils.parseString(doc.get(DbKeyConfig.NOTE)))
-                        .dateOfCreate(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
-                        .dateOfUpdate(AppUtils.parseLong(doc.get(DbKeyConfig.UPDATE_AT)))
+                        .dateOfCreate(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT))))
+                        .dateOfUpdate(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.UPDATE_AT))))
                         .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
                         .build();
                 profiles.add(profile);
             }
         }
-        return writeExcel(profiles, excelFilePath);
+        return writeExcel(profiles, path);
     }
 }

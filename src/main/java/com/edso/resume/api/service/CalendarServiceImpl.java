@@ -153,8 +153,9 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             if (request.getTime() < System.currentTimeMillis()) {
                 checkTime = "1";
             }
+            String id = UUID.randomUUID().toString();
             Document calendar = new Document();
-            calendar.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            calendar.append(DbKeyConfig.ID, id);
             calendar.append(DbKeyConfig.ID_PROFILE, idProfile);
             calendar.append(DbKeyConfig.EMAIL, email);
             calendar.append(DbKeyConfig.TIME, request.getTime());
@@ -183,7 +184,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo().getUsername());
+            historyService.createHistoryCalendar(idProfile, id, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -206,14 +207,12 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        String idProfile = request.getIdProfile();
         String key = UUID.randomUUID().toString();
 
         try {
 
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR, id, db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatus(), db, this));
             int total = rs.size();
@@ -252,14 +251,13 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             }
 
             String statusCVName = null;
-            String email = null;
-
+            String idProfile = null;
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
                     statusCVName = r.getResult().getName();
                 }
-                if (r.getResult().getType().equals(ThreadConfig.PROFILE)) {
-                    email = r.getResult().getName();
+                if (r.getResult().getType().equals(ThreadConfig.CALENDAR)) {
+                    idProfile = r.getResult().getIdProfile();
                 }
             }
             String check = "0";
@@ -268,8 +266,6 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             }
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.ID_PROFILE, idProfile),
-                    Updates.set(DbKeyConfig.EMAIL, email),
                     Updates.set(DbKeyConfig.TIME, request.getTime()),
                     Updates.set(DbKeyConfig.ADDRESS, request.getAddress()),
                     Updates.set(DbKeyConfig.FORM, request.getForm()),
@@ -292,7 +288,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo().getUsername());
+            historyService.createHistoryCalendar(idProfile, request.getId(),TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -314,16 +310,13 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
-
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
-            return response;
-        }
-
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
+        //xóa lịch sử
+        historyService.deleteHistoryCalendar(id);
+
         //Insert history to DB
-        historyService.createHistory(request.getIdProfile(), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo().getUsername());
+        historyService.createHistoryProfile(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo().getUsername());
         response.setSuccess();
 
         return response;
