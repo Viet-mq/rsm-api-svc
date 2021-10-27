@@ -7,7 +7,7 @@ import com.edso.resume.api.service.ProfileService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
-import com.edso.resume.lib.response.GetReponse;
+import com.edso.resume.lib.response.GetResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,7 +42,7 @@ public class ProfileController extends BaseController {
             @RequestParam(value = "idProfile") String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>findOneProfile u: {}, idProfile: {}", headerInfo, idProfile);
-        GetReponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
+        GetResponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
         logger.info("<=findOneProfile u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
         return resp;
     }

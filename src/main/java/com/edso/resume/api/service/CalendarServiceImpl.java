@@ -13,7 +13,7 @@ import com.edso.resume.api.domain.validator.IDictionaryValidator;
 import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
-import com.edso.resume.lib.response.GetArrayCalendarReponse;
+import com.edso.resume.lib.response.GetArrayCalendarResponse;
 import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
@@ -47,8 +47,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
     }
 
     @Override
-    public GetArrayCalendarReponse<CalendarEntity> findAllCalendar(HeaderInfo info, String idProfile) {
-        GetArrayCalendarReponse<CalendarEntity> resp = new GetArrayCalendarReponse<>();
+    public GetArrayCalendarResponse<CalendarEntity> findAllCalendar(HeaderInfo info, String idProfile) {
+        GetArrayCalendarResponse<CalendarEntity> resp = new GetArrayCalendarResponse<>();
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
         if (idProfileDocument == null) {
             resp.setFailed("Id profile không tồn tại");
@@ -184,7 +184,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistoryCalendar(idProfile, id, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -288,7 +288,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistoryCalendar(idProfile, request.getId(),TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -310,16 +310,25 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
         Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
+        if (idDocument == null) {
+            response.setFailed("Không tồn tại id calendar này");
+            return response;
+        }
+
         db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
-        //xóa lịch sử
-        historyService.deleteHistoryCalendar(id);
-
         //Insert history to DB
-        historyService.createHistoryProfile(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo().getUsername());
+        historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo().getUsername());
         response.setSuccess();
 
         return response;
+    }
+
+    @Override
+    public void deleteCalendarByIdProfile(String idProfile) {
+        Bson cond = Filters.eq(DbKeyConfig.ID_PROFILE, idProfile);
+        db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
+        logger.info("deleteCalendarByIdProfile idProfile: {}", idProfile);
     }
 
     public void alarmInterview() {

@@ -179,7 +179,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistoryProfile(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo().getUsername());
+            historyService.createHistory(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -292,7 +292,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistoryProfile(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -327,9 +327,23 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        historyService.createHistoryProfile(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
+        historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
 
         return new BaseResponse(0, "OK");
+    }
+
+    @Override
+    public void deleteNoteProfileByIdProfile(String idProfile) {
+        Bson cond = Filters.eq(DbKeyConfig.ID_PROFILE, idProfile);
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_NOTE_PROFILE, cond, null, 0, 0);
+
+        //Xóa file
+        for (Document doc : list) {
+            String path = AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE));
+            deleteFile(path);
+        }
+        //Xóa note
+        db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
     }
 
     public String saveFile(MultipartFile file) {
@@ -341,7 +355,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             while (file1.exists()) {
                 i++;
                 String[] arr = Objects.requireNonNull(file.getOriginalFilename()).split("\\.");
-                fileName = arr[0] + " (" + i + ")."+ arr[1];
+                fileName = arr[0] + " (" + i + ")." + arr[1];
                 file1 = new File(serverPath + fileName);
             }
             fos = new FileOutputStream(file1);

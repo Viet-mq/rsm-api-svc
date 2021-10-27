@@ -33,4 +33,5 @@ public class ProfileDetailEntity {
     private String evaluation;
     private String statusCVId;
     private String statusCVName;
+    private String image;
 }

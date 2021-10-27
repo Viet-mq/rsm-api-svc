@@ -39,7 +39,7 @@ public class DictionaryValidateProcessor implements Runnable {
                     cond = Filters.eq(DbKeyConfig.USERNAME, this.id);
                     break;
                 }
-                case ThreadConfig.BLACKLIST_EMAIL:{
+                case ThreadConfig.BLACKLIST_EMAIL: {
                     cond = Filters.eq(DbKeyConfig.EMAIL, this.id);
                     break;
                 }
@@ -54,7 +54,7 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             Document doc = db.findOne(getCollectionName(), cond);
             if (doc == null) {
-                if(type.equals(ThreadConfig.BLACKLIST_EMAIL)||type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER)){
+                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER)) {
                     result.setResult(true);
                     return;
                 }
@@ -137,6 +137,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.NOTE: {
                 return "id note";
             }
+            case ThreadConfig.TALENT_POOL: {
+                return "talent pool";
+            }
             default: {
                 return null;
             }
@@ -178,6 +181,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.BLACKLIST_EMAIL:
             case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
                 return CollectionNameDefs.COLL_BLACKLIST;
+            }
+            case ThreadConfig.TALENT_POOL: {
+                return CollectionNameDefs.COLL_TALENT_POOL;
             }
             default: {
                 return null;

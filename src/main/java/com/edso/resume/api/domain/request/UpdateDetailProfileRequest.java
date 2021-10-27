@@ -28,6 +28,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private String tags;
     private String note;
     private String evaluation;
+    private String talentPool;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(gender)) {
@@ -88,6 +89,9 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
             return new BaseResponse(-1, "Vui lòng nhập ngày apply");
         }
         if (Strings.isNullOrEmpty(cvType)) {
+            return new BaseResponse(-1, "Vui lòng nhập kiểu cv");
+        }
+        if (Strings.isNullOrEmpty(talentPool)) {
             return new BaseResponse(-1, "Vui lòng nhập kiểu cv");
         }
         return null;

@@ -24,4 +24,6 @@ public class ProfileRabbitMQEntity {
     private String cvType;
     private String statusCVId;
     private String statusCVName;
+    private String talentPoolId;
+    private String talentPoolName;
 }
