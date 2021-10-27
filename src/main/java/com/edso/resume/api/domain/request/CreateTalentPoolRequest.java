@@ -16,6 +16,7 @@ public class CreateTalentPoolRequest extends BaseAuthRequest {
     private String name;
     private List<String> managers;
     private String description;
+    private int numberOfProfile;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(name)) {

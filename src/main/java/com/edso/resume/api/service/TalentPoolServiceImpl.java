@@ -92,6 +92,7 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
         talentPool.append("name", name);
         talentPool.append("managers", request.getManagers());
         talentPool.append("description", request.getDescription());
+        talentPool.append("numberOfProfile", 0);
         talentPool.append("name_search", name.toLowerCase());
         talentPool.append("create_at", System.currentTimeMillis());
         talentPool.append("update_at", System.currentTimeMillis());
