@@ -12,6 +12,7 @@ import lombok.ToString;
 public class CreateProfileRequest extends BaseAuthRequest {
 
     private String fullName;
+    private String gender;
     private Long dateOfBirth;
     private String hometown;
     private String school;
@@ -29,6 +30,12 @@ public class CreateProfileRequest extends BaseAuthRequest {
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(-1, "Vui lòng nhập họ và tên");
+        }
+        if (Strings.isNullOrEmpty(gender)) {
+            return new BaseResponse(-1, "Vui lòng nhập giới tính");
+        }
+        if (!gender.equals("Nam") && !gender.equals("Nữ")) {
+            return new BaseResponse(-1, "Vui lòng nhập Nam hoặc Nữ");
         }
         if (dateOfBirth <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày tháng năm sinh");

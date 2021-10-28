@@ -8,6 +8,7 @@ import lombok.Data;
 public class ProfileEntity {
     private String id;
     private String fullName;
+    private String gender;
     private String phoneNumber;
     private String email;
     private Long dateOfBirth;
@@ -28,4 +29,5 @@ public class ProfileEntity {
     private String statusCVName;
     private String talentPoolId;
     private String talentPoolName;
+    private String image;
 }

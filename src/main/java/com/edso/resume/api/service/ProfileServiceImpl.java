@@ -80,6 +80,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 ProfileEntity profile = ProfileEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
+                        .gender(AppUtils.parseString(doc.get(DbKeyConfig.GENDER)))
                         .dateOfBirth(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_BIRTH)))
                         .hometown(AppUtils.parseString(doc.get(DbKeyConfig.HOMETOWN)))
                         .schoolId(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_ID)))
@@ -98,6 +99,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .cvType(AppUtils.parseString(doc.get(DbKeyConfig.CV_TYPE)))
                         .statusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
                         .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
+                        .talentPoolId(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_ID)))
+                        .talentPoolName(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_NAME)))
+                        .image(AppUtils.parseString(doc.get(DbKeyConfig.URL_IMAGE)))
                         .build();
                 rows.add(profile);
             }
@@ -153,6 +157,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .dateOfCreate(AppUtils.parseLong(one.get(DbKeyConfig.CREATE_AT)))
                 .dateOfUpdate(AppUtils.parseLong(one.get(DbKeyConfig.UPDATE_AT)))
                 .evaluation(AppUtils.parseString(one.get(DbKeyConfig.EVALUATION)))
+                .talentPoolId(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_ID)))
+                .talentPoolName(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_NAME)))
                 .image(AppUtils.parseString(one.get(DbKeyConfig.URL_IMAGE)))
                 .build();
 
@@ -251,6 +257,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             Document profile = new Document();
             profile.append(DbKeyConfig.ID, idProfile);
             profile.append(DbKeyConfig.FULL_NAME, request.getFullName());
+            profile.append(DbKeyConfig.GENDER, request.getGender());
             profile.append(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber());
             profile.append(DbKeyConfig.EMAIL, request.getEmail());
             profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
@@ -425,6 +432,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                    Updates.set(DbKeyConfig.GENDER, request.getGender()),
                     Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
                     Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
                     Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),

@@ -33,5 +33,7 @@ public class ProfileDetailEntity {
     private String evaluation;
     private String statusCVId;
     private String statusCVName;
+    private String talentPoolId;
+    private String talentPoolName;
     private String image;
 }
