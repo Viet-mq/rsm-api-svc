@@ -1,6 +1,8 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.edso.resume.api.domain.entities.EventEntity;
+import com.edso.resume.api.domain.entities.ProfileRabbitMQEntity;
 import com.edso.resume.api.domain.entities.ProfileUploadEntity;
 import com.edso.resume.api.domain.validator.DictionaryNameValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryNameValidatorResult;
@@ -16,11 +18,14 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.bson.Document;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
@@ -35,15 +40,19 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     public static final int COLUMN_DATE_OF_BIRTH = 3;
     public static final int COLUMN_GENDER = 4;
     public static final int COLUMN_HOMETOWN = 5;
-    public static final int COLUMN_SCHOOL_LEVEL = 6;
+    public static final int COLUMN_LEVEL_SCHOOL = 6;
     public static final int COLUMN_SCHOOL_NAME = 7;
-    public static final int COLUMN_MAJOR = 8;
-    public static final int COLUMN_RECENT_WORK_PLACE = 9;
-    public static final int COLUMN_DATE_OF_APPLY = 10;
-    public static final int COLUMN_SOURCE_CV = 11;
+    public static final int COLUMN_DATE_OF_APPLY = 8;
+    public static final int COLUMN_SOURCE_CV = 9;
+
+    private final RabbitTemplate rabbitTemplate;
+    @Value("${spring.rabbitmq.profile.exchange}")
+    private String exchange;
+    @Value("${spring.rabbitmq.profile.routingkey}")
+    private String routingkey;
 
     private final Queue<DictionaryNameValidatorResult> queue = new LinkedBlockingQueue<>();
-    private static final String EMAIL_REGEX = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])";
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9]+[A-Za-z0-9]*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)$";
     private static Pattern patternEmail;
     @JsonIgnore
     protected HeaderInfo info;
@@ -51,8 +60,9 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     @Value("${excel.serverPath}")
     private String serverPath;
 
-    public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db) {
+    public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
         super(db);
+        this.rabbitTemplate = rabbitTemplate;
         patternEmail = Pattern.compile(EMAIL_REGEX);
     }
 
@@ -139,17 +149,11 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     case COLUMN_HOMETOWN:
                         profiles.setHometown((String) getCellValue(cell));
                         break;
-                    case COLUMN_SCHOOL_LEVEL:
-                        profiles.setSchoolLevel((String) getCellValue(cell));
+                    case COLUMN_LEVEL_SCHOOL:
+                        profiles.setLevelSchool((String) getCellValue(cell));
                         break;
                     case COLUMN_SCHOOL_NAME:
                         profiles.setSchoolName((String) getCellValue(cell));
-                        break;
-                    case COLUMN_MAJOR:
-                        profiles.setMajor((String) getCellValue(cell));
-                        break;
-                    case COLUMN_RECENT_WORK_PLACE:
-                        profiles.setRecentWorkPlace((String) getCellValue(cell));
                         break;
                     case COLUMN_DATE_OF_APPLY:
                         profiles.setDateOfApply((String) getCellValue(cell));
@@ -199,10 +203,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             if (Strings.isNullOrEmpty(profile.getFullName())) {
                 continue;
             }
-            if (Strings.isNullOrEmpty(profile.getEmail())) {
-                continue;
-            }
-            if (!validateEmail(profile.getEmail())) {
+            if (!Strings.isNullOrEmpty(profile.getEmail()) && !validateEmail(profile.getEmail())) {
                 continue;
             }
 
@@ -210,78 +211,125 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 
             try {
                 List<DictionaryNameValidateProcessor> rs = new ArrayList<>();
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SCHOOL, profile.getSchoolName(), db, this));
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCVName(), db, this));
+                if (!Strings.isNullOrEmpty(profile.getSchoolName())) {
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SCHOOL, profile.getSchoolName(), db, this));
+                }
+                if (!Strings.isNullOrEmpty(profile.getSourceCVName())) {
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCVName(), db, this));
+                }
+                if (!Strings.isNullOrEmpty(profile.getEmail())) {
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail(), db, this));
+                }
+                if (!Strings.isNullOrEmpty(profile.getPhoneNumber())) {
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
+                }
                 int total = rs.size();
-
-                for (DictionaryNameValidateProcessor r : rs) {
-                    Thread t = new Thread(r);
-                    t.start();
-                }
-
-                long time = System.currentTimeMillis();
-                int count = 0;
-                int count2 = 0;
-                while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
-                    DictionaryNameValidatorResult validatorResult = queue.poll();
-                    if (validatorResult != null) {
-                        if (validatorResult.getKey().equals(key)) {
-                            if (!validatorResult.isResult()) {
-                                count2++;
-                                break;
-                            } else {
-                                count++;
-                            }
-                            total--;
-                        } else {
-                            queue.offer(validatorResult);
-                        }
-                    }
-                }
-                if (count2 != 0) {
-                    continue;
-                }
-
-                if (count != rs.size()) {
-                    continue;
-                }
 
                 String schoolId = null;
                 String sourceCVId = null;
+                Long dateOfBirth = null;
+                Long dateOfApply = null;
+                if(total != 0){
+                    for (DictionaryNameValidateProcessor r : rs) {
+                        Thread t = new Thread(r);
+                        t.start();
+                    }
 
-                for (DictionaryNameValidateProcessor r : rs) {
-                    switch (r.getResult().getType()) {
-                        case ThreadConfig.SCHOOL: {
-                            schoolId = r.getResult().getId();
-                            break;
+                    long time = System.currentTimeMillis();
+                    int count = 0;
+                    int count2 = 0;
+                    while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                        DictionaryNameValidatorResult validatorResult = queue.poll();
+                        if (validatorResult != null) {
+                            if (validatorResult.getKey().equals(key)) {
+                                if (!validatorResult.isResult()) {
+                                    count2++;
+                                    break;
+                                } else {
+                                    count++;
+                                }
+                                total--;
+                            } else {
+                                queue.offer(validatorResult);
+                            }
                         }
-                        case ThreadConfig.SOURCE_CV: {
-                            sourceCVId = r.getResult().getId();
-                            break;
+                    }
+
+                    if (count2 != 0) {
+                        continue;
+                    }
+
+                    if (count != rs.size()) {
+                        continue;
+                    }
+
+                    for (DictionaryNameValidateProcessor r : rs) {
+                        switch (r.getResult().getType()) {
+                            case ThreadConfig.SCHOOL: {
+                                schoolId = r.getResult().getId();
+                                break;
+                            }
+                            case ThreadConfig.SOURCE_CV: {
+                                sourceCVId = r.getResult().getId();
+                                break;
+                            }
                         }
+                    }
+                }
+
+                String idProfile = UUID.randomUUID().toString();
+                if(!Strings.isNullOrEmpty(profile.getDateOfApply())){
+                    try {
+                        dateOfApply = parseMillis(profile.getDateOfApply());
+                    } catch (Throwable e) {
+                        logger.error("Exception: ", e);
+                        continue;
+                    }
+                }
+                if(!Strings.isNullOrEmpty(profile.getDateOfBirth())){
+                    try {
+                        dateOfBirth = parseMillis(profile.getDateOfBirth());
+                    } catch (Throwable e) {
+                        logger.error("Exception: ", e);
+                        continue;
                     }
                 }
 
                 Document pro = new Document();
-                pro.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+                pro.append(DbKeyConfig.ID, idProfile);
                 pro.append(DbKeyConfig.FULL_NAME, profile.getFullName());
                 pro.append(DbKeyConfig.PHONE_NUMBER, profile.getPhoneNumber());
                 pro.append(DbKeyConfig.EMAIL, profile.getEmail());
-                pro.append(DbKeyConfig.DATE_OF_BIRTH, profile.getDateOfBirth());
+                pro.append(DbKeyConfig.DATE_OF_BIRTH, dateOfBirth);
                 pro.append(DbKeyConfig.GENDER, profile.getGender());
                 pro.append(DbKeyConfig.HOMETOWN, profile.getHometown());
-                pro.append(DbKeyConfig.SCHOOL_LEVEL, profile.getSchoolLevel());
+                pro.append(DbKeyConfig.SCHOOL_LEVEL, profile.getLevelSchool());
                 pro.append(DbKeyConfig.SCHOOL_NAME, profile.getSchoolName());
                 pro.append(DbKeyConfig.SCHOOL_ID, schoolId);
-                pro.append(DbKeyConfig.MAJOR, profile.getMajor());
-                pro.append(DbKeyConfig.RECENT_WORK_PLACE, profile.getRecentWorkPlace());
-                pro.append(DbKeyConfig.DATE_OF_APPLY, profile.getDateOfApply());
+                pro.append(DbKeyConfig.DATE_OF_APPLY, dateOfApply);
                 pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCVName());
                 pro.append(DbKeyConfig.SOURCE_CV_ID, sourceCVId);
                 pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                 pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
 
                 db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
+
+                ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+                profileEntity.setId(idProfile);
+                profileEntity.setFullName(profile.getFullName());
+                profileEntity.setGender(profile.getGender());
+                profileEntity.setPhoneNumber(profile.getPhoneNumber());
+                profileEntity.setEmail(profile.getEmail());
+                profileEntity.setDateOfBirth(dateOfBirth);
+                profileEntity.setHometown(profile.getHometown());
+                profileEntity.setSchoolId(schoolId);
+                profileEntity.setSchoolName(profile.getSchoolName());
+                profileEntity.setDateOfApply(dateOfApply);
+                profileEntity.setSourceCVId(sourceCVId);
+                profileEntity.setSourceCVName(profile.getSourceCVName());
+
+                publishActionToRabbitMQ(profileEntity);
+
             } finally {
                 synchronized (queue) {
                     queue.removeIf(s -> s.getKey().equals(key));
@@ -291,6 +339,17 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 
         response.setSuccess();
         return response;
+    }
+
+    public Long parseMillis(String date) throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+        return format.parse(date).getTime();
+    }
+
+    private void publishActionToRabbitMQ(Object obj) {
+        EventEntity event = new EventEntity("create", obj);
+        rabbitTemplate.convertAndSend(exchange, routingkey, event);
+        logger.info("=>publishActionToRabbitMQ type: {create}, profile: {}", obj);
     }
 
     public File convertToFile(MultipartFile file) throws IOException {

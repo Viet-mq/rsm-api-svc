@@ -27,12 +27,13 @@ public class ProfileController extends BaseController {
     public BaseResponse findAllProfile(
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "talentPool", required = false) String talentPool,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, fullName: {}, page: {}, size: {}", headerInfo, fullName, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, page, size);
-        logger.info("<=findAllProfile u: {}, fullName: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, page: {}, size: {}", headerInfo, fullName, talentPool, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, page, size);
+        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, page, size, resp.info());
         return resp;
     }
 

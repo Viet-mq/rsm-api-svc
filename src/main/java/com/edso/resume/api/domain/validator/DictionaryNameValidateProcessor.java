@@ -33,15 +33,36 @@ public class DictionaryNameValidateProcessor implements Runnable {
     @Override
     public void run() {
         try {
-            Bson cond = Filters.eq(DbKeyConfig.NAME, this.name);
+            Bson cond;
+            switch (type) {
+                case ThreadConfig.BLACKLIST_EMAIL: {
+                    cond = Filters.eq(DbKeyConfig.EMAIL, this.name);
+                    break;
+                }
+                case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
+                    cond = Filters.eq(DbKeyConfig.PHONE_NUMBER, this.name);
+                    break;
+                }
+                default: {
+                    cond = Filters.eq(DbKeyConfig.NAME, this.name);
+                    break;
+                }
+            }
             Document doc = db.findOne(getCollectionName(), cond);
             if (doc == null) {
+                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER)) {
+                    result.setResult(true);
+                    return;
+                }
                 result.setResult(false);
-                result.setId("Không tồn tại " + getDictionaryName() + " này!");
                 return;
             }
-            result.setResult(true);
-            result.setId(AppUtils.parseString(doc.get(DbKeyConfig.ID)));
+            if(type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER)){
+                result.setResult(false);
+            }else {
+                result.setResult(true);
+                result.setId(AppUtils.parseString(doc.get(DbKeyConfig.ID)));
+            }
         } catch (Throwable ex) {
             logger.error("Ex: ", ex);
             result.setResult(false);
@@ -53,38 +74,6 @@ public class DictionaryNameValidateProcessor implements Runnable {
 
     public DictionaryNameValidatorResult getResult() {
         return result;
-    }
-
-    private String getDictionaryName() {
-        switch (type) {
-            case ThreadConfig.JOB: {
-                return "công việc";
-            }
-            case ThreadConfig.JOB_LEVEL: {
-                return "vị trí tuyển dụng";
-            }
-            case ThreadConfig.SCHOOL: {
-                return "trường học";
-            }
-            case ThreadConfig.SOURCE_CV: {
-                return "nguồn cv";
-            }
-            case ThreadConfig.PROFILE: {
-                return "id profile";
-            }
-            case ThreadConfig.STATUS_CV: {
-                return "trạng thái cv";
-            }
-            case ThreadConfig.DEPARTMENT: {
-                return "phòng ban";
-            }
-            case ThreadConfig.CALENDAR: {
-                return "id calendar";
-            }
-            default: {
-                return null;
-            }
-        }
     }
 
     private String getCollectionName() {
@@ -112,6 +101,10 @@ public class DictionaryNameValidateProcessor implements Runnable {
             }
             case ThreadConfig.CALENDAR: {
                 return CollectionNameDefs.COLL_CALENDAR_PROFILE;
+            }
+            case ThreadConfig.BLACKLIST_EMAIL:
+            case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
+                return CollectionNameDefs.COLL_BLACKLIST;
             }
             default: {
                 return null;

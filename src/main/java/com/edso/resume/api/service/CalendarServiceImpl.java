@@ -20,7 +20,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -32,8 +31,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class CalendarServiceImpl extends BaseService implements CalendarService, IDictionaryValidator {
     private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
-    @Autowired
-    private RabbitMQOnlineActions rabbitMQOnlineActions;
+    private final RabbitMQOnlineActions rabbitMQOnlineActions;
 
     @Value("${calendar.timeCheck}")
     private long timeCheck;
@@ -41,9 +39,10 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
     @Value("${calendar.nLoop}")
     private int nLoop;
 
-    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+    public CalendarServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
         this.historyService = historyService;
+        this.rabbitMQOnlineActions = rabbitMQOnlineActions;
     }
 
     @Override

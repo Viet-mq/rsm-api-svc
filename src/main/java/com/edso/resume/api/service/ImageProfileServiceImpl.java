@@ -1,6 +1,8 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.edso.resume.api.domain.entities.EventImageEntity;
+import com.edso.resume.api.domain.entities.ImageEntity;
 import com.edso.resume.api.domain.request.DeleteImageProfileRequest;
 import com.edso.resume.api.domain.request.UpdateImageProfileRequest;
 import com.edso.resume.lib.common.AppUtils;
@@ -11,6 +13,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,15 +25,28 @@ import java.util.Objects;
 @Service
 public class ImageProfileServiceImpl extends BaseService implements ImageProfileService {
 
+    private final RabbitTemplate rabbitTemplate;
+
     @Value("${avatar.serverpath}")
     private String serverPath;
     @Value("${avatar.domain}")
     private String domain;
     @Value("${avatar.fileSize}")
     private Long fileSize;
+    @Value("${spring.rabbitmq.profile.exchange}")
+    private String exchange;
+    @Value("${spring.rabbitmq.profile.routingkey}")
+    private String routingkey;
 
-    protected ImageProfileServiceImpl(MongoDbOnlineSyncActions db) {
+    protected ImageProfileServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
         super(db);
+        this.rabbitTemplate = rabbitTemplate;
+    }
+
+    private void publishActionToRabbitMQ(String type, ImageEntity image) {
+        EventImageEntity eventImageEntity = new EventImageEntity(type, image);
+        rabbitTemplate.convertAndSend(exchange, routingkey, eventImageEntity);
+        logger.info("=>publishActionToRabbitMQ type: {}, image: {}", type, image);
     }
 
     @Override
@@ -49,6 +65,7 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
             return response;
         }
 
+        deleteFile(AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE)));
         String fileName = saveFile(image);
 
         Bson update = Updates.combine(
@@ -56,6 +73,13 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
                 Updates.set(DbKeyConfig.PATH_IMAGE, serverPath + fileName)
         );
         db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
+
+
+
+        ImageEntity imageEntity = new ImageEntity(request.getIdProfile(), domain + fileName);
+        publishActionToRabbitMQ("update-image", imageEntity);
+
+//        rabbit.publishImageToRabbit("update-image", imageEntity);
 
         response.setSuccess();
         return response;
@@ -78,7 +102,12 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
                 Updates.set(DbKeyConfig.URL_IMAGE, null),
                 Updates.set(DbKeyConfig.PATH_IMAGE, null)
         );
+
         db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
+
+        ImageEntity imageEntity = new ImageEntity(request.getIdProfile(), null);
+        publishActionToRabbitMQ("delete-image", imageEntity);
+//        rabbit.publishImageToRabbit("delete-image", imageEntity);
 
         response.setSuccess();
         return null;

@@ -30,6 +30,10 @@ spring:
       exchange: cv.exchange
       queue: cv.queue
       routingkey: cv.routingkey
+    image:
+      exchange: image.exchange
+      queue: image.queue
+      routingkey: image.routingkey
 
 server:
   port: ${API_SVC_PORT:30003}
@@ -78,6 +82,7 @@ excel:
 #  path: D:\
 
 note:
+  domain: http://file-rs.edsolabs.com/attachment/
   serverpath: /usr/share/nginx/file-rs/attachment/
 #  serverPath: D:\
   fileSize: 15728640 #Byte 15MB

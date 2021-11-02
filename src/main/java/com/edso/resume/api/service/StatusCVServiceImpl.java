@@ -78,9 +78,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         statusCV.append(DbKeyConfig.NAME, name);
         statusCV.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-        statusCV.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
         statusCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-        statusCV.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_STATUS_CV, statusCV);
@@ -116,27 +114,19 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
 
         Bson idStatusCV = Filters.eq(DbKeyConfig.STATUS_CV_ID, request.getId());
 
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idStatusCV, null, 0, 0);
-        for (Document doc : list) {
-            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+        Bson update = Updates.combine(
+                Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
+        );
 
-            Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
-            );
+        db.update(CollectionNameDefs.COLL_PROFILE, idStatusCV, update, true);
 
-            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
-        }
 
-        FindIterable<Document> listCalendar = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, idStatusCV, null, 0, 0);
-        for (Document doc : listCalendar) {
-            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+        Bson updateProfile = Updates.combine(
+                Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
+        );
 
-            Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
-            );
+        db.update(CollectionNameDefs.COLL_PROFILE, idStatusCV, updateProfile, true);
 
-            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
-        }
 
         // update roles
         Bson updates = Updates.combine(

@@ -30,7 +30,6 @@ public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerSe
 
         Bson update = Updates.combine(
                 Updates.set(DbKeyConfig.URL_CV, url.getUrl()),
-                Updates.set(DbKeyConfig.CV_TYPE, url.getType()),
                 Updates.set(DbKeyConfig.CV, url.getFileName())
         );
 

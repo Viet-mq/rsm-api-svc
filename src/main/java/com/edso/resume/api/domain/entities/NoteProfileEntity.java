@@ -12,7 +12,6 @@ public class NoteProfileEntity {
     private String fullName;
     private String comment;
     private String evaluation;
-    private String path;
     private String fileName;
-    private String filePath;
+    private String url;
 }

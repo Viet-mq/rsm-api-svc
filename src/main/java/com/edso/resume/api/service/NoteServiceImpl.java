@@ -39,6 +39,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     private String serverPath;
     @Value("${note.fileSize}")
     private long fileSize;
+    @Value("${note.domain}")
+    private String domain;
 
     public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
         super(db);
@@ -77,9 +79,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                         .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
                         .comment(AppUtils.parseString(doc.get(DbKeyConfig.COMMENT)))
                         .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
-                        .path(AppUtils.parseString(doc.get(DbKeyConfig.PATH_SERVER)))
-                        .filePath(AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE)))
                         .fileName(AppUtils.parseString(doc.get(DbKeyConfig.FILE_NAME)))
+                        .url(AppUtils.parseString(doc.get(DbKeyConfig.URL)))
                         .build();
                 rows.add(noteProfile);
             }
@@ -149,13 +150,13 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             }
 
             String fileName = null;
-            String path = null;
             String pathFile = null;
+            String url = null;
             if (file != null) {
                 try {
                     fileName = saveFile(file);
-                    path = serverPath;
                     pathFile = serverPath + fileName;
+                    url = domain + fileName;
                 } catch (Throwable ex) {
                     logger.error("Exception: ", ex);
                 }
@@ -169,8 +170,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             note.append(DbKeyConfig.EVALUATION, request.getEvaluation());
             note.append(DbKeyConfig.COMMENT, request.getComment());
             note.append(DbKeyConfig.FILE_NAME, fileName);
-            note.append(DbKeyConfig.PATH_SERVER, path);
             note.append(DbKeyConfig.PATH_FILE, pathFile);
+            note.append(DbKeyConfig.URL, url);
             note.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             note.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -259,13 +260,13 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             }
 
             String fileName = null;
-            String path = null;
+            String url = null;
             String pathFile1 = null;
             if (file != null) {
                 try {
                     deleteFile(pathFile);
                     fileName = saveFile(file);
-                    path = serverPath;
+                    url = domain + fileName;
                     pathFile1 = serverPath + fileName;
                 } catch (Throwable ex) {
                     logger.error("Exception: ", ex);
@@ -282,9 +283,9 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                     Updates.set(DbKeyConfig.FULL_NAME, fullName),
                     Updates.set(DbKeyConfig.COMMENT, request.getComment()),
                     Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
-                    Updates.set(DbKeyConfig.PATH_SERVER, path),
                     Updates.set(DbKeyConfig.FILE_NAME, fileName),
                     Updates.set(DbKeyConfig.PATH_FILE, pathFile1),
+                    Updates.set(DbKeyConfig.URL, url),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

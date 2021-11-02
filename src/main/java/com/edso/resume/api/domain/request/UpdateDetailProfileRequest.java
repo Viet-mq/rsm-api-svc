@@ -19,47 +19,26 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private String school;
     private String job;
     private String levelJob;
-    private String cv;
     private String sourceCV;
     private String hrRef;
     private Long dateOfApply;
-    private String cvType;
     private Long lastApply;
-    private String tags;
-    private String note;
     private String evaluation;
     private String talentPool;
+    private String department;
 
     public BaseResponse validate() {
+        if (Strings.isNullOrEmpty(fullName)) {
+            return new BaseResponse(-1, "Vui lòng nhập họ và tên");
+        }
+        if (!validateFullName(fullName)) {
+            return new BaseResponse(-1, "Vui lòng nhập đúng định dạng họ và tên");
+        }
         if (Strings.isNullOrEmpty(gender)) {
             return new BaseResponse(-1, "Vui lòng nhập giới tính");
         }
         if (!gender.equals("Nam") && !gender.equals("Nữ")) {
             return new BaseResponse(-1, "Vui lòng nhập Nam hoặc Nữ");
-        }
-        if (Strings.isNullOrEmpty(tags)) {
-            return new BaseResponse(-1, "Vui lòng nhập tags");
-        }
-        if (Strings.isNullOrEmpty(note)) {
-            return new BaseResponse(-1, "Vui lòng nhập note");
-        }
-        if (lastApply <= 0) {
-            return new BaseResponse(-1, "Vui lòng nhập thời gian ứng tuyển gần nhất");
-        }
-        if (Strings.isNullOrEmpty(evaluation)) {
-            return new BaseResponse(-1, "Vui lòng nhập đánh giá");
-        }
-        if (Strings.isNullOrEmpty(fullName)) {
-            return new BaseResponse(-1, "Vui lòng nhập họ và tên");
-        }
-        if (dateOfBirth <= 0) {
-            return new BaseResponse(-1, "Vui lòng nhập ngày tháng năm sinh");
-        }
-        if (Strings.isNullOrEmpty(hometown)) {
-            return new BaseResponse(-1, "Vui lòng nhập quê quán");
-        }
-        if (Strings.isNullOrEmpty(school)) {
-            return new BaseResponse(-1, "Vui lòng nhập trường học");
         }
         if (Strings.isNullOrEmpty(phoneNumber)) {
             return new BaseResponse(-1, "Vui lòng nhập số điện thoại");
@@ -70,29 +49,14 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (!validateEmail(email)) {
             return new BaseResponse(-1, "Vui lòng nhập đúng định dạng email");
         }
-        if (Strings.isNullOrEmpty(job)) {
-            return new BaseResponse(-1, "Vui lòng nhập tên công việc");
-        }
         if (Strings.isNullOrEmpty(levelJob)) {
-            return new BaseResponse(-1, "Vui lòng nhập vị trí tuyển dụng");
-        }
-        if (Strings.isNullOrEmpty(cv)) {
-            return new BaseResponse(-1, "Vui lòng nhập cv");
+            return new BaseResponse(-1, "Vui lòng nhập vị trí ứng tuyển");
         }
         if (Strings.isNullOrEmpty(sourceCV)) {
-            return new BaseResponse(-1, "Vui lòng nhập nguồn cv");
-        }
-        if (Strings.isNullOrEmpty(hrRef)) {
-            return new BaseResponse(-1, "Vui lòng nhập HR ref");
+            return new BaseResponse(-1, "Vui lòng nhập nguồn ứng tuyển");
         }
         if (dateOfApply <= 0) {
-            return new BaseResponse(-1, "Vui lòng nhập ngày apply");
-        }
-        if (Strings.isNullOrEmpty(cvType)) {
-            return new BaseResponse(-1, "Vui lòng nhập kiểu cv");
-        }
-        if (Strings.isNullOrEmpty(talentPool)) {
-            return new BaseResponse(-1, "Vui lòng nhập kiểu cv");
+            return new BaseResponse(-1, "Vui lòng nhập ngày ứng tuyển");
         }
         return null;
     }

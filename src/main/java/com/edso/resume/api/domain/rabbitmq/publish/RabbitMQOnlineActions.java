@@ -1,7 +1,6 @@
 package com.edso.resume.api.domain.rabbitmq.publish;
 
 import com.edso.resume.api.domain.entities.EmailMessageEntity;
-import com.edso.resume.api.domain.entities.EventEntity;
 import com.google.gson.Gson;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -22,20 +21,20 @@ public class RabbitMQOnlineActions extends BaseAction {
     private String routingKeyEmail;
 
     @Value("${spring.rabbitmq.profile.queue}")
-    private String queueProfile;
+    private String queueImage;
 
     @Value("${spring.rabbitmq.profile.exchange}")
-    private String exchangeProfile;
+    private String exchangeImage;
 
     @Value("${spring.rabbitmq.profile.routingkey}")
-    private String routingKeyProfile;
+    private String routingKeyImage;
 
     public RabbitMQOnlineActions(RabbitMQAccess rabbitMQAccess) {
         this.rabbitMQAccess = rabbitMQAccess;
     }
 
     public void publishEmailToRabbit(String email, String time) {
-        try{
+        try {
             Channel channel = rabbitMQAccess.getChannel();
 
             //Neu khong co thi tao
@@ -55,11 +54,32 @@ public class RabbitMQOnlineActions extends BaseAction {
             channel.close();
 
             logger.info("=>publishEmailToRabbit toEmail: {}, time: {}", email, time);
-        }catch (Throwable ex){
+        } catch (Throwable ex) {
             logger.error("Exception: ", ex);
         }
 
     }
+
+//    public void publishImageToRabbit(ImageEntity image) {
+//        try{
+//            Channel channel = rabbitMQAccess.getChannel();
+//
+//            //Neu khong co thi tao
+//            channel.exchangeDeclare(exchangeImage, "direct", true);
+//            channel.queueDeclare(queueImage, true, false, false, null);
+//            channel.queueBind(queueImage, exchangeImage, routingKeyImage);
+//            BasicProperties properties = new BasicProperties.Builder()
+//                    .contentType("application/json")
+//                    .build();
+//            channel.basicPublish(exchangeImage, routingKeyImage, properties, new Gson().toJson(image).getBytes());
+//            channel.close();
+//
+//            logger.info("=>publishImageToRabbit type: {}, image: {}", image);
+//        }catch (Throwable ex){
+//            logger.error("Exception: ", ex);
+//        }
+//
+//    }
 
 //    public void sendActionProfileToRabbit(String type, Object obj) {
 //        try{
