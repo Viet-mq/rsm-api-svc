@@ -16,6 +16,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private Long dateOfBirth;
     private String hometown;
     private String school;
+    private String levelSchool;
     private String phoneNumber;
     private String email;
     private String job;
@@ -56,6 +57,12 @@ public class CreateProfileRequest extends BaseAuthRequest {
         }
         if (dateOfApply <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày ứng tuyển");
+        }
+        if (Strings.isNullOrEmpty(talentPool)) {
+            return new BaseResponse(-1, "Vui lòng nhập nguồn ứng tuyển");
+        }
+        if (Strings.isNullOrEmpty(department)) {
+            return new BaseResponse(-1, "Vui lòng nhập nguồn ứng tuyển");
         }
         return null;
     }

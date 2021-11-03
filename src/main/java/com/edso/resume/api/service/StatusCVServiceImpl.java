@@ -1,6 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.edso.resume.api.domain.entities.ChildrenStatusCVEntity;
 import com.edso.resume.api.domain.entities.StatusCVEntity;
 import com.edso.resume.api.domain.request.CreateStatusCVRequest;
 import com.edso.resume.api.domain.request.DeleteStatusCVRequest;
@@ -48,6 +49,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
                 StatusCVEntity statusCV = StatusCVEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                        .children((List<ChildrenStatusCVEntity>) doc.get(DbKeyConfig.CHILDREN))
                         .build();
                 rows.add(statusCV);
             }
@@ -60,7 +62,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     }
 
     @Override
-    public BaseResponse createStatusCV(CreateStatusCVRequest request) {
+    public BaseResponse createStatusCV(CreateStatusCVRequest request, List<String> children) {
 
         BaseResponse response = new BaseResponse();
 
@@ -73,9 +75,26 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             return response;
         }
 
+        List<Document> list = new ArrayList<>();
+        if (children != null) {
+            for (String child : children) {
+                Document idDoc = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, child));
+                if (idDoc == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                } else {
+                    Document childrenDoc = new Document();
+                    childrenDoc.append(DbKeyConfig.ID, AppUtils.parseString(idDoc.get(DbKeyConfig.ID)));
+                    childrenDoc.append(DbKeyConfig.NAME, AppUtils.parseString(idDoc.get(DbKeyConfig.NAME)));
+                    list.add(childrenDoc);
+                }
+            }
+        }
+
         Document statusCV = new Document();
         statusCV.append(DbKeyConfig.ID, UUID.randomUUID().toString());
         statusCV.append(DbKeyConfig.NAME, name);
+        statusCV.append(DbKeyConfig.CHILDREN, list);
         statusCV.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
         statusCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -90,7 +109,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
 
 
     @Override
-    public BaseResponse updateStatusCV(UpdateStatusCVRequest request) {
+    public BaseResponse updateStatusCV(UpdateStatusCVRequest request, List<String> children) {
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
@@ -112,25 +131,32 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             }
         }
 
-        Bson idStatusCV = Filters.eq(DbKeyConfig.STATUS_CV_ID, request.getId());
+        List<Document> list = new ArrayList<>();
+        if (children != null) {
+            for (String child : children) {
+                Document idDoc = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, child));
+                if (id == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                } else {
+                    Document childrenDoc = new Document();
+                    childrenDoc.append(DbKeyConfig.ID, AppUtils.parseString(idDoc.get(DbKeyConfig.ID)));
+                    childrenDoc.append(DbKeyConfig.NAME, AppUtils.parseString(idDoc.get(DbKeyConfig.NAME)));
+                    list.add(childrenDoc);
+                }
+            }
+        }
 
+        Bson idStatusCV = Filters.eq(DbKeyConfig.STATUS_CV_ID, request.getId());
         Bson update = Updates.combine(
                 Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
         );
-
         db.update(CollectionNameDefs.COLL_PROFILE, idStatusCV, update, true);
-
-
-        Bson updateProfile = Updates.combine(
-                Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
-        );
-
-        db.update(CollectionNameDefs.COLL_PROFILE, idStatusCV, updateProfile, true);
-
 
         // update roles
         Bson updates = Updates.combine(
                 Updates.set(DbKeyConfig.NAME, name),
+                Updates.set(DbKeyConfig.CHILDREN, list),
                 Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
                 Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                 Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())

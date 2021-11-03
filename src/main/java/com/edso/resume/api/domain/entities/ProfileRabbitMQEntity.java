@@ -30,4 +30,5 @@ public class ProfileRabbitMQEntity {
     private Long lastApply;
     private String departmentId;
     private String departmentName;
+    private String levelSchool;
 }

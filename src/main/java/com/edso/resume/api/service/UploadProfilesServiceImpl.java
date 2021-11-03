@@ -303,7 +303,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 pro.append(DbKeyConfig.DATE_OF_BIRTH, dateOfBirth);
                 pro.append(DbKeyConfig.GENDER, profile.getGender());
                 pro.append(DbKeyConfig.HOMETOWN, profile.getHometown());
-                pro.append(DbKeyConfig.SCHOOL_LEVEL, profile.getLevelSchool());
+                pro.append(DbKeyConfig.LEVEL_SCHOOL, profile.getLevelSchool());
                 pro.append(DbKeyConfig.SCHOOL_NAME, profile.getSchoolName());
                 pro.append(DbKeyConfig.SCHOOL_ID, schoolId);
                 pro.append(DbKeyConfig.DATE_OF_APPLY, dateOfApply);

@@ -35,4 +35,5 @@ public class ProfileDetailEntity {
     private String urlCV;
     private String departmentId;
     private String departmentName;
+    private String levelSchool;
 }

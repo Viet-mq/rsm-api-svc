@@ -115,11 +115,9 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
         }
 
         Bson idSourceCV = Filters.eq(DbKeyConfig.SOURCE_CV_ID, request.getId());
-
         Bson updateProfile = Updates.combine(
                 Updates.set(DbKeyConfig.SOURCE_CV_NAME, request.getName())
         );
-
         db.update(CollectionNameDefs.COLL_PROFILE, idSourceCV, updateProfile, true);
 
 

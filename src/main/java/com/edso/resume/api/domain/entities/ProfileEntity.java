@@ -13,6 +13,7 @@ public class ProfileEntity {
     private String email;
     private Long dateOfBirth;
     private String hometown;
+    private String levelSchool;
     private String schoolId;
     private String schoolName;
     private String jobId;

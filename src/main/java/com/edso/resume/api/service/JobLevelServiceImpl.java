@@ -115,11 +115,9 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         }
 
         Bson idJobLevel = Filters.eq(DbKeyConfig.LEVEL_JOB_ID, request.getId());
-
         Bson updateProfile = Updates.combine(
                 Updates.set(DbKeyConfig.LEVEL_JOB_NAME, request.getName())
         );
-
         db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
 
 

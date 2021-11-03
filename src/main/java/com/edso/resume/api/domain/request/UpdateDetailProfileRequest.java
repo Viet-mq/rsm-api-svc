@@ -26,6 +26,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private String evaluation;
     private String talentPool;
     private String department;
+    private String levelSchool;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(fullName)) {
@@ -57,6 +58,12 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         }
         if (dateOfApply <= 0) {
             return new BaseResponse(-1, "Vui lòng nhập ngày ứng tuyển");
+        }
+        if (Strings.isNullOrEmpty(talentPool)) {
+            return new BaseResponse(-1, "Vui lòng nhập nguồn ứng tuyển");
+        }
+        if (Strings.isNullOrEmpty(department)) {
+            return new BaseResponse(-1, "Vui lòng nhập nguồn ứng tuyển");
         }
         return null;
     }

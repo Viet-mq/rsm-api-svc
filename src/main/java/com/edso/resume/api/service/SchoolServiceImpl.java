@@ -115,11 +115,9 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         }
 
         Bson idSchool = Filters.eq(DbKeyConfig.SCHOOL_ID, request.getId());
-
         Bson updateProfile = Updates.combine(
                 Updates.set(DbKeyConfig.SCHOOL_NAME, request.getName())
         );
-
         db.update(CollectionNameDefs.COLL_PROFILE, idSchool, updateProfile, true);
 
 

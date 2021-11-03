@@ -33,28 +33,10 @@ public class DictionaryValidateProcessor implements Runnable {
     @Override
     public void run() {
         try {
-            Bson cond;
-            switch (type) {
-                case ThreadConfig.USER: {
-                    cond = Filters.eq(DbKeyConfig.USERNAME, this.id);
-                    break;
-                }
-                case ThreadConfig.BLACKLIST_EMAIL: {
-                    cond = Filters.eq(DbKeyConfig.EMAIL, this.id);
-                    break;
-                }
-                case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
-                    cond = Filters.eq(DbKeyConfig.PHONE_NUMBER, this.id);
-                    break;
-                }
-                default: {
-                    cond = Filters.eq(DbKeyConfig.ID, this.id);
-                    break;
-                }
-            }
+            Bson cond = getCondition();
             Document doc = db.findOne(getCollectionName(), cond);
             if (doc == null) {
-                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER)) {
+                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL )|| type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
                     result.setResult(true);
                     return;
                 }
@@ -62,36 +44,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setName("Không tồn tại " + getDictionaryName() + " này!");
                 return;
             }
-            result.setResult(true);
-            switch (type) {
-                case ThreadConfig.PROFILE: {
-                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
-                    break;
-                }
-                case ThreadConfig.USER: {
-                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
-                    break;
-                }
-                case ThreadConfig.NOTE: {
-                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE)));
-                    result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
-                    break;
-                }
-                case ThreadConfig.CALENDAR: {
-                    result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
-                    break;
-                }
-                case ThreadConfig.BLACKLIST_EMAIL:
-                case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
-                    result.setResult(false);
-                    result.setName("Ứng viên này đang trong blacklist!");
-                    break;
-                }
-                default: {
-                    result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
-                    break;
-                }
-            }
+            setName(doc);
         } catch (Throwable ex) {
             logger.error("Ex: ", ex);
             result.setResult(false);
@@ -103,6 +56,72 @@ public class DictionaryValidateProcessor implements Runnable {
 
     public DictionaryValidatorResult getResult() {
         return result;
+    }
+
+    private void setName(Document doc){
+        switch (type) {
+            case ThreadConfig.PROFILE: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
+                break;
+            }
+            case ThreadConfig.USER: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
+                break;
+            }
+            case ThreadConfig.NOTE: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE)));
+                result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
+                break;
+            }
+            case ThreadConfig.CALENDAR: {
+                result.setResult(true);
+                result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
+                break;
+            }
+            case ThreadConfig.BLACKLIST_EMAIL:
+            case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
+                result.setResult(false);
+                result.setName("Ứng viên này đang trong blacklist!");
+                break;
+            }
+            case ThreadConfig.PROFILE_EMAIL:{
+                result.setResult(false);
+                result.setName("Đã tồn tại ứng viên có email này");
+                break;
+            }
+            case ThreadConfig.PROFILE_PHONE_NUMBER: {
+                result.setResult(false);
+                result.setName("Đã tồn tại ứng viên có số điện thoại này");
+                break;
+            }
+            default: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
+                break;
+            }
+        }
+    }
+
+    private Bson getCondition(){
+        switch (type) {
+            case ThreadConfig.USER: {
+                return Filters.eq(DbKeyConfig.USERNAME, this.id);
+            }
+            case ThreadConfig.PROFILE_EMAIL:
+            case ThreadConfig.BLACKLIST_EMAIL: {
+                return Filters.eq(DbKeyConfig.EMAIL, this.id);
+            }
+            case ThreadConfig.PROFILE_PHONE_NUMBER:
+            case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
+                return Filters.eq(DbKeyConfig.PHONE_NUMBER, this.id);
+            }
+            default: {
+                return Filters.eq(DbKeyConfig.ID, this.id);
+            }
+        }
     }
 
     private String getDictionaryName() {
@@ -160,6 +179,8 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.SOURCE_CV: {
                 return CollectionNameDefs.COLL_SOURCE_CV;
             }
+            case ThreadConfig.PROFILE_EMAIL:
+            case ThreadConfig.PROFILE_PHONE_NUMBER:
             case ThreadConfig.PROFILE: {
                 return CollectionNameDefs.COLL_PROFILE;
             }

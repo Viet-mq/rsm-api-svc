@@ -115,11 +115,9 @@ public class JobServiceImpl extends BaseService implements JobService {
         }
 
         Bson idJob = Filters.eq(DbKeyConfig.JOB_ID, request.getId());
-
         Bson updateProfile = Updates.combine(
                 Updates.set(DbKeyConfig.JOB_NAME, request.getName())
         );
-
         db.update(CollectionNameDefs.COLL_PROFILE, idJob, updateProfile, true);
 
         // update roles
