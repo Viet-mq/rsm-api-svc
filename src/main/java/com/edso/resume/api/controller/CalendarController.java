@@ -7,7 +7,7 @@ import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
 import com.edso.resume.api.service.CalendarService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
-import com.edso.resume.lib.response.GetArrayCalendarReponse;
+import com.edso.resume.lib.response.GetArrayCalendarResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +30,7 @@ public class CalendarController extends BaseController {
             @RequestParam(value = "idProfile") String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>findAllCalendar u: {}, idProfile: {}", headerInfo, idProfile);
-        GetArrayCalendarReponse<CalendarEntity> resp = calendarService.findAllCalendar(headerInfo, idProfile);
+        GetArrayCalendarResponse<CalendarEntity> resp = calendarService.findAllCalendar(headerInfo, idProfile);
         logger.info("<=findAllCalendar u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
         return resp;
     }
@@ -89,7 +89,7 @@ public class CalendarController extends BaseController {
         return response;
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 60000)
     public void alarmInterview() {
         calendarService.alarmInterview();
     }

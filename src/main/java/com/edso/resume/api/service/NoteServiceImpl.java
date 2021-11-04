@@ -39,6 +39,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     private String serverPath;
     @Value("${note.fileSize}")
     private long fileSize;
+    @Value("${note.domain}")
+    private String domain;
 
     public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
         super(db);
@@ -77,9 +79,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                         .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
                         .comment(AppUtils.parseString(doc.get(DbKeyConfig.COMMENT)))
                         .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
-                        .path(AppUtils.parseString(doc.get(DbKeyConfig.PATH_SERVER)))
-                        .filePath(AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE)))
                         .fileName(AppUtils.parseString(doc.get(DbKeyConfig.FILE_NAME)))
+                        .url(AppUtils.parseString(doc.get(DbKeyConfig.URL)))
                         .build();
                 rows.add(noteProfile);
             }
@@ -149,13 +150,13 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             }
 
             String fileName = null;
-            String path = null;
             String pathFile = null;
+            String url = null;
             if (file != null) {
                 try {
                     fileName = saveFile(file);
-                    path = serverPath;
                     pathFile = serverPath + fileName;
+                    url = domain + fileName;
                 } catch (Throwable ex) {
                     logger.error("Exception: ", ex);
                 }
@@ -169,8 +170,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             note.append(DbKeyConfig.EVALUATION, request.getEvaluation());
             note.append(DbKeyConfig.COMMENT, request.getComment());
             note.append(DbKeyConfig.FILE_NAME, fileName);
-            note.append(DbKeyConfig.PATH_SERVER, path);
             note.append(DbKeyConfig.PATH_FILE, pathFile);
+            note.append(DbKeyConfig.URL, url);
             note.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             note.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -179,7 +180,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistoryProfile(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo().getUsername());
+            historyService.createHistory(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -259,13 +260,13 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             }
 
             String fileName = null;
-            String path = null;
+            String url = null;
             String pathFile1 = null;
             if (file != null) {
                 try {
                     deleteFile(pathFile);
                     fileName = saveFile(file);
-                    path = serverPath;
+                    url = domain + fileName;
                     pathFile1 = serverPath + fileName;
                 } catch (Throwable ex) {
                     logger.error("Exception: ", ex);
@@ -282,9 +283,9 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                     Updates.set(DbKeyConfig.FULL_NAME, fullName),
                     Updates.set(DbKeyConfig.COMMENT, request.getComment()),
                     Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
-                    Updates.set(DbKeyConfig.PATH_SERVER, path),
                     Updates.set(DbKeyConfig.FILE_NAME, fileName),
                     Updates.set(DbKeyConfig.PATH_FILE, pathFile1),
+                    Updates.set(DbKeyConfig.URL, url),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
@@ -292,7 +293,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistoryProfile(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -327,9 +328,23 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
         //Insert history to DB
-        historyService.createHistoryProfile(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
+        historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
 
         return new BaseResponse(0, "OK");
+    }
+
+    @Override
+    public void deleteNoteProfileByIdProfile(String idProfile) {
+        Bson cond = Filters.eq(DbKeyConfig.ID_PROFILE, idProfile);
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_NOTE_PROFILE, cond, null, 0, 0);
+
+        //Xóa file
+        for (Document doc : list) {
+            String path = AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE));
+            deleteFile(path);
+        }
+        //Xóa note
+        db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
     }
 
     public String saveFile(MultipartFile file) {
@@ -341,7 +356,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             while (file1.exists()) {
                 i++;
                 String[] arr = Objects.requireNonNull(file.getOriginalFilename()).split("\\.");
-                fileName = arr[0] + " (" + i + ")."+ arr[1];
+                fileName = arr[0] + " (" + i + ")." + arr[1];
                 file1 = new File(serverPath + fileName);
             }
             fos = new FileOutputStream(file1);

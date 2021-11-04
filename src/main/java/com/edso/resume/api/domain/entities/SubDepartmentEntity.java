@@ -7,8 +7,8 @@ import java.util.List;
 
 @Data
 @Builder
-public class StatusCVEntity {
+public class SubDepartmentEntity {
     private String id;
     private String name;
-    private List<ChildrenStatusCVEntity> children;
+    private List<SubDepartmentEntity> child;
 }

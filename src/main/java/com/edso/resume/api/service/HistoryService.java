@@ -6,13 +6,9 @@ import com.edso.resume.lib.response.GetArrayResponse;
 
 public interface HistoryService {
 
-    void createHistoryProfile(String idProfile, String type, String action, String username);
+    void createHistory(String idProfile, String type, String action, String username);
 
-    void createHistoryCalendar(String idProfile, String idCalendar, String type, String action, String username);
-
-    void deleteHistoryProfile(String idProfile);
-
-    void deleteHistoryCalendar(String idCalendar);
+    void deleteHistory(String idProfile);
 
     GetArrayResponse<HistoryEntity> findAllHistory(HeaderInfo info, String idProfile, Integer page, Integer size);
 }

@@ -10,9 +10,13 @@ import lombok.ToString;
 @Data
 @ToString(callSuper = true)
 public class CreateDepartmentRequest extends BaseAuthRequest {
+    private String idCompany;
     private String name;
 
     public BaseResponse validate() {
+        if (Strings.isNullOrEmpty(idCompany)) {
+            return new BaseResponse(-1, "Vui lòng nhập id company");
+        }
         if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(-1, "Vui lòng nhập tên phòng ban");
         }

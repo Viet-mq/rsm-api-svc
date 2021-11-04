@@ -2,6 +2,7 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.DepartmentEntity;
+import com.edso.resume.api.domain.entities.SubDepartmentEntity;
 import com.edso.resume.api.domain.request.CreateDepartmentRequest;
 import com.edso.resume.api.domain.request.DeleteDepartmentRequest;
 import com.edso.resume.api.domain.request.UpdateDepartmentRequest;
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Service
 public class DepartmentServiceImpl extends BaseService implements DepartmentService {
@@ -33,36 +33,95 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
     }
 
     @Override
-    public GetArrayResponse<DepartmentEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
-        List<Bson> c = new ArrayList<>();
-        if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+    public GetArrayResponse<DepartmentEntity> findAll(HeaderInfo info, String idCompany, String name, Integer page, Integer size) {
+        GetArrayResponse<DepartmentEntity> resp = new GetArrayResponse<>();
+        Bson cond = Filters.eq(DbKeyConfig.COMPANY_ID, idCompany);
+        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, idCompany));
+        if (company == null) {
+            resp.setFailed("Không tồn tại công ty này");
+            return resp;
         }
-        Bson cond = buildCondition(c);
-        long total = db.countAll(CollectionNameDefs.COLL_DEPARTMENT, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_DEPARTMENT, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<DepartmentEntity> rows = new ArrayList<>();
-        if (lst != null) {
+        if (lst != null && lst.iterator().hasNext()) {
             for (Document doc : lst) {
-                DepartmentEntity department = DepartmentEntity.builder()
-                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
-                        .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
-                        .build();
-                rows.add(department);
+                String idParent = AppUtils.parseString(doc.get(DbKeyConfig.PARENT_ID));
+                if (Strings.isNullOrEmpty(idParent)) {
+                    DepartmentEntity department = DepartmentEntity.builder()
+                            .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                            .idCompany(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_ID)))
+                            .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                            .child(new ArrayList<>())
+                            .build();
+                    rows.add(department);
+                } else {
+                    for (DepartmentEntity departmentEntity : rows) {
+                        if (departmentEntity.getId().equals(idParent)) {
+                            List<SubDepartmentEntity> list = departmentEntity.getChild();
+                            SubDepartmentEntity subDepartmentEntity = SubDepartmentEntity.builder()
+                                    .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                                    .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                                    .child(new ArrayList<>())
+                                    .build();
+
+                            //De quy
+                            recursiveFunction(lst,subDepartmentEntity);
+
+                            list.add(subDepartmentEntity);
+                            departmentEntity.setChild(list);
+                        }
+                    }
+                }
             }
         }
-        GetArrayResponse<DepartmentEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(total);
+        resp.setTotal(rows.size());
         resp.setRows(rows);
         return resp;
     }
 
+    public void recursiveFunction(FindIterable<Document> lst, SubDepartmentEntity subs) {
+        for (Document doc : lst) {
+            String idParent = AppUtils.parseString(doc.get(DbKeyConfig.PARENT_ID));
+            if (!Strings.isNullOrEmpty(idParent)) {
+                if (subs.getId().equals(idParent)) {
+                    List<SubDepartmentEntity> list = subs.getChild();
+                    SubDepartmentEntity subDepartmentEntity = SubDepartmentEntity.builder()
+                            .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                            .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                            .child(new ArrayList<>())
+                            .build();
+
+                    recursiveFunction(lst, subDepartmentEntity);
+
+                    list.add(subDepartmentEntity);
+                    subs.setChild(list);
+                }
+            }
+        }
+    }
+
     @Override
-    public BaseResponse createDepartment(CreateDepartmentRequest request) {
+    public BaseResponse createDepartment(CreateDepartmentRequest request, String idParent) {
 
         BaseResponse response = new BaseResponse();
+        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, request.getIdCompany()));
+        if (company == null) {
+            response.setFailed("Không tồn tại id company này");
+            return response;
+        }
+
+        String parentName = null;
+        if (!Strings.isNullOrEmpty(idParent)) {
+            Document doc = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.ID, idParent));
+            if (doc != null) {
+                parentName = AppUtils.parseString(doc.get(DbKeyConfig.NAME));
+            } else {
+                response.setFailed("Không tồn tại id parent này");
+                return response;
+            }
+        }
 
         String name = request.getName();
         Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
@@ -75,15 +134,16 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
 
         Document department = new Document();
         department.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-        department.append(DbKeyConfig.NAME, name);
+        department.append(DbKeyConfig.NAME, request.getName());
+        department.append(DbKeyConfig.COMPANY_ID, request.getIdCompany());
+        department.append(DbKeyConfig.PARENT_ID, idParent);
+        department.append(DbKeyConfig.PARENT_NAME, parentName);
         department.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         department.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-        department.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
         department.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-        department.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
         // insert to database
-        db.insertOne(CollectionNameDefs.COLL_DEPARTMENT, department);
+        db.insertOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, department);
 
         response.setSuccess();
         return response;
@@ -92,7 +152,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
 
 
     @Override
-    public BaseResponse updateDepartment(UpdateDepartmentRequest request) {
+    public BaseResponse updateDepartment(UpdateDepartmentRequest request, String idParent) {
 
         BaseResponse response = new BaseResponse();
         String id = request.getId();
@@ -115,26 +175,50 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         }
 
         Bson idJobLevel = Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId());
+        Bson updateProfile = Updates.combine(
+                Updates.set(DbKeyConfig.DEPARTMENT_NAME, request.getName())
+        );
+        db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
 
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idJobLevel, null, 0, 0);
-        for (Document doc : list) {
-            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+        Bson updates;
+        if (!Strings.isNullOrEmpty(idParent)) {
+            Document doc = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.PARENT_ID, idParent));
+            if (doc != null) {
+                String parentName = AppUtils.parseString(doc.get(DbKeyConfig.NAME));
+                // update roles
+                updates = Updates.combine(
+                        Updates.set(DbKeyConfig.NAME, request.getName()),
+                        Updates.set(DbKeyConfig.PARENT_NAME, parentName),
+                        Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                        Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                        Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+                );
+            } else {
+                response.setFailed("Không tồn tại id parent này");
+                return response;
+            }
+        } else {
+            if (Strings.isNullOrEmpty(AppUtils.parseString(idDocument.get(DbKeyConfig.PARENT_ID)))) {
+                // update roles
+                updates = Updates.combine(
+                        Updates.set(DbKeyConfig.NAME, request.getName()),
+                        Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                        Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                        Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+                );
 
-            Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, request.getName())
-            );
-
-            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
+                Bson con = Filters.eq(DbKeyConfig.PARENT_ID, request.getId());
+                Bson update = Updates.combine(
+                        Updates.set(DbKeyConfig.PARENT_NAME, request.getName())
+                );
+                db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, con, update, true);
+            } else {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
         }
 
-        // update roles
-        Bson updates = Updates.combine(
-                Updates.set(DbKeyConfig.NAME, name),
-                Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
-                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
-        );
-        db.update(CollectionNameDefs.COLL_DEPARTMENT, cond, updates, true);
+        db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, updates, true);
 
         response.setSuccess();
         return response;

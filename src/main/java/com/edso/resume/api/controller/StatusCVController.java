@@ -11,6 +11,7 @@ import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -37,7 +38,9 @@ public class StatusCVController extends BaseController {
     }
 
     @PostMapping("/create")
-    public BaseResponse createStatusCV(@RequestHeader Map<String, String> headers, @RequestBody CreateStatusCVRequest request) {
+    public BaseResponse createStatusCV(@RequestHeader Map<String, String> headers,
+                                       @RequestBody CreateStatusCVRequest request,
+                                       @RequestParam(value = "children", required = false) List<String> children) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>createStatusCV u: {}, req: {}", headerInfo, request);
@@ -47,7 +50,7 @@ public class StatusCVController extends BaseController {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = statusCVService.createStatusCV(request);
+                response = statusCVService.createStatusCV(request, children);
             }
         }
         logger.info("<=createStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);
@@ -55,7 +58,9 @@ public class StatusCVController extends BaseController {
     }
 
     @PostMapping("/update")
-    public BaseResponse updateStatusCV(@RequestHeader Map<String, String> headers, @RequestBody UpdateStatusCVRequest request) {
+    public BaseResponse updateStatusCV(@RequestHeader Map<String, String> headers,
+                                       @RequestBody UpdateStatusCVRequest request,
+                                       @RequestParam(value = "children", required = false) List<String> children) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>updateStatusCV u: {}, req: {}", headerInfo, request);
@@ -65,7 +70,7 @@ public class StatusCVController extends BaseController {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = statusCVService.updateStatusCV(request);
+                response = statusCVService.updateStatusCV(request, children);
             }
         }
         logger.info("<=updateStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);

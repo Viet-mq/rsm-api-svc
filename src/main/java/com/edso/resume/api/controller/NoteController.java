@@ -75,11 +75,10 @@ public class NoteController extends BaseController {
             @RequestParam(value = "username") String username,
             @RequestParam(value = "comment", required = false) String comment,
             @RequestParam(value = "evaluation", required = false) String evaluation) {
-        BaseResponse response;
         UpdateNoteProfileRequest request = new UpdateNoteProfileRequest(id, username, comment, evaluation);
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>updateNoteProfile u: {}, req: {}", headerInfo, request);
-        response = request.validate();
+        BaseResponse response = request.validate();
         if (response == null) {
             request.setInfo(headerInfo);
             response = noteService.updateNoteProfile(request, file);

@@ -115,17 +115,10 @@ public class JobServiceImpl extends BaseService implements JobService {
         }
 
         Bson idJob = Filters.eq(DbKeyConfig.JOB_ID, request.getId());
-
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idJob, null, 0, 0);
-        for (Document doc : list) {
-            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
-
-            Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.JOB_NAME, request.getName())
-            );
-
-            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
-        }
+        Bson updateProfile = Updates.combine(
+                Updates.set(DbKeyConfig.JOB_NAME, request.getName())
+        );
+        db.update(CollectionNameDefs.COLL_PROFILE, idJob, updateProfile, true);
 
         // update roles
         Bson updates = Updates.combine(

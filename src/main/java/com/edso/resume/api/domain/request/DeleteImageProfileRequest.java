@@ -9,12 +9,12 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class DeleteNoteProfileRequest extends BaseAuthRequest {
-    private String id;
+public class DeleteImageProfileRequest extends BaseAuthRequest{
+    private String idProfile;
 
-    public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(id)) {
-            return new BaseResponse(-1, "Vui lòng chọn id");
+    public BaseResponse validate(){
+        if (Strings.isNullOrEmpty(idProfile)) {
+            return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
         return null;
     }

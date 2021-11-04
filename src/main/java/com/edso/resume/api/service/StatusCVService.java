@@ -8,13 +8,15 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 
+import java.util.List;
+
 public interface StatusCVService {
 
     GetArrayResponse<StatusCVEntity> findAll(HeaderInfo info, String name, Integer page, Integer size);
 
-    BaseResponse createStatusCV(CreateStatusCVRequest request);
+    BaseResponse createStatusCV(CreateStatusCVRequest request, List<String> children);
 
-    BaseResponse updateStatusCV(UpdateStatusCVRequest request);
+    BaseResponse updateStatusCV(UpdateStatusCVRequest request, List<String> children);
 
     BaseResponse deleteStatusCV(DeleteStatusCVRequest request);
 }

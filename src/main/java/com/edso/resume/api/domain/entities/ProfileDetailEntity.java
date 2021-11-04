@@ -19,18 +19,21 @@ public class ProfileDetailEntity {
     private String jobName;
     private String levelJobId;
     private String levelJobName;
-    private String cv;
     private String sourceCVId;
     private String sourceCVName;
     private String hrRef;
     private Long dateOfApply;
-    private String cvType;
     private Long lastApply;
-    private String tags;
     private Long dateOfCreate;
     private Long dateOfUpdate;
-    private String note;
     private String evaluation;
     private String statusCVId;
     private String statusCVName;
+    private String talentPoolId;
+    private String talentPoolName;
+    private String image;
+    private String urlCV;
+    private String departmentId;
+    private String departmentName;
+    private String levelSchool;
 }

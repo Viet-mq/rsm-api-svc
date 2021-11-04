@@ -30,6 +30,10 @@ spring:
       exchange: cv.exchange
       queue: cv.queue
       routingkey: cv.routingkey
+    image:
+      exchange: image.exchange
+      queue: image.queue
+      routingkey: image.routingkey
 
 server:
   port: ${API_SVC_PORT:30003}
@@ -72,12 +76,19 @@ calendar:
   nLoop: 3 #canh bao 3 lan
 
 excel:
-  serverPath: /home/resume/api-svc/file/file-profiles/
+  serverPath: /usr/share/nginx/file-rs/attachment/
 #  serverPath: D:\
-  path: /home/resume/api-svc/file/Profiles.xlsx
+  path: /usr/share/nginx/file-rs/attachment/Profiles.xlsx
 #  path: D:\
 
 note:
-  serverpath: /home/resume/api-svc/file/file-notes/
+  domain: http://file-rs.edsolabs.com/attachment/
+  serverpath: /usr/share/nginx/file-rs/attachment/
 #  serverPath: D:\
-  fileSize: 1048576 #Byte 1MB
+  fileSize: 15728640 #Byte 15MB
+
+avatar:
+  domain: http://file-rs.edsolabs.com/avatar/
+  serverpath: /usr/share/nginx/file-rs/avatar/
+#  serverPath: D:\
+  fileSize: 15728640 #Byte 15MB

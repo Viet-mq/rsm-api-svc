@@ -68,8 +68,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     }
 
     @Override
-    public void createHistoryProfile(String idProfile, String type, String action, String username) {
-
+    public void createHistory(String idProfile, String type, String action, String username) {
         Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
 
         Document history = new Document();
@@ -79,41 +78,18 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         history.append(DbKeyConfig.TIME, System.currentTimeMillis());
         history.append(DbKeyConfig.ACTION, action);
         history.append(DbKeyConfig.USERNAME, username);
-//        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
         logger.info("createHistoryProfile history: {}", history);
     }
 
-    @Override
-    public void createHistoryCalendar(String idProfile, String idCalendar, String type, String action, String username) {
-        Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
-
-        Document history = new Document();
-        history.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-        history.append(DbKeyConfig.ID_PROFILE, idProfile);
-        history.append(DbKeyConfig.ID_CALENDAR, idCalendar);
-        history.append(DbKeyConfig.TYPE, type);
-        history.append(DbKeyConfig.TIME, System.currentTimeMillis());
-        history.append(DbKeyConfig.ACTION, action);
-        history.append(DbKeyConfig.USERNAME, username);
-//        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
-
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
-        logger.info("createHistoryProfile history: {}", history);
-    }
 
     @Override
-    public void deleteHistoryProfile(String idProfile) {
+    public void deleteHistory(String idProfile) {
         db.delete(CollectionNameDefs.COLL_HISTORY_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         logger.info("deleteHistoryProfile idProfile: {}", idProfile);
     }
 
-    @Override
-    public void deleteHistoryCalendar(String idCalendar) {
-        db.delete(CollectionNameDefs.COLL_HISTORY_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, idCalendar));
-        logger.info("deleteHistoryCalendar idCalendar: {}", idCalendar);
-    }
 }

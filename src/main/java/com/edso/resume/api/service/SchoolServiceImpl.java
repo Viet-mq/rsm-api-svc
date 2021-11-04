@@ -115,17 +115,11 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         }
 
         Bson idSchool = Filters.eq(DbKeyConfig.SCHOOL_ID, request.getId());
+        Bson updateProfile = Updates.combine(
+                Updates.set(DbKeyConfig.SCHOOL_NAME, request.getName())
+        );
+        db.update(CollectionNameDefs.COLL_PROFILE, idSchool, updateProfile, true);
 
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, idSchool, null, 0, 0);
-        for (Document doc : list) {
-            Bson idProfile = Filters.eq(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
-
-            Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.SCHOOL_NAME, request.getName())
-            );
-
-            db.update(CollectionNameDefs.COLL_PROFILE, idProfile, updateProfile, true);
-        }
 
         // update roles
         Bson updates = Updates.combine(

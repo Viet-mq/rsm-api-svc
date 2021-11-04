@@ -7,7 +7,7 @@ import com.edso.resume.api.service.ProfileService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
-import com.edso.resume.lib.response.GetReponse;
+import com.edso.resume.lib.response.GetResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,12 +27,13 @@ public class ProfileController extends BaseController {
     public BaseResponse findAllProfile(
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "talentPool", required = false) String talentPool,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, fullName: {}, page: {}, size: {}", headerInfo, fullName, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, page, size);
-        logger.info("<=findAllProfile u: {}, fullName: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, page: {}, size: {}", headerInfo, fullName, talentPool, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, page, size);
+        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, page, size, resp.info());
         return resp;
     }
 
@@ -42,7 +43,7 @@ public class ProfileController extends BaseController {
             @RequestParam(value = "idProfile") String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>findOneProfile u: {}, idProfile: {}", headerInfo, idProfile);
-        GetReponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
+        GetResponse<ProfileDetailEntity> resp = profileService.findOne(headerInfo, idProfile);
         logger.info("<=findOneProfile u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
         return resp;
     }

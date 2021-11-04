@@ -10,10 +10,8 @@ public class ProfileUploadEntity {
     private String dateOfBirth;
     private String gender;
     private String hometown;
-    private String schoolLevel;
+    private String levelSchool;
     private String schoolName;
-    private String major;
-    private String recentWorkPlace;
     private String dateOfApply;
     private String sourceCVName;
 }
