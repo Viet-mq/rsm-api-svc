@@ -1,10 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.EventEntity;
-import com.edso.resume.api.domain.entities.ProfileDetailEntity;
-import com.edso.resume.api.domain.entities.ProfileEntity;
-import com.edso.resume.api.domain.entities.ProfileRabbitMQEntity;
+import com.edso.resume.api.domain.entities.*;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
@@ -55,10 +52,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         this.noteService = noteService;
     }
 
-    private void publishActionToRabbitMQ(String type, Object obj) {
-        EventEntity event = new EventEntity(type, obj);
+    private void publishActionToRabbitMQ(String type, Object profile) {
+        EventEntity event = new EventEntity(type, profile);
         rabbitTemplate.convertAndSend(exchange, routingkey, event);
-        logger.info("=>publishActionToRabbitMQ type: {}, profile: {}", type, obj);
+        logger.info("=>publishActionToRabbitMQ type: {}, profile: {}", type, profile);
     }
 
     @Override
@@ -72,7 +69,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             c.add(Filters.regex(DbKeyConfig.TALENT_POOL_ID, Pattern.compile(talentPool)));
         }
         Bson cond = buildCondition(c);
-        long total = db.countAll(CollectionNameDefs.COLL_PROFILE, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<ProfileEntity> rows = new ArrayList<>();
@@ -114,7 +110,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         GetArrayResponse<ProfileEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(total);
+        resp.setTotal(rows.size());
         resp.setRows(rows);
 
         return resp;
@@ -234,41 +230,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            String schoolName = null;
-            String jobName = null;
-            String levelJobName = null;
-            String sourceCVName = null;
-            String talentPoolName = null;
-            String departmentName = null;
-
-            for (DictionaryValidateProcessor r : rs) {
-                switch (r.getResult().getType()) {
-                    case ThreadConfig.JOB: {
-                        jobName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.JOB_LEVEL: {
-                        levelJobName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.SCHOOL: {
-                        schoolName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.SOURCE_CV: {
-                        sourceCVName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.TALENT_POOL: {
-                        talentPoolName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.DEPARTMENT: {
-                        departmentName = r.getResult().getName();
-                        break;
-                    }
-                }
-            }
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
             // conventions
             Document profile = new Document();
@@ -280,53 +242,30 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
             profile.append(DbKeyConfig.HOMETOWN, request.getHometown());
             profile.append(DbKeyConfig.SCHOOL_ID, request.getSchool());
-            profile.append(DbKeyConfig.SCHOOL_NAME, schoolName);
+            profile.append(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName());
             profile.append(DbKeyConfig.JOB_ID, request.getJob());
-            profile.append(DbKeyConfig.JOB_NAME, jobName);
+            profile.append(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName());
             profile.append(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob());
-            profile.append(DbKeyConfig.LEVEL_JOB_NAME, levelJobName);
+            profile.append(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName());
             profile.append(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV());
-            profile.append(DbKeyConfig.SOURCE_CV_NAME, sourceCVName);
+            profile.append(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName());
             profile.append(DbKeyConfig.HR_REF, request.getHrRef());
             profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
             profile.append(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase());
             profile.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             profile.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             profile.append(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool());
-            profile.append(DbKeyConfig.TALENT_POOL_NAME, talentPoolName);
+            profile.append(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName());
             profile.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
-            profile.append(DbKeyConfig.DEPARTMENT_NAME, departmentName);
+            profile.append(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName());
             profile.append(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
 
-            ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
-            profileEntity.setId(idProfile);
-            profileEntity.setFullName(request.getFullName());
-            profileEntity.setGender(request.getGender());
-            profileEntity.setPhoneNumber(request.getPhoneNumber());
-            profileEntity.setEmail(request.getEmail());
-            profileEntity.setDateOfBirth(request.getDateOfBirth());
-            profileEntity.setHometown(request.getHometown());
-            profileEntity.setSchoolId(request.getSchool());
-            profileEntity.setSchoolName(schoolName);
-            profileEntity.setJobId(request.getJob());
-            profileEntity.setJobName(jobName);
-            profileEntity.setLevelJobId(request.getLevelJob());
-            profileEntity.setLevelJobName(levelJobName);
-            profileEntity.setSourceCVId(request.getSourceCV());
-            profileEntity.setSourceCVName(sourceCVName);
-            profileEntity.setHrRef(request.getHrRef());
-            profileEntity.setDateOfApply(request.getDateOfApply());
-            profileEntity.setTalentPoolId(request.getTalentPool());
-            profileEntity.setTalentPoolName(talentPoolName);
-            profileEntity.setDepartmentId(request.getDepartment());
-            profileEntity.setDepartmentName(departmentName);
-            profileEntity.setDepartmentName(request.getLevelSchool());
-
             // insert to rabbitmq
-            publishActionToRabbitMQ("create", profileEntity);
+            ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(idProfile, request, dictionaryNames);
+            publishActionToRabbitMQ(RabbitMQConfig.CREATE, profileRabbitMQ);
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo().getUsername());
@@ -409,49 +348,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            String schoolName = null;
-            String jobName = null;
-            String levelJobName = null;
-            String sourceCVName = null;
-            String talentPoolName = null;
-            String departmentName = null;
-            String email = null;
-
-            for (DictionaryValidateProcessor r : rs) {
-                switch (r.getResult().getType()) {
-                    case ThreadConfig.JOB: {
-                        jobName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.JOB_LEVEL: {
-                        levelJobName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.SCHOOL: {
-                        schoolName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.SOURCE_CV: {
-                        sourceCVName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.TALENT_POOL: {
-                        talentPoolName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.DEPARTMENT: {
-                        departmentName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.PROFILE: {
-                        email = r.getResult().getName();
-                        break;
-                    }
-                }
-            }
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
             //Update coll calendar
-            if (!email.equals(request.getEmail())) {
+            if (!dictionaryNames.getEmail().equals(request.getEmail())) {
                 Bson idProfile = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
                 Bson updateProfile = Updates.combine(
                         Updates.set(DbKeyConfig.EMAIL, request.getEmail())
@@ -466,55 +366,32 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
                     Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
                     Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                    Updates.set(DbKeyConfig.SCHOOL_NAME, schoolName),
+                    Updates.set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
                     Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
                     Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
                     Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                    Updates.set(DbKeyConfig.JOB_NAME, jobName),
+                    Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                     Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJobName),
+                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
                     Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCVName),
+                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                     Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool()),
-                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, talentPoolName),
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
-                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, departmentName),
+                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
 
-            ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
-            profileEntity.setId(id);
-            profileEntity.setFullName(request.getFullName());
-            profileEntity.setGender(request.getGender());
-            profileEntity.setPhoneNumber(request.getPhoneNumber());
-            profileEntity.setEmail(request.getEmail());
-            profileEntity.setDateOfBirth(request.getDateOfBirth());
-            profileEntity.setHometown(request.getHometown());
-            profileEntity.setSchoolId(request.getSchool());
-            profileEntity.setSchoolName(schoolName);
-            profileEntity.setJobId(request.getJob());
-            profileEntity.setJobName(jobName);
-            profileEntity.setLevelJobId(request.getLevelJob());
-            profileEntity.setLevelJobName(levelJobName);
-            profileEntity.setSourceCVId(request.getSourceCV());
-            profileEntity.setSourceCVName(sourceCVName);
-            profileEntity.setHrRef(request.getHrRef());
-            profileEntity.setDateOfApply(request.getDateOfApply());
-            profileEntity.setTalentPoolId(request.getTalentPool());
-            profileEntity.setTalentPoolName(talentPoolName);
-            profileEntity.setDepartmentId(request.getDepartment());
-            profileEntity.setDepartmentName(departmentName);
-            profileEntity.setLevelSchool(request.getLevelSchool());
-
             // insert to rabbitmq
-            publishActionToRabbitMQ("update", profileEntity);
+            ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(request, dictionaryNames);
+            publishActionToRabbitMQ(RabbitMQConfig.UPDATE, profileRabbitMQ);
 
             //Insert history to DB
             historyService.createHistory(id, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
@@ -596,115 +473,52 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            String schoolName = null;
-            String jobName = null;
-            String levelJobName = null;
-            String sourceCVName = null;
-            String talentPoolName = null;
-            String departmentName = null;
-            String email = null;
-
-            for (DictionaryValidateProcessor r : rs) {
-                switch (r.getResult().getType()) {
-                    case ThreadConfig.JOB: {
-                        jobName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.JOB_LEVEL: {
-                        levelJobName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.SCHOOL: {
-                        schoolName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.SOURCE_CV: {
-                        sourceCVName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.TALENT_POOL: {
-                        talentPoolName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.DEPARTMENT: {
-                        departmentName = r.getResult().getName();
-                        break;
-                    }
-                    case ThreadConfig.PROFILE: {
-                        email = r.getResult().getName();
-                        break;
-                    }
-                }
-            }
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
             //Update coll calendar
-            if (!email.equals(request.getEmail())) {
+            if (!dictionaryNames.getEmail().equals(request.getEmail())) {
                 Bson idProfile = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
                 Bson updateProfile = Updates.combine(
                         Updates.set(DbKeyConfig.EMAIL, request.getEmail())
                 );
                 db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, idProfile, updateProfile, true);
             }
+
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
                     Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
                     Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
                     Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                    Updates.set(DbKeyConfig.SCHOOL_NAME, schoolName),
+                    Updates.set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
                     Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
                     Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
                     Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                    Updates.set(DbKeyConfig.JOB_NAME, jobName),
+                    Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                     Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, levelJobName),
+                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
                     Updates.set(DbKeyConfig.GENDER, request.getGender()),
                     Updates.set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
                     Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
                     Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, sourceCVName),
+                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                     Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool()),
-                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, talentPoolName),
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
-                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, departmentName),
+                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
 
-            ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
-            profileEntity.setId(id);
-            profileEntity.setFullName(request.getFullName());
-            profileEntity.setGender(request.getGender());
-            profileEntity.setPhoneNumber(request.getPhoneNumber());
-            profileEntity.setEmail(request.getEmail());
-            profileEntity.setDateOfBirth(request.getDateOfBirth());
-            profileEntity.setHometown(request.getHometown());
-            profileEntity.setSchoolId(request.getSchool());
-            profileEntity.setSchoolName(schoolName);
-            profileEntity.setJobId(request.getJob());
-            profileEntity.setJobName(jobName);
-            profileEntity.setLevelJobId(request.getLevelJob());
-            profileEntity.setLevelJobName(levelJobName);
-            profileEntity.setSourceCVId(request.getSourceCV());
-            profileEntity.setSourceCVName(sourceCVName);
-            profileEntity.setHrRef(request.getHrRef());
-            profileEntity.setDateOfApply(request.getDateOfApply());
-            profileEntity.setTalentPoolId(request.getTalentPool());
-            profileEntity.setTalentPoolName(talentPoolName);
-            profileEntity.setEvaluation(request.getEvaluation());
-            profileEntity.setLastApply(request.getLastApply());
-            profileEntity.setDepartmentId(request.getDepartment());
-            profileEntity.setDepartmentName(departmentName);
-            profileEntity.setLevelSchool(request.getLevelSchool());
-
             // insert to rabbitmq
-            publishActionToRabbitMQ("update-detail", profileEntity);
+            ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(request, dictionaryNames);
+            publishActionToRabbitMQ(RabbitMQConfig.UPDATE_DETAIL, profileRabbitMQ);
 
             //Insert history to DB
             historyService.createHistory(id, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
@@ -712,7 +526,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             return response;
 
         } catch (Throwable ex) {
-
             logger.error("Exception: ", ex);
             response.setFailed("Hệ thống đang bận");
             return response;
@@ -727,39 +540,44 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
     @Override
     public BaseResponse deleteProfile(DeleteProfileRequest request) {
-
         BaseResponse response = new BaseResponse();
 
-        //Validate
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+        try {
+            //Validate
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Không tồn tại id profile này");
+            if (idDocument == null) {
+                response.setFailed("Không tồn tại id profile này");
+                return response;
+            }
+
+            deleteFile(AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV)));
+
+            //Xóa profile
+            db.delete(CollectionNameDefs.COLL_PROFILE, cond);
+
+            //Xóa lịch phỏng vấn
+            calendarService.deleteCalendarByIdProfile(request.getId());
+
+            //Xóa note
+            noteService.deleteNoteProfileByIdProfile(request.getId());
+
+            //Xóa lịch sử
+            historyService.deleteHistory(id);
+
+            // insert to rabbitmq
+            publishActionToRabbitMQ(RabbitMQConfig.DELETE, request);
+
+            response.setSuccess();
+
+            return response;
+        }catch (Throwable e){
+            logger.info("Exception: ", e);
+            response.setFailed("Hệ thống đang bận");
             return response;
         }
-
-        deleteFile(AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV)));
-
-        //Xóa profile
-        db.delete(CollectionNameDefs.COLL_PROFILE, cond);
-
-        //Xóa lịch phỏng vấn
-        calendarService.deleteCalendarByIdProfile(request.getId());
-
-        //Xóa note
-        noteService.deleteNoteProfileByIdProfile(request.getId());
-
-        //Xóa lịch sử
-        historyService.deleteHistory(id);
-
-        // insert to rabbitmq
-        publishActionToRabbitMQ("delete", request);
-
-        response.setSuccess();
-
-        return response;
     }
 
     @Override
@@ -835,7 +653,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profileRabbitMQ.setStatusCVName(statusCVName);
 
             // insert to rabbitmq
-            publishActionToRabbitMQ("update-status", profileRabbitMQ);
+            publishActionToRabbitMQ(RabbitMQConfig.UPDATE_STATUS, profileRabbitMQ);
 
             //Insert history to DB
             historyService.createHistory(id, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());
@@ -853,6 +671,130 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 queue.removeIf(s -> s.getKey().equals(key));
             }
         }
+    }
+
+    private DictionaryNamesEntity getDictionayNames(List<DictionaryValidateProcessor> rs) {
+        DictionaryNamesEntity dictionaryNames = new DictionaryNamesEntity();
+        for (DictionaryValidateProcessor r : rs) {
+            switch (r.getResult().getType()) {
+                case ThreadConfig.JOB: {
+                    dictionaryNames.setJobName(r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.JOB_LEVEL: {
+                    dictionaryNames.setLevelJobName(r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.SCHOOL: {
+                    dictionaryNames.setSchoolName(r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.SOURCE_CV: {
+                    dictionaryNames.setSourceCVName(r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.TALENT_POOL: {
+                    dictionaryNames.setTalentPoolName(r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.DEPARTMENT: {
+                    dictionaryNames.setDepartmentName(r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.PROFILE: {
+                    dictionaryNames.setEmail(r.getResult().getName());
+                    break;
+                }
+                default: {
+                    logger.info("Không có tên của dictionary này!");
+                    break;
+                }
+            }
+        }
+        return dictionaryNames;
+    }
+
+    private ProfileRabbitMQEntity getProfileRabbit(String id, CreateProfileRequest request, DictionaryNamesEntity dictionaryNames) {
+        ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+        profileEntity.setId(id);
+        profileEntity.setFullName(request.getFullName());
+        profileEntity.setGender(request.getGender());
+        profileEntity.setPhoneNumber(request.getPhoneNumber());
+        profileEntity.setEmail(request.getEmail());
+        profileEntity.setDateOfBirth(request.getDateOfBirth());
+        profileEntity.setHometown(request.getHometown());
+        profileEntity.setSchoolId(request.getSchool());
+        profileEntity.setSchoolName(dictionaryNames.getSchoolName());
+        profileEntity.setJobId(request.getJob());
+        profileEntity.setJobName(dictionaryNames.getJobName());
+        profileEntity.setLevelJobId(request.getLevelJob());
+        profileEntity.setLevelJobName(dictionaryNames.getLevelJobName());
+        profileEntity.setSourceCVId(request.getSourceCV());
+        profileEntity.setSourceCVName(dictionaryNames.getSourceCVName());
+        profileEntity.setHrRef(request.getHrRef());
+        profileEntity.setDateOfApply(request.getDateOfApply());
+        profileEntity.setTalentPoolId(request.getTalentPool());
+        profileEntity.setTalentPoolName(dictionaryNames.getTalentPoolName());
+        profileEntity.setDepartmentId(request.getDepartment());
+        profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
+        profileEntity.setLevelSchool(request.getLevelSchool());
+        return profileEntity;
+    }
+
+    private ProfileRabbitMQEntity getProfileRabbit(UpdateProfileRequest request, DictionaryNamesEntity dictionaryNames) {
+        ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+        profileEntity.setId(request.getId());
+        profileEntity.setFullName(request.getFullName());
+        profileEntity.setGender(request.getGender());
+        profileEntity.setPhoneNumber(request.getPhoneNumber());
+        profileEntity.setEmail(request.getEmail());
+        profileEntity.setDateOfBirth(request.getDateOfBirth());
+        profileEntity.setHometown(request.getHometown());
+        profileEntity.setSchoolId(request.getSchool());
+        profileEntity.setSchoolName(dictionaryNames.getSchoolName());
+        profileEntity.setJobId(request.getJob());
+        profileEntity.setJobName(dictionaryNames.getJobName());
+        profileEntity.setLevelJobId(request.getLevelJob());
+        profileEntity.setLevelJobName(dictionaryNames.getLevelJobName());
+        profileEntity.setSourceCVId(request.getSourceCV());
+        profileEntity.setSourceCVName(dictionaryNames.getSourceCVName());
+        profileEntity.setHrRef(request.getHrRef());
+        profileEntity.setDateOfApply(request.getDateOfApply());
+        profileEntity.setTalentPoolId(request.getTalentPool());
+        profileEntity.setTalentPoolName(dictionaryNames.getTalentPoolName());
+        profileEntity.setDepartmentId(request.getDepartment());
+        profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
+        profileEntity.setLevelSchool(request.getLevelSchool());
+        return profileEntity;
+    }
+
+    private ProfileRabbitMQEntity getProfileRabbit(UpdateDetailProfileRequest request, DictionaryNamesEntity dictionaryNames) {
+        ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+        profileEntity.setId(request.getId());
+        profileEntity.setFullName(request.getFullName());
+        profileEntity.setGender(request.getGender());
+        profileEntity.setPhoneNumber(request.getPhoneNumber());
+        profileEntity.setEmail(request.getEmail());
+        profileEntity.setDateOfBirth(request.getDateOfBirth());
+        profileEntity.setHometown(request.getHometown());
+        profileEntity.setSchoolId(request.getSchool());
+        profileEntity.setSchoolName(dictionaryNames.getSchoolName());
+        profileEntity.setJobId(request.getJob());
+        profileEntity.setJobName(dictionaryNames.getJobName());
+        profileEntity.setLevelJobId(request.getLevelJob());
+        profileEntity.setLevelJobName(dictionaryNames.getLevelJobName());
+        profileEntity.setSourceCVId(request.getSourceCV());
+        profileEntity.setSourceCVName(dictionaryNames.getSourceCVName());
+        profileEntity.setHrRef(request.getHrRef());
+        profileEntity.setDateOfApply(request.getDateOfApply());
+        profileEntity.setTalentPoolId(request.getTalentPool());
+        profileEntity.setTalentPoolName(dictionaryNames.getTalentPoolName());
+        profileEntity.setDepartmentId(request.getDepartment());
+        profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
+        profileEntity.setLevelSchool(request.getLevelSchool());
+        profileEntity.setEvaluation(request.getEvaluation());
+        profileEntity.setLastApply(request.getLastApply());
+        return profileEntity;
     }
 
     public void deleteFile(String path) {

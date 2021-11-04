@@ -39,7 +39,6 @@ public class JobServiceImpl extends BaseService implements JobService {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
-        long total = db.countAll(CollectionNameDefs.COLL_JOB, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_JOB, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<CategoryEntity> rows = new ArrayList<>();
@@ -54,7 +53,7 @@ public class JobServiceImpl extends BaseService implements JobService {
         }
         GetArrayResponse<CategoryEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(total);
+        resp.setTotal(rows.size());
         resp.setRows(rows);
         return resp;
     }

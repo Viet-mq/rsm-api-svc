@@ -42,7 +42,6 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         Bson cond = Filters.eq(DbKeyConfig.ID_PROFILE, idProfile);
         Bson sort = Filters.eq(DbKeyConfig.TIME, -1);
 
-        long total = db.countAll(CollectionNameDefs.COLL_HISTORY_PROFILE, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_HISTORY_PROFILE, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<HistoryEntity> rows = new ArrayList<>();
@@ -62,7 +61,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         }
 
         resp.setSuccess();
-        resp.setTotal(total);
+        resp.setTotal(rows.size());
         resp.setRows(rows);
         return resp;
     }
@@ -78,7 +77,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         history.append(DbKeyConfig.TIME, System.currentTimeMillis());
         history.append(DbKeyConfig.ACTION, action);
         history.append(DbKeyConfig.USERNAME, username);
-        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+//        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
 
         // insert to database
         db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);

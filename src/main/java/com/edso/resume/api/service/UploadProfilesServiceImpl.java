@@ -42,8 +42,12 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     public static final int COLUMN_HOMETOWN = 5;
     public static final int COLUMN_LEVEL_SCHOOL = 6;
     public static final int COLUMN_SCHOOL_NAME = 7;
-    public static final int COLUMN_DATE_OF_APPLY = 8;
-    public static final int COLUMN_SOURCE_CV = 9;
+    public static final int COLUMN_LEVEL_JOB_NAME = 8;
+    public static final int COLUMN_DATE_OF_APPLY = 9;
+    public static final int COLUMN_SOURCE_CV = 10;
+    public static final int COLUMN_TALENT_POOL = 11;
+    public static final int COLUMN_HR_REFERENCE = 12;
+    public static final int COLUMN_DEPARTMENT = 13;
 
     private final RabbitTemplate rabbitTemplate;
     @Value("${spring.rabbitmq.profile.exchange}")
@@ -52,8 +56,12 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     private String routingkey;
 
     private final Queue<DictionaryNameValidatorResult> queue = new LinkedBlockingQueue<>();
-    private static final String EMAIL_REGEX = "^[A-Za-z0-9]+[A-Za-z0-9]*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)$";
+    private static final String EMAIL_REGEX = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])";
+    private static final String FULL_NAME_REGEX = "^[\\p{L} .'-]+$";
     private static Pattern patternEmail;
+    private static Pattern fullNamePattern;
+    private static Matcher matcher;
+
     @JsonIgnore
     protected HeaderInfo info;
 
@@ -64,6 +72,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         super(db);
         this.rabbitTemplate = rabbitTemplate;
         patternEmail = Pattern.compile(EMAIL_REGEX);
+        fullNamePattern = Pattern.compile(FULL_NAME_REGEX);
     }
 
     // Get cell value
@@ -155,16 +164,27 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     case COLUMN_SCHOOL_NAME:
                         profiles.setSchoolName((String) getCellValue(cell));
                         break;
+                    case COLUMN_LEVEL_JOB_NAME:
+                        profiles.setLevelJobName((String) getCellValue(cell));
+                        break;
                     case COLUMN_DATE_OF_APPLY:
                         profiles.setDateOfApply((String) getCellValue(cell));
                         break;
                     case COLUMN_SOURCE_CV:
                         profiles.setSourceCVName((String) getCellValue(cell));
                         break;
+                    case COLUMN_TALENT_POOL:
+                        profiles.setTalentPoolName((String) getCellValue(cell));
+                        break;
+                    case COLUMN_HR_REFERENCE:
+                        profiles.setHrRef((String) getCellValue(cell));
+                        break;
+                    case COLUMN_DEPARTMENT:
+                        profiles.setDepartmentName((String) getCellValue(cell));
+                        break;
                     default:
                         break;
                 }
-
             }
             listProfile.add(profiles);
         }
@@ -199,12 +219,52 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             return response;
         }
         for (ProfileUploadEntity profile : profiles) {
-
+            //Validate null hoac empty thi bo qua
             if (Strings.isNullOrEmpty(profile.getFullName())) {
+                logger.info("Họ và tên trống!");
                 continue;
             }
-            if (!Strings.isNullOrEmpty(profile.getEmail()) && !validateEmail(profile.getEmail())) {
+            if (!validateFullName(profile.getFullName())) {
+                logger.info("Họ và tên không đúng định dạng! fullName: {}", profile.getFullName());
                 continue;
+            }
+            if (Strings.isNullOrEmpty(profile.getPhoneNumber())) {
+                logger.info("Số điện thoại trống!");
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profile.getEmail())) {
+                logger.info("Email trống!");
+                continue;
+            }
+            if (!validateEmail(profile.getEmail())) {
+                logger.info("Email không đúng định dạng! email: {}", profile.getEmail());
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profile.getLevelJobName())) {
+                logger.info("Vị trí ứng tuyển trống!");
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profile.getDateOfApply())) {
+                logger.info("Ngày ứng tuyển trống!");
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profile.getSourceCVName())) {
+                logger.info("Nguồn ứng viên trống!");
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profile.getTalentPoolName())) {
+                logger.info("Talent pool trống!");
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profile.getDepartmentName())) {
+                logger.info("Phòng ban trống!");
+                continue;
+            }
+            if (!Strings.isNullOrEmpty(profile.getGender())) {
+                if (!profile.getGender().equals("Nữ") && !profile.getGender().equals("Nam")) {
+                    logger.info("Giới tính chỉ có thể là Nam hoặc Nữ!");
+                    continue;
+                }
             }
 
             String key = UUID.randomUUID().toString();
@@ -214,71 +274,71 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 if (!Strings.isNullOrEmpty(profile.getSchoolName())) {
                     rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SCHOOL, profile.getSchoolName(), db, this));
                 }
-                if (!Strings.isNullOrEmpty(profile.getSourceCVName())) {
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCVName(), db, this));
-                }
-                if (!Strings.isNullOrEmpty(profile.getEmail())) {
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail(), db, this));
-                }
-                if (!Strings.isNullOrEmpty(profile.getPhoneNumber())) {
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
-                }
+                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCVName(), db, this));
+                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail(), db, this));
+                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
+                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail(), db, this));
+                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
+
+                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.TALENT_POOL, profile.getTalentPoolName(), db, this));
+                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB_LEVEL, profile.getLevelJobName(), db, this));
+                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.DEPARTMENT, profile.getDepartmentName(), db, this));
+
                 int total = rs.size();
 
                 String schoolId = null;
                 String sourceCVId = null;
                 Long dateOfBirth = null;
                 Long dateOfApply = null;
-                if(total != 0){
-                    for (DictionaryNameValidateProcessor r : rs) {
-                        Thread t = new Thread(r);
-                        t.start();
-                    }
+                for (DictionaryNameValidateProcessor r : rs) {
+                    Thread t = new Thread(r);
+                    t.start();
+                }
 
-                    long time = System.currentTimeMillis();
-                    int count = 0;
-                    int count2 = 0;
-                    while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
-                        DictionaryNameValidatorResult validatorResult = queue.poll();
-                        if (validatorResult != null) {
-                            if (validatorResult.getKey().equals(key)) {
-                                if (!validatorResult.isResult()) {
-                                    count2++;
-                                    break;
-                                } else {
-                                    count++;
-                                }
-                                total--;
+                long time = System.currentTimeMillis();
+                int count = 0;
+                int count2 = 0;
+                while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                    DictionaryNameValidatorResult validatorResult = queue.poll();
+                    if (validatorResult != null) {
+                        if (validatorResult.getKey().equals(key)) {
+                            if (!validatorResult.isResult()) {
+                                count2++;
+                                break;
                             } else {
-                                queue.offer(validatorResult);
+                                count++;
                             }
-                        }
-                    }
-
-                    if (count2 != 0) {
-                        continue;
-                    }
-
-                    if (count != rs.size()) {
-                        continue;
-                    }
-
-                    for (DictionaryNameValidateProcessor r : rs) {
-                        switch (r.getResult().getType()) {
-                            case ThreadConfig.SCHOOL: {
-                                schoolId = r.getResult().getId();
-                                break;
-                            }
-                            case ThreadConfig.SOURCE_CV: {
-                                sourceCVId = r.getResult().getId();
-                                break;
-                            }
+                            total--;
+                        } else {
+                            queue.offer(validatorResult);
                         }
                     }
                 }
 
+                if (count2 != 0) {
+                    continue;
+                }
+
+                if (count != rs.size()) {
+                    continue;
+                }
+
+                for (DictionaryNameValidateProcessor r : rs) {
+                    switch (r.getResult().getType()) {
+                        case ThreadConfig.SCHOOL: {
+                            schoolId = r.getResult().getId();
+                            break;
+                        }
+                        case ThreadConfig.SOURCE_CV: {
+                            sourceCVId = r.getResult().getId();
+                            break;
+                        }
+                    }
+                }
+
+
                 String idProfile = UUID.randomUUID().toString();
-                if(!Strings.isNullOrEmpty(profile.getDateOfApply())){
+                if (!Strings.isNullOrEmpty(profile.getDateOfApply())) {
                     try {
                         dateOfApply = parseMillis(profile.getDateOfApply());
                     } catch (Throwable e) {
@@ -286,7 +346,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         continue;
                     }
                 }
-                if(!Strings.isNullOrEmpty(profile.getDateOfBirth())){
+                if (!Strings.isNullOrEmpty(profile.getDateOfBirth())) {
                     try {
                         dateOfBirth = parseMillis(profile.getDateOfBirth());
                     } catch (Throwable e) {
@@ -364,7 +424,12 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     }
 
     public boolean validateEmail(String email) {
-        Matcher matcher = patternEmail.matcher(email);
+        matcher = patternEmail.matcher(email);
+        return matcher.matches();
+    }
+
+    public boolean validateFullName(String fullName) {
+        matcher = fullNamePattern.matcher(fullName);
         return matcher.matches();
     }
 

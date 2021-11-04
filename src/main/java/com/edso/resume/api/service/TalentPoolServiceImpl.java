@@ -39,7 +39,6 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
             c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
-        long total = db.countAll(CollectionNameDefs.COLL_TALENT_POOL, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_TALENT_POOL, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<TalentPoolEntity> rows = new ArrayList<>();
@@ -57,7 +56,7 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
         }
         GetArrayResponse<TalentPoolEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(total);
+        resp.setTotal(rows.size());
         resp.setRows(rows);
         return resp;
     }

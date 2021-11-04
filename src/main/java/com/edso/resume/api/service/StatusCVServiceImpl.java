@@ -40,7 +40,6 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
-        long total = db.countAll(CollectionNameDefs.COLL_STATUS_CV, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_STATUS_CV, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<StatusCVEntity> rows = new ArrayList<>();
@@ -56,7 +55,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         }
         GetArrayResponse<StatusCVEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(total);
+        resp.setTotal(rows.size());
         resp.setRows(rows);
         return resp;
     }

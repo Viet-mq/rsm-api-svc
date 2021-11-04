@@ -66,7 +66,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
         }
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.FULL_NAME, 1);
-        long total = db.countAll(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_NOTE_PROFILE, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<NoteProfileEntity> rows = new ArrayList<>();
@@ -87,7 +86,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
         }
 
         resp.setSuccess();
-        resp.setTotal(total);
+        resp.setTotal(rows.size());
         resp.setRows(rows);
         return resp;
     }

@@ -78,8 +78,8 @@ calendar:
 excel:
   serverPath: /usr/share/nginx/file-rs/attachment/
 #  serverPath: D:\
-  path: /usr/share/nginx/file-rs/attachment/Profiles.xlsx
-#  path: D:\
+#  path: /usr/share/nginx/file-rs/attachment/Profiles.xlsx
+  path: D:\Profiles.xlsx
 
 note:
   domain: http://file-rs.edsolabs.com/attachment/

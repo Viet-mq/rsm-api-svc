@@ -44,7 +44,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setName("Không tồn tại " + getDictionaryName() + " này!");
                 return;
             }
-            setName(doc);
+            setResult(doc);
         } catch (Throwable ex) {
             logger.error("Ex: ", ex);
             result.setResult(false);
@@ -58,7 +58,7 @@ public class DictionaryValidateProcessor implements Runnable {
         return result;
     }
 
-    private void setName(Document doc){
+    private void setResult(Document doc){
         switch (type) {
             case ThreadConfig.PROFILE: {
                 result.setResult(true);
@@ -188,7 +188,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return CollectionNameDefs.COLL_STATUS_CV;
             }
             case ThreadConfig.DEPARTMENT: {
-                return CollectionNameDefs.COLL_DEPARTMENT;
+                return CollectionNameDefs.COLL_DEPARTMENT_COMPANY;
             }
             case ThreadConfig.CALENDAR: {
                 return CollectionNameDefs.COLL_CALENDAR_PROFILE;

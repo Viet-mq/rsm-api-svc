@@ -31,4 +31,5 @@ public class ProfileRabbitMQEntity {
     private String departmentId;
     private String departmentName;
     private String levelSchool;
+
 }

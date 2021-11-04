@@ -39,7 +39,6 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
         Bson cond = buildCondition(c);
-        long total = db.countAll(CollectionNameDefs.COLL_SCHOOL, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_SCHOOL, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<SchoolEntity> rows = new ArrayList<>();
@@ -54,7 +53,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         }
         GetArrayResponse<SchoolEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(total);
+        resp.setTotal(rows.size());
         resp.setRows(rows);
         return resp;
     }
