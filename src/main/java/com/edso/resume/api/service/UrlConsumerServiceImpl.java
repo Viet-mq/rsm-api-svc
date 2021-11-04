@@ -23,7 +23,7 @@ public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerSe
         Bson cond = Filters.eq(DbKeyConfig.ID, url.getId());
         Document idProfile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
         logger.info("=>updateUrlToProfile url: {}", url);
-        if (idProfile == null){
+        if (idProfile == null) {
             logger.info("Id profile không tồn tại");
             return;
         }

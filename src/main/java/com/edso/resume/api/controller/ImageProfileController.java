@@ -1,7 +1,6 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.request.DeleteImageProfileRequest;
-import com.edso.resume.api.domain.request.DeleteNoteProfileRequest;
 import com.edso.resume.api.domain.request.UpdateImageProfileRequest;
 import com.edso.resume.api.service.ImageProfileService;
 import com.edso.resume.lib.entities.HeaderInfo;

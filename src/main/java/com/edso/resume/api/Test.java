@@ -1,14 +1,7 @@
 package com.edso.resume.api;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
-
-import java.util.Arrays;
-
 public class Test {
-//    public static void main(String[] args) throws Exception {
+    //    public static void main(String[] args) throws Exception {
 //        ConnectionFactory factory = new ConnectionFactory();
 //        factory.setUsername("admin");
 //        factory.setPassword("rabb@t@7911");
@@ -26,9 +19,9 @@ public class Test {
 //        });
 //
 //    }
-public static void main(String[] args) {
-    String str = "quanpham.docx";
-    String[] array = str.split("\\.");
-    System.out.println(array[0]);
-}
+    public static void main(String[] args) {
+        String str = "quanpham.docx";
+        String[] array = str.split("\\.");
+        System.out.println(array[0]);
+    }
 }

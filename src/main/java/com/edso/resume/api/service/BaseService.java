@@ -35,13 +35,13 @@ public abstract class BaseService {
         return (List<String>) list;
     }
 
-    public String parseDate(Long time){
+    public String parseDate(Long time) {
         Date dateTime = new Date(time);
         SimpleDateFormat format = new SimpleDateFormat("HH:mm dd-MM-yyyy");
         return format.format(dateTime);
     }
 
-    public String parseDateMonthYear(Long time){
+    public String parseDateMonthYear(Long time) {
         Date dateTime = new Date(time);
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
         return format.format(dateTime);
