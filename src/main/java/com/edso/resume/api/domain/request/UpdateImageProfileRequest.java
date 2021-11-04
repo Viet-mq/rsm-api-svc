@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
 @EqualsAndHashCode(callSuper = true)
@@ -18,7 +17,7 @@ public class UpdateImageProfileRequest extends BaseAuthRequest {
     private String idProfile;
     private MultipartFile image;
 
-    public BaseResponse validate(){
+    public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile)) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }

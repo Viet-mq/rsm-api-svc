@@ -36,7 +36,7 @@ public class DictionaryValidateProcessor implements Runnable {
             Bson cond = getCondition();
             Document doc = db.findOne(getCollectionName(), cond);
             if (doc == null) {
-                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL )|| type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
+                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
                     result.setResult(true);
                     return;
                 }
@@ -58,7 +58,7 @@ public class DictionaryValidateProcessor implements Runnable {
         return result;
     }
 
-    private void setName(Document doc){
+    private void setName(Document doc) {
         switch (type) {
             case ThreadConfig.PROFILE: {
                 result.setResult(true);
@@ -87,7 +87,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setName("Ứng viên này đang trong blacklist!");
                 break;
             }
-            case ThreadConfig.PROFILE_EMAIL:{
+            case ThreadConfig.PROFILE_EMAIL: {
                 result.setResult(false);
                 result.setName("Đã tồn tại ứng viên có email này");
                 break;
@@ -105,7 +105,7 @@ public class DictionaryValidateProcessor implements Runnable {
         }
     }
 
-    private Bson getCondition(){
+    private Bson getCondition() {
         switch (type) {
             case ThreadConfig.USER: {
                 return Filters.eq(DbKeyConfig.USERNAME, this.id);

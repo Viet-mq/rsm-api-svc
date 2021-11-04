@@ -229,7 +229,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 String sourceCVId = null;
                 Long dateOfBirth = null;
                 Long dateOfApply = null;
-                if(total != 0){
+                if (total != 0) {
                     for (DictionaryNameValidateProcessor r : rs) {
                         Thread t = new Thread(r);
                         t.start();
@@ -278,7 +278,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 }
 
                 String idProfile = UUID.randomUUID().toString();
-                if(!Strings.isNullOrEmpty(profile.getDateOfApply())){
+                if (!Strings.isNullOrEmpty(profile.getDateOfApply())) {
                     try {
                         dateOfApply = parseMillis(profile.getDateOfApply());
                     } catch (Throwable e) {
@@ -286,7 +286,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         continue;
                     }
                 }
-                if(!Strings.isNullOrEmpty(profile.getDateOfBirth())){
+                if (!Strings.isNullOrEmpty(profile.getDateOfBirth())) {
                     try {
                         dateOfBirth = parseMillis(profile.getDateOfBirth());
                     } catch (Throwable e) {

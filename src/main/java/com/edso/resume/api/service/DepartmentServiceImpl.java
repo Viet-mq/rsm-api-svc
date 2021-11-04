@@ -66,7 +66,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
                                     .build();
 
                             //De quy
-                            recursiveFunction(lst,subDepartmentEntity);
+                            recursiveFunction(lst, subDepartmentEntity);
 
                             list.add(subDepartmentEntity);
                             departmentEntity.setChild(list);

@@ -75,7 +75,6 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
         db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
 
 
-
         ImageEntity imageEntity = new ImageEntity(request.getIdProfile(), domain + fileName);
         publishActionToRabbitMQ("update-image", imageEntity);
 

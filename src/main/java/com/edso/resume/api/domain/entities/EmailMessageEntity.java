@@ -2,8 +2,6 @@ package com.edso.resume.api.domain.entities;
 
 import lombok.Data;
 
-import java.util.Arrays;
-
 @Data
 public class EmailMessageEntity {
     private String toEmail;

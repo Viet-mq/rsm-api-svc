@@ -57,9 +57,9 @@ public class DictionaryNameValidateProcessor implements Runnable {
                 result.setResult(false);
                 return;
             }
-            if(type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER)){
+            if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER)) {
                 result.setResult(false);
-            }else {
+            } else {
                 result.setResult(true);
                 result.setId(AppUtils.parseString(doc.get(DbKeyConfig.ID)));
             }
