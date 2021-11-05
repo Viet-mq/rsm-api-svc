@@ -60,10 +60,10 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
             return new BaseResponse(-1, "Vui lòng nhập ngày ứng tuyển");
         }
         if (Strings.isNullOrEmpty(talentPool)) {
-            return new BaseResponse(-1, "Vui lòng nhập nguồn ứng tuyển");
+            return new BaseResponse(-1, "Vui lòng nhập talent pool");
         }
         if (Strings.isNullOrEmpty(department)) {
-            return new BaseResponse(-1, "Vui lòng nhập nguồn ứng tuyển");
+            return new BaseResponse(-1, "Vui lòng nhập phòng ban");
         }
         return null;
     }

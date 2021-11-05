@@ -219,6 +219,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             return response;
         }
         for (ProfileUploadEntity profile : profiles) {
+
             //Validate null hoac empty thi bo qua
             if (Strings.isNullOrEmpty(profile.getFullName())) {
                 logger.info("Họ và tên trống!");
@@ -279,17 +280,12 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
                 rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail(), db, this));
                 rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
-
                 rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.TALENT_POOL, profile.getTalentPoolName(), db, this));
                 rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB_LEVEL, profile.getLevelJobName(), db, this));
                 rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.DEPARTMENT, profile.getDepartmentName(), db, this));
 
                 int total = rs.size();
 
-                String schoolId = null;
-                String sourceCVId = null;
-                Long dateOfBirth = null;
-                Long dateOfApply = null;
                 for (DictionaryNameValidateProcessor r : rs) {
                     Thread t = new Thread(r);
                     t.start();
@@ -297,13 +293,11 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 
                 long time = System.currentTimeMillis();
                 int count = 0;
-                int count2 = 0;
                 while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
                     DictionaryNameValidatorResult validatorResult = queue.poll();
                     if (validatorResult != null) {
                         if (validatorResult.getKey().equals(key)) {
                             if (!validatorResult.isResult()) {
-                                count2++;
                                 break;
                             } else {
                                 count++;
@@ -315,13 +309,15 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     }
                 }
 
-                if (count2 != 0) {
-                    continue;
-                }
-
                 if (count != rs.size()) {
                     continue;
                 }
+
+                String schoolId = null;
+                String sourceCVId = null;
+                String talentPoolId = null;
+                String levelJobId = null;
+                String departmentId = null;
 
                 for (DictionaryNameValidateProcessor r : rs) {
                     switch (r.getResult().getType()) {
@@ -333,18 +329,28 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                             sourceCVId = r.getResult().getId();
                             break;
                         }
+                        case ThreadConfig.TALENT_POOL: {
+                            talentPoolId = r.getResult().getId();
+                            break;
+                        }
+                        case ThreadConfig.JOB_LEVEL: {
+                            levelJobId = r.getResult().getId();
+                            break;
+                        }
+                        case ThreadConfig.DEPARTMENT: {
+                            departmentId = r.getResult().getId();
+                            break;
+                        }
                     }
                 }
 
-
-                String idProfile = UUID.randomUUID().toString();
-                if (!Strings.isNullOrEmpty(profile.getDateOfApply())) {
-                    try {
-                        dateOfApply = parseMillis(profile.getDateOfApply());
-                    } catch (Throwable e) {
-                        logger.error("Exception: ", e);
-                        continue;
-                    }
+                Long dateOfBirth = null;
+                Long dateOfApply;
+                try {
+                    dateOfApply = parseMillis(profile.getDateOfApply());
+                } catch (Throwable e) {
+                    logger.error("Exception: ", e);
+                    continue;
                 }
                 if (!Strings.isNullOrEmpty(profile.getDateOfBirth())) {
                     try {
@@ -355,6 +361,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     }
                 }
 
+                String idProfile = UUID.randomUUID().toString();
                 Document pro = new Document();
                 pro.append(DbKeyConfig.ID, idProfile);
                 pro.append(DbKeyConfig.FULL_NAME, profile.getFullName());
@@ -367,10 +374,17 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 pro.append(DbKeyConfig.SCHOOL_NAME, profile.getSchoolName());
                 pro.append(DbKeyConfig.SCHOOL_ID, schoolId);
                 pro.append(DbKeyConfig.DATE_OF_APPLY, dateOfApply);
+                pro.append(DbKeyConfig.LEVEL_JOB_ID, levelJobId);
+                pro.append(DbKeyConfig.LEVEL_JOB_NAME, profile.getLevelJobName());
                 pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCVName());
                 pro.append(DbKeyConfig.SOURCE_CV_ID, sourceCVId);
                 pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                 pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
+                pro.append(DbKeyConfig.TALENT_POOL_ID, talentPoolId);
+                pro.append(DbKeyConfig.TALENT_POOL_NAME, profile.getTalentPoolName());
+                pro.append(DbKeyConfig.HR_REF, profile.getHrRef());
+                pro.append(DbKeyConfig.DEPARTMENT_ID, departmentId);
+                pro.append(DbKeyConfig.DEPARTMENT_NAME, profile.getDepartmentName());
 
                 db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
 
@@ -386,9 +400,17 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 profileEntity.setSchoolName(profile.getSchoolName());
                 profileEntity.setDateOfApply(dateOfApply);
                 profileEntity.setSourceCVId(sourceCVId);
+                profileEntity.setLevelSchool(profile.getLevelSchool());
+                profileEntity.setLevelJobId(levelJobId);
+                profileEntity.setLevelJobName(profile.getLevelJobName());
                 profileEntity.setSourceCVName(profile.getSourceCVName());
+                profileEntity.setTalentPoolId(talentPoolId);
+                profileEntity.setTalentPoolName(profile.getTalentPoolName());
+                profileEntity.setHrRef(profile.getHrRef());
+                profileEntity.setDepartmentId(departmentId);
+                profileEntity.setDepartmentName(profile.getDepartmentName());
 
-                publishActionToRabbitMQ(profileEntity);
+//                publishActionToRabbitMQ(profileEntity);
 
             } finally {
                 synchronized (queue) {
@@ -400,6 +422,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         response.setSuccess();
         return response;
     }
+
 
     public Long parseMillis(String date) throws ParseException {
         SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");

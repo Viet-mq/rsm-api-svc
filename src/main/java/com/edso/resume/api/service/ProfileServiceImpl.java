@@ -193,8 +193,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+            DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
+            dictionaryValidateProcessorEmail.setIdProfile(idProfile);
+            rs.add(dictionaryValidateProcessorEmail);
+            DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+            dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
+            rs.add(dictionaryValidateProcessorPhoneNumber);
             int total = rs.size();
 
             for (DictionaryValidateProcessor p : rs) {
@@ -294,8 +298,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         try {
             //Validate
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            String idProfile = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             if (!Strings.isNullOrEmpty(request.getSchool())) {
@@ -306,13 +310,17 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, id, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+            DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
+            dictionaryValidateProcessorEmail.setIdProfile(idProfile);
+            rs.add(dictionaryValidateProcessorEmail);
+            DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+            dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
+            rs.add(dictionaryValidateProcessorPhoneNumber);
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -352,11 +360,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //Update coll calendar
             if (!dictionaryNames.getEmail().equals(request.getEmail())) {
-                Bson idProfile = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
+                Bson id = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
                 Bson updateProfile = Updates.combine(
                         Updates.set(DbKeyConfig.EMAIL, request.getEmail())
                 );
-                db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, idProfile, updateProfile, true);
+                db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, id, updateProfile, true);
             }
 
             // update roles
@@ -394,7 +402,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE, profileRabbitMQ);
 
             //Insert history to DB
-            historyService.createHistory(id, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
 
             return response;
 
@@ -419,8 +427,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         try {
             //Validate
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            String idProfile = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             if (!Strings.isNullOrEmpty(request.getSchool())) {
@@ -431,13 +439,17 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, id, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+            DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
+            dictionaryValidateProcessorEmail.setIdProfile(idProfile);
+            rs.add(dictionaryValidateProcessorEmail);
+            DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+            dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
+            rs.add(dictionaryValidateProcessorPhoneNumber);
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -477,11 +489,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //Update coll calendar
             if (!dictionaryNames.getEmail().equals(request.getEmail())) {
-                Bson idProfile = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
+                Bson id = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
                 Bson updateProfile = Updates.combine(
                         Updates.set(DbKeyConfig.EMAIL, request.getEmail())
                 );
-                db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, idProfile, updateProfile, true);
+                db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, id, updateProfile, true);
             }
 
             // update roles
@@ -521,7 +533,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE_DETAIL, profileRabbitMQ);
 
             //Insert history to DB
-            historyService.createHistory(id, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
 
             return response;
 
@@ -541,7 +553,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     @Override
     public BaseResponse deleteProfile(DeleteProfileRequest request) {
         BaseResponse response = new BaseResponse();
-
         try {
             //Validate
             String id = request.getId();
@@ -589,11 +600,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         try {
 
             //Validate
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            String idProfile = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, id, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatusCV(), db, this));
             int total = rs.size();
 
@@ -656,7 +667,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE_STATUS, profileRabbitMQ);
 
             //Insert history to DB
-            historyService.createHistory(id, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());
 
             return response;
 

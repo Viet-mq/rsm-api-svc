@@ -1,6 +1,5 @@
 package com.edso.resume.api.domain.rabbitmq.consume;
 
-import com.edso.resume.api.domain.db.BaseAction;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -12,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RabbitMQConfig extends BaseAction {
+public class RabbitMQConfig extends CachingConnectionFactory {
 
     @Value("${spring.rabbitmq.profile.queue}")
     private String queue;
@@ -31,6 +30,9 @@ public class RabbitMQConfig extends BaseAction {
 
     @Value("${spring.rabbitmq.host}")
     private String host;
+
+    @Value("${spring.rabbitmq.port}")
+    private int port;
 
     @Bean
     Queue queue() {
@@ -53,7 +55,7 @@ public class RabbitMQConfig extends BaseAction {
 
     @Bean
     public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(host);
+        CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(host, port);
         cachingConnectionFactory.setUsername(username);
         cachingConnectionFactory.setPassword(password);
         return cachingConnectionFactory;

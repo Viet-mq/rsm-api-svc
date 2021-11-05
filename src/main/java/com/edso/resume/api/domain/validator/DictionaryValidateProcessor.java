@@ -6,11 +6,13 @@ import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.common.ThreadConfig;
 import com.mongodb.client.model.Filters;
+import lombok.Data;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Data
 public class DictionaryValidateProcessor implements Runnable {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -20,6 +22,7 @@ public class DictionaryValidateProcessor implements Runnable {
     private final String key;
     private final String type;
     private final String id;
+    private String idProfile;
 
     public DictionaryValidateProcessor(String key, String type, String id, MongoDbOnlineSyncActions db, IDictionaryValidator target) {
         this.key = key;
@@ -36,7 +39,7 @@ public class DictionaryValidateProcessor implements Runnable {
             Bson cond = getCondition();
             Document doc = db.findOne(getCollectionName(), cond);
             if (doc == null) {
-                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL )|| type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
+                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
                     result.setResult(true);
                     return;
                 }
@@ -58,7 +61,7 @@ public class DictionaryValidateProcessor implements Runnable {
         return result;
     }
 
-    private void setResult(Document doc){
+    private void setResult(Document doc) {
         switch (type) {
             case ThreadConfig.PROFILE: {
                 result.setResult(true);
@@ -87,15 +90,26 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setName("Ứng viên này đang trong blacklist!");
                 break;
             }
-            case ThreadConfig.PROFILE_EMAIL:{
-                result.setResult(false);
-                result.setName("Đã tồn tại ứng viên có email này");
-                break;
+            case ThreadConfig.PROFILE_EMAIL: {
+                if (!AppUtils.parseString(doc.get(DbKeyConfig.ID)).equals(idProfile)) {
+                    result.setResult(false);
+                    result.setName("Đã tồn tại ứng viên có email này");
+                    break;
+                } else {
+                    result.setResult(true);
+                    break;
+                }
+
             }
             case ThreadConfig.PROFILE_PHONE_NUMBER: {
-                result.setResult(false);
-                result.setName("Đã tồn tại ứng viên có số điện thoại này");
-                break;
+                if (!AppUtils.parseString(doc.get(DbKeyConfig.ID)).equals(idProfile)) {
+                    result.setResult(false);
+                    result.setName("Đã tồn tại ứng viên có số điện thoại này");
+                    break;
+                } else {
+                    result.setResult(true);
+                    break;
+                }
             }
             default: {
                 result.setResult(true);
@@ -105,7 +119,7 @@ public class DictionaryValidateProcessor implements Runnable {
         }
     }
 
-    private Bson getCondition(){
+    private Bson getCondition() {
         switch (type) {
             case ThreadConfig.USER: {
                 return Filters.eq(DbKeyConfig.USERNAME, this.id);

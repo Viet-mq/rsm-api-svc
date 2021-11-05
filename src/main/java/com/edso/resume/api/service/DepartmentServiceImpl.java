@@ -37,10 +37,10 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         GetArrayResponse<DepartmentEntity> resp = new GetArrayResponse<>();
         Bson cond = Filters.eq(DbKeyConfig.COMPANY_ID, idCompany);
         Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, idCompany));
-        if (company == null) {
-            resp.setFailed("Không tồn tại công ty này");
-            return resp;
-        }
+//        if (company == null) {
+//            resp.setFailed("Không tồn tại công ty này");
+//            return resp;
+//        }
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<DepartmentEntity> rows = new ArrayList<>();
@@ -107,10 +107,10 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
 
         BaseResponse response = new BaseResponse();
         Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, request.getIdCompany()));
-        if (company == null) {
-            response.setFailed("Không tồn tại id company này");
-            return response;
-        }
+//        if (company == null) {
+//            response.setFailed("Không tồn tại id company này");
+//            return response;
+//        }
 
         String parentName = null;
         if (!Strings.isNullOrEmpty(idParent)) {

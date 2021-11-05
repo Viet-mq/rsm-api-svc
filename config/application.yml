@@ -7,16 +7,16 @@ spring:
       max-request-size: 100MB
   data:
     mongodb:
-      host: 103.152.165.53
+      host: 192.168.50.33
       port: 27017
       database: 'resume'
       username: 'resume'
-      password: 'abc123resume'
+      password: 'MHFbdWe1KsjiMKtzDpuDrue1ZtcmDifxY1ousr5HXj12Uth65ZI1juLTaXVcYU6czsdgh'
   rabbitmq:
-    host: 18.139.222.137
-    port: 5672
+    host: 192.168.50.33
+    port: 5673
     username: admin
-    password: rabb@t@7911
+    password: adminlgsp@123
     queue: cv.queue
     profile:
       exchange: event.exchange
@@ -47,7 +47,7 @@ server:
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_URI:http://localhost:30000/eureka/}
+      defaultZone: ${EUREKA_URI:http://localhost:30300/eureka/}
 
 logging:
   config: config/log4j2.xml
@@ -76,19 +76,19 @@ calendar:
   nLoop: 3 #canh bao 3 lan
 
 excel:
-  serverPath: /usr/share/nginx/file-rs/attachment/
-#  serverPath: D:\
+#  serverPath: /usr/share/nginx/file-rs/attachment/
+  serverPath: D:\
 #  path: /usr/share/nginx/file-rs/attachment/Profiles.xlsx
   path: D:\Profiles.xlsx
 
 note:
   domain: http://file-rs.edsolabs.com/attachment/
-  serverpath: /usr/share/nginx/file-rs/attachment/
-#  serverPath: D:\
+#  serverpath: /usr/share/nginx/file-rs/attachment/
+  serverPath: D:\
   fileSize: 15728640 #Byte 15MB
 
 avatar:
   domain: http://file-rs.edsolabs.com/avatar/
-  serverpath: /usr/share/nginx/file-rs/avatar/
-#  serverPath: D:\
+#  serverpath: /usr/share/nginx/file-rs/avatar/
+  serverPath: D:\
   fileSize: 15728640 #Byte 15MB

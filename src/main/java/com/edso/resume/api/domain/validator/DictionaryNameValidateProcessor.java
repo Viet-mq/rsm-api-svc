@@ -35,7 +35,6 @@ public class DictionaryNameValidateProcessor implements Runnable {
         try {
             Bson cond = getCondition();
             Document doc = db.findOne(getCollectionName(), cond);
-
             if (doc == null) {
                 if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL )|| type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
                     result.setResult(true);
