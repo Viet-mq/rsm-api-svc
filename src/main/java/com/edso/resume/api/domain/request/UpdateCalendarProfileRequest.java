@@ -1,5 +1,6 @@
 package com.edso.resume.api.domain.request;
 
+import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;
@@ -30,46 +31,46 @@ public class UpdateCalendarProfileRequest extends BaseAuthRequest {
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập id");
+            return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
         }
         if (time == null || time < 0) {
-            return new BaseResponse(-1, "Vui lòng nhập thời gian");
+            return new BaseResponse(ErrorCodeDefs.TIME, "Vui lòng nhập thời gian");
         }
         if (Strings.isNullOrEmpty(address) || address.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập địa điểm");
+            return new BaseResponse(ErrorCodeDefs.ADDRESS, "Vui lòng nhập địa điểm");
         }
         if (Strings.isNullOrEmpty(form) || form.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập hình thức");
+            return new BaseResponse(ErrorCodeDefs.FORM, "Vui lòng nhập hình thức");
         }
         if (interviewer == null || interviewer.isEmpty()) {
-            return new BaseResponse(-1, "Vui lòng nhập người phỏng vấn");
+            return new BaseResponse(ErrorCodeDefs.INTERVIEWER, "Vui lòng nhập người phỏng vấn");
         }
         if (Strings.isNullOrEmpty(interviewee) || interviewee.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập người tham gia");
+            return new BaseResponse(ErrorCodeDefs.INTERVIEWEE, "Vui lòng nhập người tham gia");
         }
         if (Strings.isNullOrEmpty(content) || content.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập nội dung");
+            return new BaseResponse(ErrorCodeDefs.CONTENT, "Vui lòng nhập nội dung");
         }
         if (Strings.isNullOrEmpty(question) || question.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập câu hỏi");
+            return new BaseResponse(ErrorCodeDefs.QUESTION, "Vui lòng nhập câu hỏi");
         }
         if (Strings.isNullOrEmpty(comments) || comments.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập nhận xét");
+            return new BaseResponse(ErrorCodeDefs.COMMENTS, "Vui lòng nhập nhận xét");
         }
         if (Strings.isNullOrEmpty(evaluation) || evaluation.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập đánh giá");
+            return new BaseResponse(ErrorCodeDefs.EVALUATION, "Vui lòng nhập đánh giá");
         }
         if (Strings.isNullOrEmpty(status) || status.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập trạng thái");
+            return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái");
         }
         if (Strings.isNullOrEmpty(reason) || reason.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập lý do");
+            return new BaseResponse(ErrorCodeDefs.REASON, "Vui lòng nhập lý do");
         }
         if (timeStart == null || timeStart < 0) {
-            return new BaseResponse(-1, "Vui lòng nhập thời gian bắt đầu");
+            return new BaseResponse(ErrorCodeDefs.TIME_START, "Vui lòng nhập thời gian bắt đầu");
         }
         if (timeFinish == null || timeFinish < 0) {
-            return new BaseResponse(-1, "Vui lòng nhập thời gian kết thúc");
+            return new BaseResponse(ErrorCodeDefs.TIME_FINISH, "Vui lòng nhập thời gian kết thúc");
         }
         return null;
     }

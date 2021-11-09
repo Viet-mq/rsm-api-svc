@@ -66,7 +66,7 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
     public BaseResponse createTalentPool(CreateTalentPoolRequest request) {
         BaseResponse response = new BaseResponse();
 
-        String name = request.getName();
+        String name = request.getName().trim();
         Bson c = Filters.eq("name_search", name.toLowerCase());
         long count = db.countAll(CollectionNameDefs.COLL_TALENT_POOL, c);
 
@@ -127,7 +127,7 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
         }
 
         //Check if the name already exists or not
-        String name = request.getName();
+        String name = request.getName().trim();
         Document obj = db.findOne(CollectionNameDefs.COLL_TALENT_POOL, Filters.eq("name_search", name.toLowerCase()));
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get("id"));

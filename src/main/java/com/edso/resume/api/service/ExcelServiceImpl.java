@@ -318,38 +318,43 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
     private String path;
 
     @Override
-    public String exportExcel(HeaderInfo info) throws IOException {
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, null, null, 0, 0);
-        List<ProfileExcelEntity> profiles = new ArrayList<>();
-        if (lst != null) {
-            for (Document doc : lst) {
-                ProfileExcelEntity profile = ProfileExcelEntity.builder()
-                        .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
-                        .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
-                        .dateOfBirth(parseDateMonthYear(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_BIRTH))))
-                        .hometown(AppUtils.parseString(doc.get(DbKeyConfig.HOMETOWN)))
-                        .schoolName(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_NAME)))
-                        .phoneNumber(AppUtils.parseString(doc.get(DbKeyConfig.PHONE_NUMBER)))
-                        .email(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)))
-                        .jobName(AppUtils.parseString(doc.get(DbKeyConfig.JOB_NAME)))
-                        .levelJobName(AppUtils.parseString(doc.get(DbKeyConfig.LEVEL_JOB_NAME)))
-                        .cv(AppUtils.parseString(doc.get(DbKeyConfig.CV)))
-                        .sourceCVName(AppUtils.parseString(doc.get(DbKeyConfig.SOURCE_CV_NAME)))
-                        .hrRef(AppUtils.parseString(doc.get(DbKeyConfig.HR_REF)))
-                        .dateOfApply(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY))))
-                        .cvType(AppUtils.parseString(doc.get(DbKeyConfig.CV_TYPE)))
-                        .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
-                        .lastApply(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.LAST_APPLY))))
-                        .tags(AppUtils.parseString(doc.get(DbKeyConfig.TAGS)))
-                        .gender(AppUtils.parseString(doc.get(DbKeyConfig.GENDER)))
-                        .note(AppUtils.parseString(doc.get(DbKeyConfig.NOTE)))
-                        .dateOfCreate(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT))))
-                        .dateOfUpdate(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.UPDATE_AT))))
-                        .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
-                        .build();
-                profiles.add(profile);
+    public String exportExcel(HeaderInfo info) {
+        try {
+            FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, null, null, 0, 0);
+            List<ProfileExcelEntity> profiles = new ArrayList<>();
+            if (lst != null) {
+                for (Document doc : lst) {
+                    ProfileExcelEntity profile = ProfileExcelEntity.builder()
+                            .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
+                            .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
+                            .dateOfBirth(parseDateMonthYear(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_BIRTH))))
+                            .hometown(AppUtils.parseString(doc.get(DbKeyConfig.HOMETOWN)))
+                            .schoolName(AppUtils.parseString(doc.get(DbKeyConfig.SCHOOL_NAME)))
+                            .phoneNumber(AppUtils.parseString(doc.get(DbKeyConfig.PHONE_NUMBER)))
+                            .email(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)))
+                            .jobName(AppUtils.parseString(doc.get(DbKeyConfig.JOB_NAME)))
+                            .levelJobName(AppUtils.parseString(doc.get(DbKeyConfig.LEVEL_JOB_NAME)))
+                            .cv(AppUtils.parseString(doc.get(DbKeyConfig.CV)))
+                            .sourceCVName(AppUtils.parseString(doc.get(DbKeyConfig.SOURCE_CV_NAME)))
+                            .hrRef(AppUtils.parseString(doc.get(DbKeyConfig.HR_REF)))
+                            .dateOfApply(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY))))
+                            .cvType(AppUtils.parseString(doc.get(DbKeyConfig.CV_TYPE)))
+                            .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
+                            .lastApply(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.LAST_APPLY))))
+                            .tags(AppUtils.parseString(doc.get(DbKeyConfig.TAGS)))
+                            .gender(AppUtils.parseString(doc.get(DbKeyConfig.GENDER)))
+                            .note(AppUtils.parseString(doc.get(DbKeyConfig.NOTE)))
+                            .dateOfCreate(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT))))
+                            .dateOfUpdate(parseDate(AppUtils.parseLong(doc.get(DbKeyConfig.UPDATE_AT))))
+                            .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
+                            .build();
+                    profiles.add(profile);
+                }
             }
+            return writeExcel(profiles, path);
+        }catch (Throwable e){
+            logger.error("Exception: ",e);
+            return null;
         }
-        return writeExcel(profiles, path);
     }
 }

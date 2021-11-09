@@ -11,6 +11,6 @@ public class DepartmentEntity {
     private String id;
     private String name;
     private String idCompany;
-    private List<SubDepartmentEntity> child;
+    private List<SubDepartmentEntity> children;
 
 }

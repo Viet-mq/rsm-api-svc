@@ -50,7 +50,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
         GetArrayCalendarResponse<CalendarEntity> resp = new GetArrayCalendarResponse<>();
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
         if (idProfileDocument == null) {
-            resp.setFailed("Id profile không tồn tại");
+            resp.setResult(ErrorCodeDefs.ID, "Id profile không tồn tại");
             return resp;
         }
         List<Bson> c = new ArrayList<>();
@@ -306,20 +306,25 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
     @Override
     public BaseResponse deleteCalendarProfile(DeleteCalendarProfileRequest request) {
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
-        if (idDocument == null) {
-            response.setFailed("Không tồn tại id calendar này");
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
+            if (idDocument == null) {
+                response.setFailed("Không tồn tại id calendar này");
+                return response;
+            }
+
+            db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
+
+            //Insert history to DB
+            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo().getUsername());
+            response.setSuccess();
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+            response.setFailed("Hệ thống bận");
             return response;
         }
-
-        db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
-
-        //Insert history to DB
-        historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo().getUsername());
-        response.setSuccess();
-
         return response;
     }
 

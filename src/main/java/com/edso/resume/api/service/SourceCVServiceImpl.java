@@ -63,7 +63,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
 
         BaseResponse response = new BaseResponse();
 
-        String name = request.getName();
+        String name = request.getName().trim();
         Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         long count = db.countAll(CollectionNameDefs.COLL_SOURCE_CV, c);
 
@@ -103,7 +103,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
             return response;
         }
 
-        String name = request.getName();
+        String name = request.getName().trim();
         Document obj = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));

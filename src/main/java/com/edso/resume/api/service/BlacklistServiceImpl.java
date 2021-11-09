@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.request.DeleteBlacklistRequest;
 import com.edso.resume.api.domain.request.UpdateBlacklistRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -69,78 +70,89 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
 
         BaseResponse response = new BaseResponse();
 
-        String name = request.getName();
-        Bson c = Filters.eq("name_search", name.toLowerCase());
-        long count = db.countAll(CollectionNameDefs.COLL_BLACKLIST, c);
+        try {
+            String name = request.getName();
+            Bson c = Filters.eq("name_search", name.toLowerCase());
+            long count = db.countAll(CollectionNameDefs.COLL_BLACKLIST, c);
 
-        if (count > 0) {
-            response.setFailed("Name already existed !");
+            if (count > 0) {
+                response.setResult(ErrorCodeDefs.NAME, "Tên này đã tồn tại");
+                return response;
+            }
+
+            response = check(request.getEmail(), request.getPhoneNumber(), request.getSsn());
+            if (response != null) return response;
+
+            Document blacklist = new Document();
+            blacklist.append("id", UUID.randomUUID().toString());
+            blacklist.append("name", name);
+            blacklist.append("email", request.getEmail());
+            blacklist.append("phoneNumber", request.getPhoneNumber());
+            blacklist.append("ssn", request.getSsn());
+            blacklist.append("reason", request.getReason());
+            blacklist.append("name_search", name.toLowerCase());
+            blacklist.append("create_at", System.currentTimeMillis());
+            blacklist.append("update_at", System.currentTimeMillis());
+            blacklist.append("create_by", request.getInfo().getUsername());
+            blacklist.append("update_by", request.getInfo().getUsername());
+
+            db.insertOne(CollectionNameDefs.COLL_BLACKLIST, blacklist);
+
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+            response.setFailed("Hệ thống bận");
             return response;
         }
-
-        response = check(request.getEmail(), request.getPhoneNumber(), request.getSsn());
-        if (response != null) return response;
-
-        Document blacklist = new Document();
-        blacklist.append("id", UUID.randomUUID().toString());
-        blacklist.append("name", name);
-        blacklist.append("email", request.getEmail());
-        blacklist.append("phoneNumber", request.getPhoneNumber());
-        blacklist.append("ssn", request.getSsn());
-        blacklist.append("reason", request.getReason());
-        blacklist.append("name_search", name.toLowerCase());
-        blacklist.append("create_at", System.currentTimeMillis());
-        blacklist.append("update_at", System.currentTimeMillis());
-        blacklist.append("create_by", request.getInfo().getUsername());
-        blacklist.append("update_by", request.getInfo().getUsername());
-
-        db.insertOne(CollectionNameDefs.COLL_BLACKLIST, blacklist);
-
         return new BaseResponse(0, "OK");
     }
 
     @Override
     public BaseResponse updateBlacklist(UpdateBlacklistRequest request) {
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq("id", id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
-            return response;
-        }
-
-        String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_BLACKLIST, Filters.eq("name_search", name.toLowerCase()));
-        if (obj != null) {
-            String objId = AppUtils.parseString(obj.get("id"));
-            if (!objId.equals(id)) {
-                response.setFailed("Name already existed !");
+            if (idDocument == null) {
+                response.setResult(ErrorCodeDefs.ID, "Id này không tồn tại");
                 return response;
             }
+
+            String name = request.getName();
+            Document obj = db.findOne(CollectionNameDefs.COLL_BLACKLIST, Filters.eq("name_search", name.toLowerCase()));
+            if (obj != null) {
+                String objId = AppUtils.parseString(obj.get("id"));
+                if (!objId.equals(id)) {
+                    response.setFailed("Name already existed !");
+                    return response;
+                }
+            }
+
+            //update roles
+            String reason = AppUtils.parseString(idDocument.get("reason"));
+            logger.info(reason);
+            if (request.getReason() != null) reason = request.getReason();
+            Bson updates = Updates.combine(
+                    Updates.set("email", request.getEmail()),
+                    Updates.set("phoneNumber", request.getPhoneNumber()),
+                    Updates.set("ssn", request.getSsn()),
+                    Updates.set("reason", reason),
+                    Updates.set("name", request.getName()),
+                    Updates.set("name_search", request.getName().toLowerCase()),
+                    Updates.set("update_at", System.currentTimeMillis()),
+                    Updates.set("update_by", request.getInfo().getUsername()),
+                    Updates.set("update_blacklist_at", System.currentTimeMillis()),
+                    Updates.set("update_blacklist_by", request.getInfo().getUsername())
+            );
+
+            db.update(CollectionNameDefs.COLL_BLACKLIST, cond, updates, true);
+            response.setSuccess();
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+            response.setFailed("Hệ thống bận");
+            return response;
         }
-
-        //update roles
-        String reason = AppUtils.parseString(idDocument.get("reason"));
-        logger.info(reason);
-        if (request.getReason() != null) reason = request.getReason();
-        Bson updates = Updates.combine(
-                Updates.set("email", request.getEmail()),
-                Updates.set("phoneNumber", request.getPhoneNumber()),
-                Updates.set("ssn", request.getSsn()),
-                Updates.set("reason", reason),
-                Updates.set("name", request.getName()),
-                Updates.set("name_search", request.getName().toLowerCase()),
-                Updates.set("update_at", System.currentTimeMillis()),
-                Updates.set("update_by", request.getInfo().getUsername()),
-                Updates.set("update_blacklist_at", System.currentTimeMillis()),
-                Updates.set("update_blacklist_by", request.getInfo().getUsername())
-        );
-
-        db.update(CollectionNameDefs.COLL_BLACKLIST, cond, updates, true);
-        response.setSuccess();
-
         return response;
     }
 
@@ -148,15 +160,21 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
     public BaseResponse deleteBlacklist(DeleteBlacklistRequest request) {
 
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq("id", id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq("id", id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+            db.delete(CollectionNameDefs.COLL_BLACKLIST, cond);
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+            response.setFailed("Hệ thống bận");
             return response;
         }
-        db.delete(CollectionNameDefs.COLL_BLACKLIST, cond);
         return new BaseResponse(0, "OK");
     }
 

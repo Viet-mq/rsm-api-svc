@@ -1,5 +1,6 @@
 package com.edso.resume.api.domain.request;
 
+import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;
@@ -15,7 +16,7 @@ public class CreateStatusCVRequest extends BaseAuthRequest {
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập trạng thái CV");
+            return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập trạng thái CV");
         }
         return null;
     }

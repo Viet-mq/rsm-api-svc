@@ -1,5 +1,6 @@
 package com.edso.resume.api.domain.request;
 
+import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
@@ -22,19 +23,19 @@ public class CreateNoteProfileRequest extends BaseAuthRequest {
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập id profile");
+            return new BaseResponse(ErrorCodeDefs.ID_PROFILE, "Vui lòng nhập id profile");
         }
         if (Strings.isNullOrEmpty(username) || username.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập username");
+            return new BaseResponse(ErrorCodeDefs.USERNAME, "Vui lòng nhập username");
         }
         if (!Strings.isNullOrEmpty(comment) && comment.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhận xét không quá 255 ký tự");
+            return new BaseResponse(ErrorCodeDefs.COMMENT, "Vui lòng nhận xét không quá 255 ký tự");
         }
         if (!Strings.isNullOrEmpty(evaluation) && evaluation.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng đánh giá không quá 255 ký tự");
+            return new BaseResponse(ErrorCodeDefs.EVALUATION, "Vui lòng đánh giá không quá 255 ký tự");
         }
         if(!valiadateNoteFile(file)){
-            return new BaseResponse(-1, "File vượt quá dung lượng cho phép");
+            return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
         }
         return null;
     }

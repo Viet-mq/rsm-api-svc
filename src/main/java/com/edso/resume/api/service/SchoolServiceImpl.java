@@ -63,7 +63,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
 
         BaseResponse response = new BaseResponse();
 
-        String name = request.getName();
+        String name = request.getName().trim();
         Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         long count = db.countAll(CollectionNameDefs.COLL_SCHOOL, c);
 
@@ -103,7 +103,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
             return response;
         }
 
-        String name = request.getName();
+        String name = request.getName().trim();
         Document obj = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));

@@ -52,24 +52,25 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
                             .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                             .idCompany(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_ID)))
                             .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
-                            .child(new ArrayList<>())
                             .build();
                     rows.add(department);
                 } else {
                     for (DepartmentEntity departmentEntity : rows) {
                         if (departmentEntity.getId().equals(idParent)) {
-                            List<SubDepartmentEntity> list = departmentEntity.getChild();
+                            List<SubDepartmentEntity> list = departmentEntity.getChildren();
+                            if (list == null) {
+                                list = new ArrayList<>();
+                            }
                             SubDepartmentEntity subDepartmentEntity = SubDepartmentEntity.builder()
                                     .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                                     .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
-                                    .child(new ArrayList<>())
                                     .build();
 
                             //De quy
                             recursiveFunction(lst, subDepartmentEntity);
 
                             list.add(subDepartmentEntity);
-                            departmentEntity.setChild(list);
+                            departmentEntity.setChildren(list);
                         }
                     }
                 }
@@ -86,17 +87,19 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
             String idParent = AppUtils.parseString(doc.get(DbKeyConfig.PARENT_ID));
             if (!Strings.isNullOrEmpty(idParent)) {
                 if (subs.getId().equals(idParent)) {
-                    List<SubDepartmentEntity> list = subs.getChild();
+                    List<SubDepartmentEntity> list = subs.getChildren();
+                    if (list == null) {
+                        list = new ArrayList<>();
+                    }
                     SubDepartmentEntity subDepartmentEntity = SubDepartmentEntity.builder()
                             .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                             .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
-                            .child(new ArrayList<>())
                             .build();
 
                     recursiveFunction(lst, subDepartmentEntity);
 
                     list.add(subDepartmentEntity);
-                    subs.setChild(list);
+                    subs.setChildren(list);
                 }
             }
         }
@@ -106,45 +109,49 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
     public BaseResponse createDepartment(CreateDepartmentRequest request, String idParent) {
 
         BaseResponse response = new BaseResponse();
+        try {
 //        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, request.getIdCompany()));
 //        if (company == null) {
 //            response.setFailed("Không tồn tại id company này");
 //            return response;
 //        }
+            String parentName = null;
+            if (!Strings.isNullOrEmpty(idParent)) {
+                Document doc = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.ID, idParent));
+                if (doc != null) {
+                    parentName = AppUtils.parseString(doc.get(DbKeyConfig.NAME));
+                } else {
+                    response.setFailed("Không tồn tại id parent này");
+                    return response;
+                }
+            }
 
-        String parentName = null;
-        if (!Strings.isNullOrEmpty(idParent)) {
-            Document doc = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.ID, idParent));
-            if (doc != null) {
-                parentName = AppUtils.parseString(doc.get(DbKeyConfig.NAME));
-            } else {
-                response.setFailed("Không tồn tại id parent này");
+            String name = request.getName().trim();
+            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            long count = db.countAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, c);
+
+            if (count > 0) {
+                response.setFailed("Tên này đã tồn tại");
                 return response;
             }
-        }
 
-        String name = request.getName();
-        Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        long count = db.countAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, c);
+            Document department = new Document();
+            department.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            department.append(DbKeyConfig.NAME, request.getName());
+            department.append(DbKeyConfig.COMPANY_ID, null);
+            department.append(DbKeyConfig.PARENT_ID, idParent);
+            department.append(DbKeyConfig.PARENT_NAME, parentName);
+            department.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            department.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+            department.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
-        if (count > 0) {
-            response.setFailed("Tên này đã tồn tại");
+            // insert to database
+            db.insertOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, department);
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+            response.setFailed("Hệ thống bận");
             return response;
         }
-
-        Document department = new Document();
-        department.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-        department.append(DbKeyConfig.NAME, request.getName());
-        department.append(DbKeyConfig.COMPANY_ID, null);
-        department.append(DbKeyConfig.PARENT_ID, idParent);
-        department.append(DbKeyConfig.PARENT_NAME, parentName);
-        department.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        department.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-        department.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, department);
-
         response.setSuccess();
         return response;
 
@@ -155,71 +162,76 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
     public BaseResponse updateDepartment(UpdateDepartmentRequest request, String idParent) {
 
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
-            return response;
-        }
-
-        String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
-        if (obj != null) {
-            String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
-            if (!objId.equals(id)) {
-                response.setFailed("Tên này đã tồn tại");
-                return response;
-            }
-        }
-
-        Bson idJobLevel = Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId());
-        Bson updateProfile = Updates.combine(
-                Updates.set(DbKeyConfig.DEPARTMENT_NAME, request.getName())
-        );
-        db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
-
-        Bson updates;
-        if (!Strings.isNullOrEmpty(idParent)) {
-            Document doc = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.PARENT_ID, idParent));
-            if (doc != null) {
-                String parentName = AppUtils.parseString(doc.get(DbKeyConfig.NAME));
-                // update roles
-                updates = Updates.combine(
-                        Updates.set(DbKeyConfig.NAME, request.getName()),
-                        Updates.set(DbKeyConfig.PARENT_NAME, parentName),
-                        Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
-                        Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                        Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
-                );
-            } else {
-                response.setFailed("Không tồn tại id parent này");
-                return response;
-            }
-        } else {
-            if (Strings.isNullOrEmpty(AppUtils.parseString(idDocument.get(DbKeyConfig.PARENT_ID)))) {
-                // update roles
-                updates = Updates.combine(
-                        Updates.set(DbKeyConfig.NAME, request.getName()),
-                        Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
-                        Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                        Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
-                );
-
-                Bson con = Filters.eq(DbKeyConfig.PARENT_ID, request.getId());
-                Bson update = Updates.combine(
-                        Updates.set(DbKeyConfig.PARENT_NAME, request.getName())
-                );
-                db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, con, update, true);
-            } else {
+            if (idDocument == null) {
                 response.setFailed("Id này không tồn tại");
                 return response;
             }
+
+            String name = request.getName().trim();
+            Document obj = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            if (obj != null) {
+                String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
+                if (!objId.equals(id)) {
+                    response.setFailed("Tên này đã tồn tại");
+                    return response;
+                }
+            }
+
+            Bson idJobLevel = Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId());
+            Bson updateProfile = Updates.combine(
+                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, request.getName())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
+
+            Bson updates;
+            if (!Strings.isNullOrEmpty(idParent)) {
+                Document doc = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.PARENT_ID, idParent));
+                if (doc != null) {
+                    String parentName = AppUtils.parseString(doc.get(DbKeyConfig.NAME));
+                    // update roles
+                    updates = Updates.combine(
+                            Updates.set(DbKeyConfig.NAME, request.getName()),
+                            Updates.set(DbKeyConfig.PARENT_NAME, parentName),
+                            Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                            Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                            Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+                    );
+                } else {
+                    response.setFailed("Không tồn tại id parent này");
+                    return response;
+                }
+            } else {
+                if (Strings.isNullOrEmpty(AppUtils.parseString(idDocument.get(DbKeyConfig.PARENT_ID)))) {
+                    // update roles
+                    updates = Updates.combine(
+                            Updates.set(DbKeyConfig.NAME, request.getName()),
+                            Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                            Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                            Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+                    );
+
+                    Bson con = Filters.eq(DbKeyConfig.PARENT_ID, request.getId());
+                    Bson update = Updates.combine(
+                            Updates.set(DbKeyConfig.PARENT_NAME, request.getName())
+                    );
+                    db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, con, update, true);
+                } else {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+            }
+
+            db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, updates, true);
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+            response.setFailed("Hệ thống bận");
+            return response;
         }
-
-        db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, updates, true);
-
         response.setSuccess();
         return response;
 
@@ -228,16 +240,22 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
     @Override
     public BaseResponse deleteDepartment(DeleteDepartmentRequest request) {
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+
+            db.delete(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+            response.setFailed("Hệ thống bận");
             return response;
         }
-
-        db.delete(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
         return new BaseResponse(0, "OK");
     }
 }

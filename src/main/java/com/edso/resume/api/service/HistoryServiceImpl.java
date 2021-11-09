@@ -68,20 +68,24 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
 
     @Override
     public void createHistory(String idProfile, String type, String action, String username) {
-        Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
+        try {
+            Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
 
-        Document history = new Document();
-        history.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-        history.append(DbKeyConfig.ID_PROFILE, idProfile);
-        history.append(DbKeyConfig.TYPE, type);
-        history.append(DbKeyConfig.TIME, System.currentTimeMillis());
-        history.append(DbKeyConfig.ACTION, action);
-        history.append(DbKeyConfig.USERNAME, username);
-        history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+            Document history = new Document();
+            history.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            history.append(DbKeyConfig.ID_PROFILE, idProfile);
+            history.append(DbKeyConfig.TYPE, type);
+            history.append(DbKeyConfig.TIME, System.currentTimeMillis());
+            history.append(DbKeyConfig.ACTION, action);
+            history.append(DbKeyConfig.USERNAME, username);
+            history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
 
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
-        logger.info("createHistoryProfile history: {}", history);
+            // insert to database
+            db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
+            logger.info("createHistoryProfile history: {}", history);
+        }catch (Throwable e){
+            logger.error("Exception: ", e);
+        }
     }
 
 

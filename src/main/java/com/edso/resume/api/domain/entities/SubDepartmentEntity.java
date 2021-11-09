@@ -10,5 +10,5 @@ import java.util.List;
 public class SubDepartmentEntity {
     private String id;
     private String name;
-    private List<SubDepartmentEntity> child;
+    private List<SubDepartmentEntity> children;
 }

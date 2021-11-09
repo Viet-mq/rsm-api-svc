@@ -63,7 +63,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
 
         BaseResponse response = new BaseResponse();
 
-        String name = request.getName();
+        String name = request.getName().trim();
         Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
         long count = db.countAll(CollectionNameDefs.COLL_VILLAGE, c);
 
@@ -103,7 +103,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
             return response;
         }
 
-        String name = request.getName();
+        String name = request.getName().trim();
         Document obj = db.findOne(CollectionNameDefs.COLL_VILLAGE, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
