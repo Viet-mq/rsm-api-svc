@@ -6,15 +6,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ToString(callSuper = true)
-public class CreateVillageRequest extends BaseAuthRequest {
-    private String name;
+public class DeleteRecruitmentRequest extends BaseAuthRequest{
+    private String id;
 
-    public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(name) || name.length() > 255) {
-            return new BaseResponse(-1, "Vui lòng nhập tên thôn");
+    public BaseResponse validate(){
+        if(Strings.isNullOrEmpty(id) || id.length() > 255){
+            return new BaseResponse(-1, "Vui lòng nhập id");
         }
         return null;
     }

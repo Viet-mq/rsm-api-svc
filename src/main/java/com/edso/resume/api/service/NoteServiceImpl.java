@@ -37,8 +37,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
 
     @Value("${note.serverpath}")
     private String serverPath;
-    @Value("${note.fileSize}")
-    private long fileSize;
     @Value("${note.domain}")
     private String domain;
 
@@ -80,6 +78,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                         .evaluation(AppUtils.parseString(doc.get(DbKeyConfig.EVALUATION)))
                         .fileName(AppUtils.parseString(doc.get(DbKeyConfig.FILE_NAME)))
                         .url(AppUtils.parseString(doc.get(DbKeyConfig.URL)))
+                        .updateAt(AppUtils.parseString(doc.get(DbKeyConfig.UPDATE_AT)))
+                        .updateBy(AppUtils.parseString(doc.get(DbKeyConfig.UPDATE_BY)))
                         .build();
                 rows.add(noteProfile);
             }
@@ -96,10 +96,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
 
         MultipartFile file = request.getFile();
         BaseResponse response = new BaseResponse();
-        if (file != null && file.getSize() > fileSize) {
-            response.setFailed("Dung lượng file quá lớn");
-            return response;
-        }
         String key = UUID.randomUUID().toString();
         try {
 
@@ -173,6 +169,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             note.append(DbKeyConfig.URL, url);
             note.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             note.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            note.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+            note.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_NOTE_PROFILE, note);
@@ -198,10 +196,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     @Override
     public BaseResponse updateNoteProfile(UpdateNoteProfileRequest request, MultipartFile file) {
         BaseResponse response = new BaseResponse();
-        if (file != null && file.getSize() > fileSize) {
-            response.setFailed("Dung lượng file quá lớn");
-            return response;
-        }
         String key = UUID.randomUUID().toString();
         Bson cond = Filters.eq(DbKeyConfig.ID, request.getId());
         try {

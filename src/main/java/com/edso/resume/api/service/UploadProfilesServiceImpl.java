@@ -101,7 +101,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         return cellValue;
     }
 
-    public List<ProfileUploadEntity> readExcel(MultipartFile excelFile) throws IOException {
+    private List<ProfileUploadEntity> readExcel(MultipartFile excelFile) throws IOException {
         List<ProfileUploadEntity> listProfile = new ArrayList<>();
 
         File file = convertToFile(excelFile);
@@ -133,10 +133,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             while (cellIterator.hasNext()) {
                 //Read cell
                 Cell cell = cellIterator.next();
-                Object cellValue = getCellValue(cell);
-                if (cellValue == null || cellValue.toString().isEmpty()) {
-                    continue;
-                }
                 // Set value for book object
                 int columnIndex = cell.getColumnIndex();
                 switch (columnIndex) {
@@ -186,10 +182,48 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         break;
                 }
             }
+            //validate
+            if (Strings.isNullOrEmpty(profiles.getFullName())) {
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profiles.getPhoneNumber())) {
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profiles.getEmail())) {
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profiles.getLevelJobName())) {
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profiles.getDateOfApply())) {
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profiles.getSourceCVName())) {
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profiles.getTalentPoolName())) {
+                continue;
+            }
+            if (Strings.isNullOrEmpty(profiles.getDepartmentName())) {
+                continue;
+            }
+            if (!validateFullName(profiles.getFullName())) {
+                logger.info("Họ và tên không đúng định dạng! fullName: {}", profiles.getFullName());
+                continue;
+            }
+            if (!validateEmail(profiles.getEmail())) {
+                logger.info("Email không đúng định dạng! email: {}", profiles.getEmail());
+                continue;
+            }
+            if (!Strings.isNullOrEmpty(profiles.getGender())) {
+                if (!profiles.getGender().equals("Nữ") && !profiles.getGender().equals("Nam")) {
+                    logger.info("Giới tính chỉ có thể là Nam hoặc Nữ!");
+                    continue;
+                }
+            }
             listProfile.add(profiles);
         }
         workbook.close();
-
         return listProfile;
     }
 
@@ -219,55 +253,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             return response;
         }
         for (ProfileUploadEntity profile : profiles) {
-
-            //Validate null hoac empty thi bo qua
-            if (Strings.isNullOrEmpty(profile.getFullName())) {
-                logger.info("Họ và tên trống!");
-                continue;
-            }
-            if (!validateFullName(profile.getFullName())) {
-                logger.info("Họ và tên không đúng định dạng! fullName: {}", profile.getFullName());
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profile.getPhoneNumber())) {
-                logger.info("Số điện thoại trống!");
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profile.getEmail())) {
-                logger.info("Email trống!");
-                continue;
-            }
-            if (!validateEmail(profile.getEmail())) {
-                logger.info("Email không đúng định dạng! email: {}", profile.getEmail());
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profile.getLevelJobName())) {
-                logger.info("Vị trí ứng tuyển trống!");
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profile.getDateOfApply())) {
-                logger.info("Ngày ứng tuyển trống!");
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profile.getSourceCVName())) {
-                logger.info("Nguồn ứng viên trống!");
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profile.getTalentPoolName())) {
-                logger.info("Talent pool trống!");
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profile.getDepartmentName())) {
-                logger.info("Phòng ban trống!");
-                continue;
-            }
-            if (!Strings.isNullOrEmpty(profile.getGender())) {
-                if (!profile.getGender().equals("Nữ") && !profile.getGender().equals("Nam")) {
-                    logger.info("Giới tính chỉ có thể là Nam hoặc Nữ!");
-                    continue;
-                }
-            }
-
             String key = UUID.randomUUID().toString();
 
             try {
@@ -378,6 +363,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 pro.append(DbKeyConfig.LEVEL_JOB_NAME, profile.getLevelJobName());
                 pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCVName());
                 pro.append(DbKeyConfig.SOURCE_CV_ID, sourceCVId);
+                pro.append(DbKeyConfig.NAME_SEARCH, profile.getFullName().toLowerCase());
                 pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                 pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
                 pro.append(DbKeyConfig.TALENT_POOL_ID, talentPoolId);
@@ -410,8 +396,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 profileEntity.setDepartmentId(departmentId);
                 profileEntity.setDepartmentName(profile.getDepartmentName());
 
-//                publishActionToRabbitMQ(profileEntity);
-
+                publishActionToRabbitMQ(profileEntity);
             } finally {
                 synchronized (queue) {
                     queue.removeIf(s -> s.getKey().equals(key));

@@ -14,4 +14,6 @@ public class NoteProfileEntity {
     private String evaluation;
     private String fileName;
     private String url;
+    private String updateAt;
+    private String updateBy;
 }

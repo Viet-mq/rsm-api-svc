@@ -80,15 +80,16 @@ excel:
   serverPath: D:\
 #  path: /usr/share/nginx/file-rs/attachment/Profiles.xlsx
   path: D:\Profiles.xlsx
+  fileSize: 15728640 #Byte 15MB
 
 note:
-  domain: http://file-rs.edsolabs.com/attachment/
+  domain: http://192.168.50.33:8182/file-rs/attachment/
 #  serverpath: /usr/share/nginx/file-rs/attachment/
   serverPath: D:\
   fileSize: 15728640 #Byte 15MB
 
 avatar:
-  domain: http://file-rs.edsolabs.com/avatar/
+  domain: http://192.168.50.33:8182/file-rs/avatar/
 #  serverpath: /usr/share/nginx/file-rs/avatar/
   serverPath: D:\
   fileSize: 15728640 #Byte 15MB

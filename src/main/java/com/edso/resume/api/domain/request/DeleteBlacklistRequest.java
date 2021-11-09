@@ -13,7 +13,7 @@ public class DeleteBlacklistRequest extends BaseAuthRequest {
     private String id;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(id)) {
+        if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(-1, "Vui lòng chọn id");
         }
         return null;

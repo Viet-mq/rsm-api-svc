@@ -14,10 +14,10 @@ public class CreateDepartmentRequest extends BaseAuthRequest {
     private String name;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(idCompany)) {
-            return new BaseResponse(-1, "Vui lòng nhập id company");
-        }
-        if (Strings.isNullOrEmpty(name)) {
+//        if (!Strings.isNullOrEmpty(idCompany) || idCompany.length() > 255) {
+//            return new BaseResponse(-1, "Vui lòng nhập id company");
+//        }
+        if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập tên phòng ban");
         }
         return null;

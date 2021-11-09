@@ -13,7 +13,7 @@ public class CreateJobLevelRequest extends BaseAuthRequest {
     private String name;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(name)) {
+        if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập tên vị trí tuyển dụng");
         }
         return null;

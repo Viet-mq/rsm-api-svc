@@ -18,7 +18,7 @@ public class UpdateImageProfileRequest extends BaseAuthRequest {
     private MultipartFile image;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(idProfile)) {
+        if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
         return null;

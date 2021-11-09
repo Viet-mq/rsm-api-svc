@@ -35,14 +35,14 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
     @Override
     public GetArrayResponse<DepartmentEntity> findAll(HeaderInfo info, String idCompany, String name, Integer page, Integer size) {
         GetArrayResponse<DepartmentEntity> resp = new GetArrayResponse<>();
-        Bson cond = Filters.eq(DbKeyConfig.COMPANY_ID, idCompany);
-        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, idCompany));
+//        Bson cond = Filters.eq(DbKeyConfig.COMPANY_ID, idCompany);
+//        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, idCompany));
 //        if (company == null) {
 //            resp.setFailed("Không tồn tại công ty này");
 //            return resp;
 //        }
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, null, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<DepartmentEntity> rows = new ArrayList<>();
         if (lst != null && lst.iterator().hasNext()) {
             for (Document doc : lst) {
@@ -106,7 +106,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
     public BaseResponse createDepartment(CreateDepartmentRequest request, String idParent) {
 
         BaseResponse response = new BaseResponse();
-        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, request.getIdCompany()));
+//        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, request.getIdCompany()));
 //        if (company == null) {
 //            response.setFailed("Không tồn tại id company này");
 //            return response;
@@ -125,7 +125,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
 
         String name = request.getName();
         Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        long count = db.countAll(CollectionNameDefs.COLL_DEPARTMENT, c);
+        long count = db.countAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, c);
 
         if (count > 0) {
             response.setFailed("Tên này đã tồn tại");
@@ -135,7 +135,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         Document department = new Document();
         department.append(DbKeyConfig.ID, UUID.randomUUID().toString());
         department.append(DbKeyConfig.NAME, request.getName());
-        department.append(DbKeyConfig.COMPANY_ID, request.getIdCompany());
+        department.append(DbKeyConfig.COMPANY_ID, null);
         department.append(DbKeyConfig.PARENT_ID, idParent);
         department.append(DbKeyConfig.PARENT_NAME, parentName);
         department.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
@@ -157,7 +157,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT, cond);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
 
         if (idDocument == null) {
             response.setFailed("Id này không tồn tại");
@@ -165,7 +165,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         }
 
         String name = request.getName();
-        Document obj = db.findOne(CollectionNameDefs.COLL_DEPARTMENT, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+        Document obj = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
         if (obj != null) {
             String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
             if (!objId.equals(id)) {
@@ -230,14 +230,14 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT, cond);
+        Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
 
         if (idDocument == null) {
             response.setFailed("Id này không tồn tại");
             return response;
         }
 
-        db.delete(CollectionNameDefs.COLL_DEPARTMENT, cond);
+        db.delete(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
         return new BaseResponse(0, "OK");
     }
 }

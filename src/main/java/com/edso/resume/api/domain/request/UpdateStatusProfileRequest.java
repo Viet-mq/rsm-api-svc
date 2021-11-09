@@ -15,10 +15,10 @@ public class UpdateStatusProfileRequest extends BaseAuthRequest {
     private String statusCV;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(id)) {
+        if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập id");
         }
-        if (Strings.isNullOrEmpty(statusCV)) {
+        if (Strings.isNullOrEmpty(statusCV) || statusCV.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập trạng thái cv");
         }
         return null;

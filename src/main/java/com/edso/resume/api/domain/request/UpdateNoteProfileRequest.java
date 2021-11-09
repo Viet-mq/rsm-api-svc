@@ -18,11 +18,17 @@ public class UpdateNoteProfileRequest extends BaseAuthRequest {
     private String evaluation;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(id)) {
+        if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập id");
         }
-        if (Strings.isNullOrEmpty(username)) {
+        if (Strings.isNullOrEmpty(username) || username.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập username");
+        }
+        if (!Strings.isNullOrEmpty(comment) && comment.length() > 255) {
+            return new BaseResponse(-1, "Vui lòng nhận xét không quá 255 ký tự");
+        }
+        if (!Strings.isNullOrEmpty(evaluation) && evaluation.length() > 255) {
+            return new BaseResponse(-1, "Vui lòng đánh giá không quá 255 ký tự");
         }
         return null;
     }

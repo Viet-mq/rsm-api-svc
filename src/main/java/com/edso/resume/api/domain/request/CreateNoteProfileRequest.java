@@ -21,11 +21,20 @@ public class CreateNoteProfileRequest extends BaseAuthRequest {
     private MultipartFile file;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(idProfile)) {
+        if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(username)) {
+        if (Strings.isNullOrEmpty(username) || username.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập username");
+        }
+        if (!Strings.isNullOrEmpty(comment) && comment.length() > 255) {
+            return new BaseResponse(-1, "Vui lòng nhận xét không quá 255 ký tự");
+        }
+        if (!Strings.isNullOrEmpty(evaluation) && evaluation.length() > 255) {
+            return new BaseResponse(-1, "Vui lòng đánh giá không quá 255 ký tự");
+        }
+        if(!valiadateNoteFile(file)){
+            return new BaseResponse(-1, "File vượt quá dung lượng cho phép");
         }
         return null;
     }

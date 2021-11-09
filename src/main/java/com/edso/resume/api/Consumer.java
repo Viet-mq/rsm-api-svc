@@ -9,10 +9,10 @@ public class Consumer {
     public static void main(String[] argv) throws Exception {
         System.out.println("Create a ConnectionFactory");
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("18.139.222.137");
-        factory.setPort(5672);
+        factory.setHost("192.168.50.33");
+        factory.setPort(5673);
         factory.setUsername("admin");
-        factory.setPassword("rabb@t@7911");
+        factory.setPassword("adminlgsp@123");
 
         System.out.println("Create a Connection");
         System.out.println("Create a Channel");

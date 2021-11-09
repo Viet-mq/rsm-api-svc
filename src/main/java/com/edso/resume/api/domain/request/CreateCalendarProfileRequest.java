@@ -28,51 +28,46 @@ public class CreateCalendarProfileRequest extends BaseAuthRequest {
     private Long timeFinish;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(idProfile)) {
+        if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập id profile");
         }
-        if (time <= 0) {
+        if (time == null || time < 0) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian");
         }
-        if (Strings.isNullOrEmpty(address)) {
+        if (Strings.isNullOrEmpty(address) || address.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập địa điểm");
         }
-        if (Strings.isNullOrEmpty(form)) {
+        if (Strings.isNullOrEmpty(form) || form.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập hình thức");
         }
-        if (interviewer.size() == 0) {
+        if (interviewer == null || interviewer.isEmpty()) {
             return new BaseResponse(-1, "Vui lòng nhập người phỏng vấn");
         }
-        for (String s : interviewer) {
-            if (Strings.isNullOrEmpty(s)) {
-                return new BaseResponse(-1, "Vui lòng nhập người phỏng vấn");
-            }
-        }
-        if (Strings.isNullOrEmpty(interviewee)) {
+        if (Strings.isNullOrEmpty(interviewee) || interviewee.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập người tham gia");
         }
-        if (Strings.isNullOrEmpty(content)) {
+        if (Strings.isNullOrEmpty(content) || content.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập nội dung");
         }
-        if (Strings.isNullOrEmpty(question)) {
+        if (Strings.isNullOrEmpty(question) || question.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập câu hỏi");
         }
-        if (Strings.isNullOrEmpty(comments)) {
+        if (Strings.isNullOrEmpty(comments) || comments.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập nhận xét");
         }
-        if (Strings.isNullOrEmpty(evaluation)) {
+        if (Strings.isNullOrEmpty(evaluation) || evaluation.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập đánh giá");
         }
-        if (Strings.isNullOrEmpty(status)) {
+        if (Strings.isNullOrEmpty(status) || status.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập trạng thái");
         }
-        if (Strings.isNullOrEmpty(reason)) {
+        if (Strings.isNullOrEmpty(reason) || reason.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập lý do");
         }
-        if (timeStart <= 0) {
+        if (timeStart == null || timeStart < 0) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian bắt đầu");
         }
-        if (timeFinish <= 0) {
+        if (timeFinish == null || timeFinish < 0) {
             return new BaseResponse(-1, "Vui lòng nhập thời gian kết thúc");
         }
         return null;

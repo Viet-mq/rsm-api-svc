@@ -16,14 +16,20 @@ public class CreateTalentPoolRequest extends BaseAuthRequest {
     private String name;
     private List<String> managers;
     private String description;
-    private int numberOfProfile;
+    private Integer numberOfProfile;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(name)) {
+        if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(-1, "Vui lòng nhập tên Talent Pool");
         }
-        if (managers.size() == 0) {
+        if (managers == null || managers.isEmpty()) {
             return new BaseResponse(-1, "Vui lòng nhập người quản lý Talent Pool");
+        }
+        if(!Strings.isNullOrEmpty(description) && description.length() > 255){
+            return new BaseResponse(-1, "Vui lòng nhập mô tả ít hơn 255 ký tự");
+        }
+        if(numberOfProfile != null && numberOfProfile < 0){
+            return new BaseResponse(-1, "Vui lòng nhập số profile");
         }
 
         return null;

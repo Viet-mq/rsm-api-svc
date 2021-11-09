@@ -1,5 +1,8 @@
 package com.edso.resume.api;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class Test {
     //    public static void main(String[] args) throws Exception {
 //        ConnectionFactory factory = new ConnectionFactory();
@@ -20,8 +23,16 @@ public class Test {
 //
 //    }
     public static void main(String[] args) {
-        String str = "quanpham.docx";
-        String[] array = str.split("\\.");
-        System.out.println(array[0]);
+        String time = "11/01/1900";
+        Date da = new Date(time);
+        System.out.println(da.getTime());
+
+//        Date date = new Date(-1100000000);
+//
+//        System.out.println(date);
+//        String str = "qua            npham.docx";
+//        System.out.println(str.length());
+//        String[] array = str.split("\\.");
+//        System.out.println(array[0]);
     }
 }

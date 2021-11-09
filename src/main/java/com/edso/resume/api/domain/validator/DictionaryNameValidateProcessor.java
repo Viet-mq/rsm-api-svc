@@ -41,7 +41,7 @@ public class DictionaryNameValidateProcessor implements Runnable {
                     return;
                 }
                 result.setResult(false);
-                logger.info("Không tồn tại "+getDictionaryName()+" này!");
+                logger.info("Không tồn tại "+getDictionaryName()+" này! name: {}", this.name);
                 return;
             }
 

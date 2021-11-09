@@ -59,7 +59,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, Integer page, Integer size) {
+    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, Integer page, Integer size) {
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
@@ -67,6 +67,15 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
             c.add(Filters.regex(DbKeyConfig.TALENT_POOL_ID, Pattern.compile(talentPool)));
+        }
+        if (!Strings.isNullOrEmpty(job)) {
+            c.add(Filters.regex(DbKeyConfig.JOB_ID, Pattern.compile(job)));
+        }
+        if (!Strings.isNullOrEmpty(levelJob)) {
+            c.add(Filters.regex(DbKeyConfig.LEVEL_JOB_ID, Pattern.compile(levelJob)));
+        }
+        if (!Strings.isNullOrEmpty(department)) {
+            c.add(Filters.regex(DbKeyConfig.DEPARTMENT_ID, Pattern.compile(department)));
         }
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
