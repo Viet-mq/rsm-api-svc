@@ -39,6 +39,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     private String serverPath;
     @Value("${note.domain}")
     private String domain;
+    @Value("${note.fileSize}")
+    private Long fileSize;
 
     public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
         super(db);
@@ -86,15 +88,17 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
         }
 
         resp.setSuccess();
-        resp.setTotal(rows.size());
+        resp.setTotal(db.countAll(CollectionNameDefs.COLL_NOTE_PROFILE, cond));
         resp.setRows(rows);
         return resp;
     }
 
     @Override
     public BaseResponse createNoteProfile(CreateNoteProfileRequest request) {
-
         MultipartFile file = request.getFile();
+        if (file != null && file.getSize() > fileSize) {
+            return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+        }
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
         try {
@@ -116,7 +120,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                 if (result != null) {
                     if (result.getKey().equals(key)) {
                         if (!result.isResult()) {
-                            response.setFailed(result.getName());
+                            response.setFailed((String) result.getName());
                             return response;
                         } else {
                             count++;
@@ -140,7 +144,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             String fullName = null;
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.USER)) {
-                    fullName = r.getResult().getName();
+                    fullName = (String) r.getResult().getName();
                 }
             }
 
@@ -194,12 +198,15 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     }
 
     @Override
-    public BaseResponse updateNoteProfile(UpdateNoteProfileRequest request, MultipartFile file) {
+    public BaseResponse updateNoteProfile(UpdateNoteProfileRequest request) {
+        MultipartFile file = request.getFile();
+        if (file != null && file.getSize() > fileSize) {
+            return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+        }
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
-        Bson cond = Filters.eq(DbKeyConfig.ID, request.getId());
         try {
-
+            Bson cond = Filters.eq(DbKeyConfig.ID, request.getId());
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.NOTE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getUsername(), db, this));
@@ -217,7 +224,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                 if (result != null) {
                     if (result.getKey().equals(key)) {
                         if (!result.isResult()) {
-                            response.setFailed(result.getName());
+                            response.setFailed((String) result.getName());
                             return response;
                         } else {
                             count++;
@@ -243,10 +250,10 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             String idProfile = null;
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.USER)) {
-                    fullName = r.getResult().getName();
+                    fullName = (String) r.getResult().getName();
                 }
                 if (r.getResult().getType().equals(ThreadConfig.NOTE)) {
-                    pathFile = r.getResult().getName();
+                    pathFile = (String) r.getResult().getName();
                     idProfile = r.getResult().getIdProfile()
                     ;
                 }
@@ -305,24 +312,31 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     @Override
     public BaseResponse deleteNoteProfile(DeleteNoteProfileRequest request) {
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+
+            //Xóa file
+            String path = AppUtils.parseString(idDocument.get(DbKeyConfig.PATH_FILE));
+            deleteFile(path);
+
+            db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
+
+            //Insert history to DB
+            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
+
         }
-
-        //Xóa file
-        String path = AppUtils.parseString(idDocument.get(DbKeyConfig.PATH_FILE));
-        deleteFile(path);
-
-        db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
-
-        //Insert history to DB
-        historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
-
         return new BaseResponse(0, "OK");
     }
 

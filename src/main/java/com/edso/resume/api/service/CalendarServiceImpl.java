@@ -2,6 +2,7 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
+import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
 import com.edso.resume.api.domain.rabbitmq.publish.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
@@ -102,6 +103,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatus(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -116,7 +118,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                 if (validatorResult != null) {
                     if (validatorResult.getKey().equals(key)) {
                         if (!validatorResult.isResult()) {
-                            response.setFailed(validatorResult.getName());
+                            response.setFailed((String) validatorResult.getName());
                             return response;
                         } else {
                             count++;
@@ -137,17 +139,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                 }
             }
 
-            String statusCVName = null;
-            String email = null;
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
-            for (DictionaryValidateProcessor r : rs) {
-                if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
-                    statusCVName = r.getResult().getName();
-                }
-                if (r.getResult().getType().equals(ThreadConfig.PROFILE)) {
-                    email = r.getResult().getName();
-                }
-            }
             String checkTime = "0";
             if (request.getTime() < System.currentTimeMillis()) {
                 checkTime = "1";
@@ -156,7 +149,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             Document calendar = new Document();
             calendar.append(DbKeyConfig.ID, id);
             calendar.append(DbKeyConfig.ID_PROFILE, idProfile);
-            calendar.append(DbKeyConfig.EMAIL, email);
+            calendar.append(DbKeyConfig.EMAIL, dictionaryNames.getEmail());
             calendar.append(DbKeyConfig.TIME, request.getTime());
             calendar.append(DbKeyConfig.ADDRESS, request.getAddress());
             calendar.append(DbKeyConfig.FORM, request.getForm());
@@ -167,7 +160,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             calendar.append(DbKeyConfig.COMMENTS, request.getComments());
             calendar.append(DbKeyConfig.EVALUATION, request.getEvaluation());
             calendar.append(DbKeyConfig.STATUS_CV_ID, request.getStatus());
-            calendar.append(DbKeyConfig.STATUS_CV_NAME, statusCVName);
+            calendar.append(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName());
             calendar.append(DbKeyConfig.REASON, request.getReason());
             calendar.append(DbKeyConfig.TIME_START, request.getTimeStart());
             calendar.append(DbKeyConfig.TIME_FINISH, request.getTimeFinish());
@@ -214,6 +207,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR, id, db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatus(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -228,7 +222,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                 if (validatorResult != null) {
                     if (validatorResult.getKey().equals(key)) {
                         if (!validatorResult.isResult()) {
-                            response.setFailed(validatorResult.getName());
+                            response.setFailed((String) validatorResult.getName());
                             return response;
                         } else {
                             count++;
@@ -249,16 +243,8 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                 }
             }
 
-            String statusCVName = null;
-            String idProfile = null;
-            for (DictionaryValidateProcessor r : rs) {
-                if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
-                    statusCVName = r.getResult().getName();
-                }
-                if (r.getResult().getType().equals(ThreadConfig.CALENDAR)) {
-                    idProfile = r.getResult().getIdProfile();
-                }
-            }
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
+
             String check = "0";
             if (request.getTime() < System.currentTimeMillis()) {
                 check = "1";
@@ -275,7 +261,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                     Updates.set(DbKeyConfig.COMMENTS, request.getComments()),
                     Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
                     Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatus()),
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCVName),
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName()),
                     Updates.set(DbKeyConfig.REASON, request.getReason()),
                     Updates.set(DbKeyConfig.CHECK, check),
                     Updates.set(DbKeyConfig.TIME_START, request.getTimeStart()),
@@ -287,7 +273,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo().getUsername());
+            historyService.createHistory(dictionaryNames.getIdProfile(), TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo().getUsername());
 
             return response;
         } catch (Throwable ex) {
@@ -381,6 +367,35 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             }
         }
 
+    }
+
+    private DictionaryNamesEntity getDictionayNames(List<DictionaryValidateProcessor> rs) {
+        DictionaryNamesEntity dictionaryNames = new DictionaryNamesEntity();
+        for (DictionaryValidateProcessor r : rs) {
+            switch (r.getResult().getType()) {
+                case ThreadConfig.CALENDAR: {
+                    dictionaryNames.setIdProfile(AppUtils.parseString(r.getResult().getIdProfile()));
+                    break;
+                }
+                case ThreadConfig.STATUS_CV: {
+                    dictionaryNames.setStatusCVName(AppUtils.parseString(r.getResult().getName()));
+                    break;
+                }
+                case ThreadConfig.LIST_USER: {
+                    dictionaryNames.setInterviewer((List<Document>) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.PROFILE: {
+                    dictionaryNames.setEmail(AppUtils.parseString(r.getResult().getName()));
+                    break;
+                }
+                default: {
+                    logger.info("Không có tên của dictionary này!");
+                    break;
+                }
+            }
+        }
+        return dictionaryNames;
     }
 
     @Override

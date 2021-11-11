@@ -53,7 +53,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         }
         GetArrayResponse<JobLevelEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(rows.size());
+        resp.setTotal(db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, cond));
         resp.setRows(rows);
         return resp;
     }
@@ -62,28 +62,34 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     public BaseResponse createJobLevel(CreateJobLevelRequest request) {
 
         BaseResponse response = new BaseResponse();
+        try {
+            String name = request.getName().trim();
+            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            long count = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, c);
 
-        String name = request.getName().trim();
-        Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        long count = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, c);
+            if (count > 0) {
+                response.setFailed("Tên này đã tồn tại");
+                return response;
+            }
 
-        if (count > 0) {
-            response.setFailed("Tên này đã tồn tại");
+            Document jobLevel = new Document();
+            jobLevel.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            jobLevel.append(DbKeyConfig.NAME, name);
+            jobLevel.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            jobLevel.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+            jobLevel.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+            jobLevel.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            jobLevel.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+
+            // insert to database
+            db.insertOne(CollectionNameDefs.COLL_JOB_LEVEL, jobLevel);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
+
         }
-
-        Document jobLevel = new Document();
-        jobLevel.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-        jobLevel.append(DbKeyConfig.NAME, name);
-        jobLevel.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        jobLevel.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-        jobLevel.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
-        jobLevel.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-        jobLevel.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
-
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_JOB_LEVEL, jobLevel);
-
         response.setSuccess();
         return response;
 
@@ -94,41 +100,48 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     public BaseResponse updateJobLevel(UpdateJobLevelRequest request) {
 
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
-            return response;
-        }
-
-        String name = request.getName().trim();
-        Document obj = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
-        if (obj != null) {
-            String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
-            if (!objId.equals(id)) {
-                response.setFailed("Tên này đã tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
                 return response;
             }
+
+            String name = request.getName().trim();
+            Document obj = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            if (obj != null) {
+                String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
+                if (!objId.equals(id)) {
+                    response.setFailed("Tên này đã tồn tại");
+                    return response;
+                }
+            }
+
+            Bson idJobLevel = Filters.eq(DbKeyConfig.LEVEL_JOB_ID, request.getId());
+            Bson updateProfile = Updates.combine(
+                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, request.getName())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
+
+
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.NAME, name),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+            );
+            db.update(CollectionNameDefs.COLL_JOB_LEVEL, cond, updates, true);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
         }
-
-        Bson idJobLevel = Filters.eq(DbKeyConfig.LEVEL_JOB_ID, request.getId());
-        Bson updateProfile = Updates.combine(
-                Updates.set(DbKeyConfig.LEVEL_JOB_NAME, request.getName())
-        );
-        db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
-
-
-        // update roles
-        Bson updates = Updates.combine(
-                Updates.set(DbKeyConfig.NAME, name),
-                Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
-                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
-        );
-        db.update(CollectionNameDefs.COLL_JOB_LEVEL, cond, updates, true);
-
         response.setSuccess();
         return response;
 
@@ -137,15 +150,23 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     @Override
     public BaseResponse deleteJobLevel(DeleteJobLevelRequest request) {
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+            db.delete(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
+
         }
-        db.delete(CollectionNameDefs.COLL_JOB_LEVEL, cond);
         return new BaseResponse(0, "OK");
     }
 }

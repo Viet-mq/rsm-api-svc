@@ -7,7 +7,7 @@ public class DictionaryValidatorResult {
 
     private final String type;
     private boolean result;
-    private String name;
+    private Object name;
     private String idProfile;
     private String key;
 

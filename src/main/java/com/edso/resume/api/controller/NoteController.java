@@ -15,10 +15,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,41 +45,36 @@ public class NoteController extends BaseController {
     }
 
     @PostMapping("/create")
-    public BaseResponse createNoteProfile(
-            @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam(value = "idProfile") String idProfile,
-            @RequestParam(value = "username") String username,
-            @RequestParam(value = "comment", required = false) String comment,
-            @RequestParam(value = "evaluation", required = false) String evaluation) {
-        BaseResponse response;
-        CreateNoteProfileRequest request = new CreateNoteProfileRequest(idProfile, username, comment, evaluation, file);
+    public BaseResponse createNoteProfile(@RequestHeader Map<String, String> headers, @ModelAttribute CreateNoteProfileRequest request) {
+        BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>createNoteProfile u: {}, req: {}", headerInfo, request);
-        response = request.validate();
-        if (response == null) {
-            request.setInfo(headerInfo);
-            response = noteService.createNoteProfile(request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = noteService.createNoteProfile(request);
+            }
         }
         logger.info("<=createNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 
     @PostMapping("/update")
-    public BaseResponse updateNoteProfile(
-            @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam(value = "id") String id,
-            @RequestParam(value = "username") String username,
-            @RequestParam(value = "comment", required = false) String comment,
-            @RequestParam(value = "evaluation", required = false) String evaluation) {
-        UpdateNoteProfileRequest request = new UpdateNoteProfileRequest(id, username, comment, evaluation);
+    public BaseResponse updateNoteProfile(@RequestHeader Map<String, String> headers, @ModelAttribute UpdateNoteProfileRequest request) {
+        BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>updateNoteProfile u: {}, req: {}", headerInfo, request);
-        BaseResponse response = request.validate();
-        if (response == null) {
-            request.setInfo(headerInfo);
-            response = noteService.updateNoteProfile(request, file);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = noteService.updateNoteProfile(request);
+            }
         }
         logger.info("<=updateNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
@@ -109,11 +102,16 @@ public class NoteController extends BaseController {
     private String serverPath;
 
     @GetMapping("/export/file/{file-name}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable("file-name") String fileName) throws IOException {
+    public ResponseEntity<Resource> exportFile(@PathVariable("file-name") String fileName) {
         logger.info("export file");
         File file = new File(serverPath + fileName);
         Path path = Paths.get(file.getAbsolutePath());
-        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+        ByteArrayResource resource = null;
+        try {
+            resource = new ByteArrayResource(Files.readAllBytes(path));
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=" + fileName);
 

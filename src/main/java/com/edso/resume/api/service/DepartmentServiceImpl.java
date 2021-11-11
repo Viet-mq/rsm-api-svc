@@ -77,7 +77,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
             }
         }
         resp.setSuccess();
-        resp.setTotal(rows.size());
+        resp.setTotal(db.countAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, null));
         resp.setRows(rows);
         return resp;
     }

@@ -40,18 +40,18 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
         if (!Strings.isNullOrEmpty(typeOfJob) && typeOfJob.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.TYPE_OF_JOB, "Vui lòng nhập loại hình công việc");
         }
-        if (quantity == null || quantity > 0) {
+        if (quantity == null || quantity <= 0) {
             return new BaseResponse(ErrorCodeDefs.QUANTITY, "Vui lòng nhập số lượng tuyển dụng");
         }
         if (!Strings.isNullOrEmpty(detailOfSalary)) {
-            if(!detailOfSalary.equals("Chi tiết mức lương") && !detailOfSalary.equals("Thỏa thuận") && !detailOfSalary.equals("Từ ...") && !detailOfSalary.equals("Up to ...")){
+            if (!detailOfSalary.equals("Chi tiết mức lương") && !detailOfSalary.equals("Thỏa thuận") && !detailOfSalary.equals("Từ ...") && !detailOfSalary.equals("Up to ...")) {
                 return new BaseResponse(ErrorCodeDefs.DETAIL_OF_SALARY, "Vui lòng nhập chi tiết mức lương");
             }
         }
-        if(from != null && from <= 0){
+        if (from != null && from < 0) {
             return new BaseResponse(ErrorCodeDefs.FORM, "Vui lòng nhập mức lương từ bao nhiêu");
         }
-        if(to != null && to <= 0){
+        if (to != null && to < 0) {
             return new BaseResponse(ErrorCodeDefs.TO, "Vui lòng nhập mức lương đến bao nhiêu");
         }
         if (Strings.isNullOrEmpty(jobDescription) || jobDescription.length() > 1000) {

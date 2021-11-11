@@ -19,21 +19,24 @@ public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerSe
 
     @Override
     public void updateUrlToProfile(UrlConsumerEntity url) {
+        try {
+            Bson cond = Filters.eq(DbKeyConfig.ID, url.getId());
+            Document idProfile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+            logger.info("=>updateUrlToProfile url: {}", url);
+            if (idProfile == null) {
+                logger.info("Id profile không tồn tại");
+                return;
+            }
 
-        Bson cond = Filters.eq(DbKeyConfig.ID, url.getId());
-        Document idProfile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-        logger.info("=>updateUrlToProfile url: {}", url);
-        if (idProfile == null) {
-            logger.info("Id profile không tồn tại");
-            return;
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.URL_CV, url.getUrl()),
+                    Updates.set(DbKeyConfig.CV, url.getFileName())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
+            logger.info("<=updateUrlToProfile url: {}", url);
+        }catch (Throwable ex){
+            logger.error("Exception: ", ex);
         }
-
-        Bson update = Updates.combine(
-                Updates.set(DbKeyConfig.URL_CV, url.getUrl()),
-                Updates.set(DbKeyConfig.CV, url.getFileName())
-        );
-
-        db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
-        logger.info("<=updateUrlToProfile url: {}", url);
     }
 }

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
 @EqualsAndHashCode(callSuper = true)
@@ -33,9 +34,6 @@ public class CreateNoteProfileRequest extends BaseAuthRequest {
         }
         if (!Strings.isNullOrEmpty(evaluation) && evaluation.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.EVALUATION, "Vui lòng đánh giá không quá 255 ký tự");
-        }
-        if(!valiadateNoteFile(file)){
-            return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
         }
         return null;
     }

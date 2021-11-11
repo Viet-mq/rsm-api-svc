@@ -55,7 +55,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         }
         GetArrayResponse<StatusCVEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(rows.size());
+        resp.setTotal(db.countAll(CollectionNameDefs.COLL_STATUS_CV, cond));
         resp.setRows(rows);
         return resp;
     }
@@ -64,43 +64,49 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     public BaseResponse createStatusCV(CreateStatusCVRequest request, List<String> children) {
 
         BaseResponse response = new BaseResponse();
+        try {
+            String name = request.getName().trim();
+            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            long count = db.countAll(CollectionNameDefs.COLL_STATUS_CV, c);
 
-        String name = request.getName().trim();
-        Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        long count = db.countAll(CollectionNameDefs.COLL_STATUS_CV, c);
+            if (count > 0) {
+                response.setFailed("Tên này đã tồn tại");
+                return response;
+            }
 
-        if (count > 0) {
-            response.setFailed("Tên này đã tồn tại");
-            return response;
-        }
-
-        List<Document> list = new ArrayList<>();
-        if (children != null) {
-            for (String child : children) {
-                Document idDoc = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, child));
-                if (idDoc == null) {
-                    response.setFailed("Id này không tồn tại");
-                    return response;
-                } else {
-                    Document childrenDoc = new Document();
-                    childrenDoc.append(DbKeyConfig.ID, AppUtils.parseString(idDoc.get(DbKeyConfig.ID)));
-                    childrenDoc.append(DbKeyConfig.NAME, AppUtils.parseString(idDoc.get(DbKeyConfig.NAME)));
-                    list.add(childrenDoc);
+            List<Document> list = new ArrayList<>();
+            if (children != null) {
+                for (String child : children) {
+                    Document idDoc = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, child));
+                    if (idDoc == null) {
+                        response.setFailed("Id này không tồn tại");
+                        return response;
+                    } else {
+                        Document childrenDoc = new Document();
+                        childrenDoc.append(DbKeyConfig.ID, AppUtils.parseString(idDoc.get(DbKeyConfig.ID)));
+                        childrenDoc.append(DbKeyConfig.NAME, AppUtils.parseString(idDoc.get(DbKeyConfig.NAME)));
+                        list.add(childrenDoc);
+                    }
                 }
             }
+
+            Document statusCV = new Document();
+            statusCV.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            statusCV.append(DbKeyConfig.NAME, name);
+            statusCV.append(DbKeyConfig.CHILDREN, list);
+            statusCV.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+            statusCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+
+            // insert to database
+            db.insertOne(CollectionNameDefs.COLL_STATUS_CV, statusCV);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
         }
-
-        Document statusCV = new Document();
-        statusCV.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-        statusCV.append(DbKeyConfig.NAME, name);
-        statusCV.append(DbKeyConfig.CHILDREN, list);
-        statusCV.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-        statusCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_STATUS_CV, statusCV);
-
         response.setSuccess();
         return response;
 
@@ -111,57 +117,64 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     public BaseResponse updateStatusCV(UpdateStatusCVRequest request, List<String> children) {
 
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
-            return response;
-        }
-
-        String name = request.getName().trim();
-        Document obj = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
-        if (obj != null) {
-            String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
-            if (!objId.equals(id)) {
-                response.setFailed("Tên này đã tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
                 return response;
             }
-        }
 
-        List<Document> list = new ArrayList<>();
-        if (children != null) {
-            for (String child : children) {
-                Document idDoc = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, child));
-                if (id == null) {
-                    response.setFailed("Id này không tồn tại");
+            String name = request.getName().trim();
+            Document obj = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            if (obj != null) {
+                String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
+                if (!objId.equals(id)) {
+                    response.setFailed("Tên này đã tồn tại");
                     return response;
-                } else {
-                    Document childrenDoc = new Document();
-                    childrenDoc.append(DbKeyConfig.ID, AppUtils.parseString(idDoc.get(DbKeyConfig.ID)));
-                    childrenDoc.append(DbKeyConfig.NAME, AppUtils.parseString(idDoc.get(DbKeyConfig.NAME)));
-                    list.add(childrenDoc);
                 }
             }
+
+            List<Document> list = new ArrayList<>();
+            if (children != null) {
+                for (String child : children) {
+                    Document idDoc = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, child));
+                    if (id == null) {
+                        response.setFailed("Id này không tồn tại");
+                        return response;
+                    } else {
+                        Document childrenDoc = new Document();
+                        childrenDoc.append(DbKeyConfig.ID, AppUtils.parseString(idDoc.get(DbKeyConfig.ID)));
+                        childrenDoc.append(DbKeyConfig.NAME, AppUtils.parseString(idDoc.get(DbKeyConfig.NAME)));
+                        list.add(childrenDoc);
+                    }
+                }
+            }
+
+            Bson idStatusCV = Filters.eq(DbKeyConfig.STATUS_CV_ID, request.getId());
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, idStatusCV, update, true);
+
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.NAME, name),
+                    Updates.set(DbKeyConfig.CHILDREN, list),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+            );
+            db.update(CollectionNameDefs.COLL_STATUS_CV, cond, updates, true);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
         }
-
-        Bson idStatusCV = Filters.eq(DbKeyConfig.STATUS_CV_ID, request.getId());
-        Bson update = Updates.combine(
-                Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
-        );
-        db.update(CollectionNameDefs.COLL_PROFILE, idStatusCV, update, true);
-
-        // update roles
-        Bson updates = Updates.combine(
-                Updates.set(DbKeyConfig.NAME, name),
-                Updates.set(DbKeyConfig.CHILDREN, list),
-                Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
-                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
-        );
-        db.update(CollectionNameDefs.COLL_STATUS_CV, cond, updates, true);
-
         response.setSuccess();
         return response;
 
@@ -170,16 +183,24 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     @Override
     public BaseResponse deleteStatusCV(DeleteStatusCVRequest request) {
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+
+            db.delete(CollectionNameDefs.COLL_STATUS_CV, cond);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
-        }
 
-        db.delete(CollectionNameDefs.COLL_STATUS_CV, cond);
+        }
         return new BaseResponse(0, "OK");
     }
 

@@ -119,7 +119,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         GetArrayResponse<ProfileEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(rows.size());
+        resp.setTotal(db.countAll(CollectionNameDefs.COLL_PROFILE, cond));
         resp.setRows(rows);
 
         return resp;
@@ -222,7 +222,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 if (result != null) {
                     if (result.getKey().equals(key)) {
                         if (!result.isResult()) {
-                            response.setFailed(result.getName());
+                            response.setFailed((String) result.getName());
                             return response;
                         } else {
                             count++;
@@ -344,7 +344,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 if (validatorResult != null) {
                     if (validatorResult.getKey().equals(key)) {
                         if (!validatorResult.isResult()) {
-                            response.setFailed(validatorResult.getName());
+                            response.setFailed((String) validatorResult.getName());
                             return response;
                         } else {
                             count++;
@@ -473,7 +473,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 if (validatorResult != null) {
                     if (validatorResult.getKey().equals(key)) {
                         if (!validatorResult.isResult()) {
-                            response.setFailed(validatorResult.getName());
+                            response.setFailed((String) validatorResult.getName());
                             return response;
                         } else {
                             count++;
@@ -607,7 +607,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         String key = UUID.randomUUID().toString();
 
         try {
-
             //Validate
             String idProfile = request.getId();
             Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
@@ -629,7 +628,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 if (validatorResult != null) {
                     if (validatorResult.getKey().equals(key)) {
                         if (!validatorResult.isResult()) {
-                            response.setFailed(validatorResult.getName());
+                            response.setFailed((String) validatorResult.getName());
                             return response;
                         } else {
                             count++;
@@ -650,29 +649,20 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            String statusCVName = null;
-
-            for (DictionaryValidateProcessor r : rs) {
-                if (r.getResult().getType().equals(ThreadConfig.STATUS_CV)) {
-                    statusCVName = r.getResult().getName();
-                }
-            }
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatusCV()),
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, statusCVName),
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName()),
                     Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
 
-            ProfileRabbitMQEntity profileRabbitMQ = new ProfileRabbitMQEntity();
-            profileRabbitMQ.setStatusCVId(request.getStatusCV());
-            profileRabbitMQ.setStatusCVName(statusCVName);
-
             // insert to rabbitmq
+            ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(request, dictionaryNames);
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE_STATUS, profileRabbitMQ);
 
             //Insert history to DB
@@ -698,31 +688,35 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         for (DictionaryValidateProcessor r : rs) {
             switch (r.getResult().getType()) {
                 case ThreadConfig.JOB: {
-                    dictionaryNames.setJobName(r.getResult().getName());
+                    dictionaryNames.setJobName((String) r.getResult().getName());
                     break;
                 }
                 case ThreadConfig.JOB_LEVEL: {
-                    dictionaryNames.setLevelJobName(r.getResult().getName());
+                    dictionaryNames.setLevelJobName((String) r.getResult().getName());
                     break;
                 }
                 case ThreadConfig.SCHOOL: {
-                    dictionaryNames.setSchoolName(r.getResult().getName());
+                    dictionaryNames.setSchoolName((String) r.getResult().getName());
                     break;
                 }
                 case ThreadConfig.SOURCE_CV: {
-                    dictionaryNames.setSourceCVName(r.getResult().getName());
+                    dictionaryNames.setSourceCVName((String) r.getResult().getName());
                     break;
                 }
                 case ThreadConfig.TALENT_POOL: {
-                    dictionaryNames.setTalentPoolName(r.getResult().getName());
+                    dictionaryNames.setTalentPoolName((String) r.getResult().getName());
                     break;
                 }
                 case ThreadConfig.DEPARTMENT: {
-                    dictionaryNames.setDepartmentName(r.getResult().getName());
+                    dictionaryNames.setDepartmentName((String) r.getResult().getName());
                     break;
                 }
                 case ThreadConfig.PROFILE: {
-                    dictionaryNames.setEmail(r.getResult().getName());
+                    dictionaryNames.setEmail((String) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.STATUS_CV: {
+                    dictionaryNames.setStatusCVName((String) r.getResult().getName());
                     break;
                 }
                 default: {
@@ -732,6 +726,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
         }
         return dictionaryNames;
+    }
+
+    private ProfileRabbitMQEntity getProfileRabbit(UpdateStatusProfileRequest request, DictionaryNamesEntity dictionaryNames) {
+        ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+        profileEntity.setId(request.getId());
+        profileEntity.setStatusCVId(request.getStatusCV());
+        profileEntity.setStatusCVName(dictionaryNames.getStatusCVName());
+        return profileEntity;
     }
 
     private ProfileRabbitMQEntity getProfileRabbit(String id, CreateProfileRequest request, DictionaryNamesEntity dictionaryNames) {

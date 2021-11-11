@@ -4,6 +4,8 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.regex.Matcher;
@@ -23,11 +25,6 @@ public class BaseAuthRequest {
     private static Matcher matcher;
     @JsonIgnore
     protected HeaderInfo info;
-
-    @Value("${note.fileSize}")
-    private long fileSizeNote;
-    @Value("${avatar.fileSize}")
-    private long fileSizeAvatar;
 
     public BaseAuthRequest() {
         pattern = Pattern.compile(EMAIL_REGEX);
@@ -59,19 +56,5 @@ public class BaseAuthRequest {
         matcher = fullNamePattern.matcher(fullName);
         return matcher.matches();
     }
-
-    public boolean valiadateNoteFile(MultipartFile file){
-        if (file == null || file.isEmpty() || file.getSize() > fileSizeNote) {
-            return true;
-        }
-        return false;
-    }
-    public boolean valiadateAvatarFile(MultipartFile file){
-        if (file == null || file.isEmpty() || file.getSize() > fileSizeAvatar) {
-            return true;
-        }
-        return false;
-    }
-
 
 }

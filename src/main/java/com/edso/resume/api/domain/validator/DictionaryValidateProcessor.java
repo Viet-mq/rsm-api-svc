@@ -12,6 +12,9 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 public class DictionaryValidateProcessor implements Runnable {
 
@@ -21,10 +24,10 @@ public class DictionaryValidateProcessor implements Runnable {
     private final IDictionaryValidator target;
     private final String key;
     private final String type;
-    private final String id;
+    private final Object id;
     private String idProfile;
 
-    public DictionaryValidateProcessor(String key, String type, String id, MongoDbOnlineSyncActions db, IDictionaryValidator target) {
+    public DictionaryValidateProcessor(String key, String type, Object id, MongoDbOnlineSyncActions db, IDictionaryValidator target) {
         this.key = key;
         this.type = type;
         this.id = id;
@@ -36,18 +39,41 @@ public class DictionaryValidateProcessor implements Runnable {
     @Override
     public void run() {
         try {
-            Bson cond = getCondition();
-            Document doc = db.findOne(getCollectionName(), cond);
-            if (doc == null) {
-                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
-                    result.setResult(true);
+            if (type.equals(ThreadConfig.LIST_USER)) {
+                List<Document> list = null;
+                List<String> listString = (List<String>) id;
+                if(listString != null && !listString.isEmpty()) {
+                    list = new ArrayList<>();
+                    for (String username : listString) {
+                        Bson cond = Filters.eq(DbKeyConfig.USERNAME, username);
+                        Document doc = db.findOne(CollectionNameDefs.COLL_USER, cond);
+                        if (doc == null) {
+                            result.setResult(false);
+                            result.setName("Không tồn tại username này!");
+                            return;
+                        }
+                        Document document = new Document();
+                        document.append(DbKeyConfig.USERNAME, username);
+                        document.append(DbKeyConfig.FULL_NAME, doc.get(DbKeyConfig.FULL_NAME));
+                        list.add(document);
+                    }
+                }
+                result.setResult(true);
+                result.setName(list);
+            } else {
+                Bson cond = getCondition();
+                Document doc = db.findOne(getCollectionName(), cond);
+                if (doc == null) {
+                    if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
+                        result.setResult(true);
+                        return;
+                    }
+                    result.setResult(false);
+                    result.setName("Không tồn tại " + getDictionaryName() + " này!");
                     return;
                 }
-                result.setResult(false);
-                result.setName("Không tồn tại " + getDictionaryName() + " này!");
-                return;
+                setResult(doc);
             }
-            setResult(doc);
         } catch (Throwable ex) {
             logger.error("Ex: ", ex);
             result.setResult(false);
@@ -164,6 +190,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.CALENDAR: {
                 return "id calendar";
             }
+            case ThreadConfig.LIST_USER:
             case ThreadConfig.USER: {
                 return "username";
             }
@@ -172,6 +199,9 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.TALENT_POOL: {
                 return "talent pool";
+            }
+            case ThreadConfig.RECRUITMENT: {
+                return "id recruitment";
             }
             default: {
                 return null;
@@ -219,6 +249,9 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.TALENT_POOL: {
                 return CollectionNameDefs.COLL_TALENT_POOL;
+            }
+            case ThreadConfig.RECRUITMENT: {
+                return CollectionNameDefs.COLL_RECRUITMENT;
             }
             default: {
                 return null;

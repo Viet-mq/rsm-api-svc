@@ -53,7 +53,7 @@ public class VillageServiceImpl extends BaseService implements VillageService {
         }
         GetArrayResponse<VillageEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
-        resp.setTotal(rows.size());
+        resp.setTotal(db.countAll(CollectionNameDefs.COLL_VILLAGE, cond));
         resp.setRows(rows);
         return resp;
     }
@@ -62,28 +62,34 @@ public class VillageServiceImpl extends BaseService implements VillageService {
     public BaseResponse createVillage(CreateVillageRequest request) {
 
         BaseResponse response = new BaseResponse();
+        try {
+            String name = request.getName().trim();
+            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            long count = db.countAll(CollectionNameDefs.COLL_VILLAGE, c);
 
-        String name = request.getName().trim();
-        Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        long count = db.countAll(CollectionNameDefs.COLL_VILLAGE, c);
+            if (count > 0) {
+                response.setFailed("Tên này đã tồn tại");
+                return response;
+            }
 
-        if (count > 0) {
-            response.setFailed("Tên này đã tồn tại");
+            Document village = new Document();
+            village.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            village.append(DbKeyConfig.NAME, name);
+            village.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            village.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+            village.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
+            village.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            village.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+
+            // insert to database
+            db.insertOne(CollectionNameDefs.COLL_VILLAGE, village);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
+
         }
-
-        Document village = new Document();
-        village.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-        village.append(DbKeyConfig.NAME, name);
-        village.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
-        village.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-        village.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
-        village.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-        village.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
-
-        // insert to database
-        db.insertOne(CollectionNameDefs.COLL_VILLAGE, village);
-
         response.setSuccess();
         return response;
 
@@ -94,34 +100,41 @@ public class VillageServiceImpl extends BaseService implements VillageService {
     public BaseResponse updateVillage(UpdateVillageRequest request) {
 
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_VILLAGE, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_VILLAGE, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
-            return response;
-        }
-
-        String name = request.getName().trim();
-        Document obj = db.findOne(CollectionNameDefs.COLL_VILLAGE, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
-        if (obj != null) {
-            String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
-            if (!objId.equals(id)) {
-                response.setFailed("Tên này đã tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
                 return response;
             }
+
+            String name = request.getName().trim();
+            Document obj = db.findOne(CollectionNameDefs.COLL_VILLAGE, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            if (obj != null) {
+                String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
+                if (!objId.equals(id)) {
+                    response.setFailed("Tên này đã tồn tại");
+                    return response;
+                }
+            }
+
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.NAME, name),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+            );
+            db.update(CollectionNameDefs.COLL_VILLAGE, cond, updates, true);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
         }
-
-        // update roles
-        Bson updates = Updates.combine(
-                Updates.set(DbKeyConfig.NAME, name),
-                Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
-                Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
-        );
-        db.update(CollectionNameDefs.COLL_VILLAGE, cond, updates, true);
-
         response.setSuccess();
         return response;
 
@@ -130,16 +143,24 @@ public class VillageServiceImpl extends BaseService implements VillageService {
     @Override
     public BaseResponse deleteVillage(DeleteVillageRequest request) {
         BaseResponse response = new BaseResponse();
-        String id = request.getId();
-        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-        Document idDocument = db.findOne(CollectionNameDefs.COLL_VILLAGE, cond);
+        try {
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_VILLAGE, cond);
 
-        if (idDocument == null) {
-            response.setFailed("Id này không tồn tại");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+
+            db.delete(CollectionNameDefs.COLL_VILLAGE, cond);
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
             return response;
-        }
 
-        db.delete(CollectionNameDefs.COLL_VILLAGE, cond);
+        }
         return new BaseResponse(0, "OK");
     }
 

@@ -30,13 +30,18 @@ public class ExcelController extends BaseController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<Resource> exportExcel(@RequestHeader Map<String, String> headers) throws IOException {
+    public ResponseEntity<Resource> exportExcel(@RequestHeader Map<String, String> headers) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>exportExcel u: {}", headerInfo);
         String pathServer = excelService.exportExcel(headerInfo);
         File file = new File(pathServer);
         Path path = Paths.get(file.getAbsolutePath());
-        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+        ByteArrayResource resource = null;
+        try {
+            resource = new ByteArrayResource(Files.readAllBytes(path));
+        }catch (Throwable e){
+            logger.error("Exception: ", e);
+        }
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Content-Disposition", "attachment; filename=" + "Profiles.xlsx");
         logger.info("<=exportExcel u: {}, path: {}", headerInfo, path);

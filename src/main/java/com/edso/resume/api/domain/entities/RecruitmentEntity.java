@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class RecruitEntity {
+public class RecruitmentEntity {
     private String id;
     private String title;
     private String levelJobId;
@@ -21,5 +21,5 @@ public class RecruitEntity {
     private Long deadLine;
     private String talentPoolId;
     private String talentPoolName;
-    private List<String> interviewer;
+    private List<UserEntity> interviewer;
 }

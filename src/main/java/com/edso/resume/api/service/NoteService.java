@@ -14,7 +14,7 @@ public interface NoteService {
 
     BaseResponse createNoteProfile(CreateNoteProfileRequest request);
 
-    BaseResponse updateNoteProfile(UpdateNoteProfileRequest request, MultipartFile file);
+    BaseResponse updateNoteProfile(UpdateNoteProfileRequest request);
 
     BaseResponse deleteNoteProfile(DeleteNoteProfileRequest request);
 

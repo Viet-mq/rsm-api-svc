@@ -61,7 +61,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
         }
 
         resp.setSuccess();
-        resp.setTotal(rows.size());
+        resp.setTotal(db.countAll(CollectionNameDefs.COLL_HISTORY_PROFILE, cond));
         resp.setRows(rows);
         return resp;
     }

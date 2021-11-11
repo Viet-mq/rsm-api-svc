@@ -56,7 +56,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     private String routingkey;
 
     private final Queue<DictionaryNameValidatorResult> queue = new LinkedBlockingQueue<>();
-    private static final String EMAIL_REGEX = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])";
+    private static final String EMAIL_REGEX = "^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$";
     private static final String FULL_NAME_REGEX = "^[\\p{L} .'-]+$";
     private static Pattern patternEmail;
     private static Pattern fullNamePattern;
@@ -241,169 +241,172 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     @Override
     public BaseResponse uploadProfiles(MultipartFile request, HeaderInfo info) {
         BaseResponse response = new BaseResponse();
-        List<ProfileUploadEntity> profiles = null;
         try {
-            profiles = readExcel(request);
-        } catch (Throwable e) {
-            logger.error("Exception: ", e);
-        }
-
-        if (profiles == null || profiles.isEmpty()) {
-            response.setFailed("Vui lòng nhập đúng file excel!");
-            return response;
-        }
-        for (ProfileUploadEntity profile : profiles) {
-            String key = UUID.randomUUID().toString();
-
+            List<ProfileUploadEntity> profiles = null;
             try {
-                List<DictionaryNameValidateProcessor> rs = new ArrayList<>();
-                if (!Strings.isNullOrEmpty(profile.getSchoolName())) {
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SCHOOL, profile.getSchoolName(), db, this));
-                }
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCVName(), db, this));
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail(), db, this));
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail(), db, this));
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.TALENT_POOL, profile.getTalentPoolName(), db, this));
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB_LEVEL, profile.getLevelJobName(), db, this));
-                rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.DEPARTMENT, profile.getDepartmentName(), db, this));
+                profiles = readExcel(request);
+            } catch (Throwable e) {
+                logger.error("Exception: ", e);
+            }
 
-                int total = rs.size();
+            if (profiles == null || profiles.isEmpty()) {
+                response.setFailed("Vui lòng nhập đúng file excel!");
+                return response;
+            }
+            for (ProfileUploadEntity profile : profiles) {
+                String key = UUID.randomUUID().toString();
 
-                for (DictionaryNameValidateProcessor r : rs) {
-                    Thread t = new Thread(r);
-                    t.start();
-                }
-
-                long time = System.currentTimeMillis();
-                int count = 0;
-                while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
-                    DictionaryNameValidatorResult validatorResult = queue.poll();
-                    if (validatorResult != null) {
-                        if (validatorResult.getKey().equals(key)) {
-                            if (!validatorResult.isResult()) {
-                                break;
-                            } else {
-                                count++;
-                            }
-                            total--;
-                        } else {
-                            queue.offer(validatorResult);
-                        }
-                    }
-                }
-
-                if (count != rs.size()) {
-                    continue;
-                }
-
-                String schoolId = null;
-                String sourceCVId = null;
-                String talentPoolId = null;
-                String levelJobId = null;
-                String departmentId = null;
-
-                for (DictionaryNameValidateProcessor r : rs) {
-                    switch (r.getResult().getType()) {
-                        case ThreadConfig.SCHOOL: {
-                            schoolId = r.getResult().getId();
-                            break;
-                        }
-                        case ThreadConfig.SOURCE_CV: {
-                            sourceCVId = r.getResult().getId();
-                            break;
-                        }
-                        case ThreadConfig.TALENT_POOL: {
-                            talentPoolId = r.getResult().getId();
-                            break;
-                        }
-                        case ThreadConfig.JOB_LEVEL: {
-                            levelJobId = r.getResult().getId();
-                            break;
-                        }
-                        case ThreadConfig.DEPARTMENT: {
-                            departmentId = r.getResult().getId();
-                            break;
-                        }
-                    }
-                }
-
-                Long dateOfBirth = null;
-                Long dateOfApply;
                 try {
-                    dateOfApply = parseMillis(profile.getDateOfApply());
-                } catch (Throwable e) {
-                    logger.error("Exception: ", e);
-                    continue;
-                }
-                if (!Strings.isNullOrEmpty(profile.getDateOfBirth())) {
+                    List<DictionaryNameValidateProcessor> rs = new ArrayList<>();
+                    if (!Strings.isNullOrEmpty(profile.getSchoolName())) {
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SCHOOL, profile.getSchoolName(), db, this));
+                    }
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCVName(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.TALENT_POOL, profile.getTalentPoolName(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB_LEVEL, profile.getLevelJobName(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.DEPARTMENT, profile.getDepartmentName(), db, this));
+
+                    int total = rs.size();
+
+                    for (DictionaryNameValidateProcessor r : rs) {
+                        Thread t = new Thread(r);
+                        t.start();
+                    }
+
+                    long time = System.currentTimeMillis();
+                    int count = 0;
+                    while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                        DictionaryNameValidatorResult validatorResult = queue.poll();
+                        if (validatorResult != null) {
+                            if (validatorResult.getKey().equals(key)) {
+                                if (!validatorResult.isResult()) {
+                                    break;
+                                } else {
+                                    count++;
+                                }
+                                total--;
+                            } else {
+                                queue.offer(validatorResult);
+                            }
+                        }
+                    }
+
+                    if (count != rs.size()) {
+                        continue;
+                    }
+
+                    String schoolId = null;
+                    String sourceCVId = null;
+                    String talentPoolId = null;
+                    String levelJobId = null;
+                    String departmentId = null;
+
+                    for (DictionaryNameValidateProcessor r : rs) {
+                        switch (r.getResult().getType()) {
+                            case ThreadConfig.SCHOOL: {
+                                schoolId = r.getResult().getId();
+                                break;
+                            }
+                            case ThreadConfig.SOURCE_CV: {
+                                sourceCVId = r.getResult().getId();
+                                break;
+                            }
+                            case ThreadConfig.TALENT_POOL: {
+                                talentPoolId = r.getResult().getId();
+                                break;
+                            }
+                            case ThreadConfig.JOB_LEVEL: {
+                                levelJobId = r.getResult().getId();
+                                break;
+                            }
+                            case ThreadConfig.DEPARTMENT: {
+                                departmentId = r.getResult().getId();
+                                break;
+                            }
+                        }
+                    }
+
+                    Long dateOfBirth = null;
+                    Long dateOfApply;
                     try {
-                        dateOfBirth = parseMillis(profile.getDateOfBirth());
+                        dateOfApply = parseMillis(profile.getDateOfApply());
                     } catch (Throwable e) {
                         logger.error("Exception: ", e);
                         continue;
                     }
-                }
+                    if (!Strings.isNullOrEmpty(profile.getDateOfBirth())) {
+                        try {
+                            dateOfBirth = parseMillis(profile.getDateOfBirth());
+                        } catch (Throwable e) {
+                            logger.error("Exception: ", e);
+                            continue;
+                        }
+                    }
 
-                String idProfile = UUID.randomUUID().toString();
-                Document pro = new Document();
-                pro.append(DbKeyConfig.ID, idProfile);
-                pro.append(DbKeyConfig.FULL_NAME, profile.getFullName());
-                pro.append(DbKeyConfig.PHONE_NUMBER, profile.getPhoneNumber());
-                pro.append(DbKeyConfig.EMAIL, profile.getEmail());
-                pro.append(DbKeyConfig.DATE_OF_BIRTH, dateOfBirth);
-                pro.append(DbKeyConfig.GENDER, profile.getGender());
-                pro.append(DbKeyConfig.HOMETOWN, profile.getHometown());
-                pro.append(DbKeyConfig.LEVEL_SCHOOL, profile.getLevelSchool());
-                pro.append(DbKeyConfig.SCHOOL_NAME, profile.getSchoolName());
-                pro.append(DbKeyConfig.SCHOOL_ID, schoolId);
-                pro.append(DbKeyConfig.DATE_OF_APPLY, dateOfApply);
-                pro.append(DbKeyConfig.LEVEL_JOB_ID, levelJobId);
-                pro.append(DbKeyConfig.LEVEL_JOB_NAME, profile.getLevelJobName());
-                pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCVName());
-                pro.append(DbKeyConfig.SOURCE_CV_ID, sourceCVId);
-                pro.append(DbKeyConfig.NAME_SEARCH, profile.getFullName().toLowerCase());
-                pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-                pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
-                pro.append(DbKeyConfig.TALENT_POOL_ID, talentPoolId);
-                pro.append(DbKeyConfig.TALENT_POOL_NAME, profile.getTalentPoolName());
-                pro.append(DbKeyConfig.HR_REF, profile.getHrRef());
-                pro.append(DbKeyConfig.DEPARTMENT_ID, departmentId);
-                pro.append(DbKeyConfig.DEPARTMENT_NAME, profile.getDepartmentName());
+                    String idProfile = UUID.randomUUID().toString();
+                    Document pro = new Document();
+                    pro.append(DbKeyConfig.ID, idProfile);
+                    pro.append(DbKeyConfig.FULL_NAME, profile.getFullName());
+                    pro.append(DbKeyConfig.PHONE_NUMBER, profile.getPhoneNumber());
+                    pro.append(DbKeyConfig.EMAIL, profile.getEmail());
+                    pro.append(DbKeyConfig.DATE_OF_BIRTH, dateOfBirth);
+                    pro.append(DbKeyConfig.GENDER, profile.getGender());
+                    pro.append(DbKeyConfig.HOMETOWN, profile.getHometown());
+                    pro.append(DbKeyConfig.LEVEL_SCHOOL, profile.getLevelSchool());
+                    pro.append(DbKeyConfig.SCHOOL_NAME, profile.getSchoolName());
+                    pro.append(DbKeyConfig.SCHOOL_ID, schoolId);
+                    pro.append(DbKeyConfig.DATE_OF_APPLY, dateOfApply);
+                    pro.append(DbKeyConfig.LEVEL_JOB_ID, levelJobId);
+                    pro.append(DbKeyConfig.LEVEL_JOB_NAME, profile.getLevelJobName());
+                    pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCVName());
+                    pro.append(DbKeyConfig.SOURCE_CV_ID, sourceCVId);
+                    pro.append(DbKeyConfig.NAME_SEARCH, profile.getFullName().toLowerCase());
+                    pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+                    pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
+                    pro.append(DbKeyConfig.TALENT_POOL_ID, talentPoolId);
+                    pro.append(DbKeyConfig.TALENT_POOL_NAME, profile.getTalentPoolName());
+                    pro.append(DbKeyConfig.HR_REF, profile.getHrRef());
+                    pro.append(DbKeyConfig.DEPARTMENT_ID, departmentId);
+                    pro.append(DbKeyConfig.DEPARTMENT_NAME, profile.getDepartmentName());
 
-                db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
+                    db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
 
-                ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
-                profileEntity.setId(idProfile);
-                profileEntity.setFullName(profile.getFullName());
-                profileEntity.setGender(profile.getGender());
-                profileEntity.setPhoneNumber(profile.getPhoneNumber());
-                profileEntity.setEmail(profile.getEmail());
-                profileEntity.setDateOfBirth(dateOfBirth);
-                profileEntity.setHometown(profile.getHometown());
-                profileEntity.setSchoolId(schoolId);
-                profileEntity.setSchoolName(profile.getSchoolName());
-                profileEntity.setDateOfApply(dateOfApply);
-                profileEntity.setSourceCVId(sourceCVId);
-                profileEntity.setLevelSchool(profile.getLevelSchool());
-                profileEntity.setLevelJobId(levelJobId);
-                profileEntity.setLevelJobName(profile.getLevelJobName());
-                profileEntity.setSourceCVName(profile.getSourceCVName());
-                profileEntity.setTalentPoolId(talentPoolId);
-                profileEntity.setTalentPoolName(profile.getTalentPoolName());
-                profileEntity.setHrRef(profile.getHrRef());
-                profileEntity.setDepartmentId(departmentId);
-                profileEntity.setDepartmentName(profile.getDepartmentName());
+                    ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
+                    profileEntity.setId(idProfile);
+                    profileEntity.setFullName(profile.getFullName());
+                    profileEntity.setGender(profile.getGender());
+                    profileEntity.setPhoneNumber(profile.getPhoneNumber());
+                    profileEntity.setEmail(profile.getEmail());
+                    profileEntity.setDateOfBirth(dateOfBirth);
+                    profileEntity.setHometown(profile.getHometown());
+                    profileEntity.setSchoolId(schoolId);
+                    profileEntity.setSchoolName(profile.getSchoolName());
+                    profileEntity.setDateOfApply(dateOfApply);
+                    profileEntity.setSourceCVId(sourceCVId);
+                    profileEntity.setLevelSchool(profile.getLevelSchool());
+                    profileEntity.setLevelJobId(levelJobId);
+                    profileEntity.setLevelJobName(profile.getLevelJobName());
+                    profileEntity.setSourceCVName(profile.getSourceCVName());
+                    profileEntity.setTalentPoolId(talentPoolId);
+                    profileEntity.setTalentPoolName(profile.getTalentPoolName());
+                    profileEntity.setHrRef(profile.getHrRef());
+                    profileEntity.setDepartmentId(departmentId);
+                    profileEntity.setDepartmentName(profile.getDepartmentName());
 
-                publishActionToRabbitMQ(profileEntity);
-            } finally {
-                synchronized (queue) {
-                    queue.removeIf(s -> s.getKey().equals(key));
+                    publishActionToRabbitMQ(profileEntity);
+                } finally {
+                    synchronized (queue) {
+                        queue.removeIf(s -> s.getKey().equals(key));
+                    }
                 }
             }
+        }catch (Throwable ex){
+            logger.error("Exception: ", ex);
         }
-
         response.setSuccess();
         return response;
     }

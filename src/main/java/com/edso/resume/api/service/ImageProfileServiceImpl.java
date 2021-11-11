@@ -8,6 +8,7 @@ import com.edso.resume.api.domain.request.UpdateImageProfileRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.response.BaseResponse;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -32,6 +33,8 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
     @Value("${avatar.domain}")
     private String domain;
     @Value("${avatar.fileSize}")
+    private Long fileSizeAvatar;
+    @Value("${avatar.fileSize}")
     private Long fileSize;
     @Value("${spring.rabbitmq.profile.exchange}")
     private String exchange;
@@ -51,35 +54,41 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
 
     @Override
     public BaseResponse updateImageProfile(UpdateImageProfileRequest request) {
-        MultipartFile image = request.getImage();
         BaseResponse response = new BaseResponse();
-        if (image.getSize() > fileSize) {
-            response.setFailed("Dung lượng file quá lớn");
-            return response;
-        }
-        Bson cond = Filters.eq(DbKeyConfig.ID, request.getIdProfile());
-        Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+        try {
+            MultipartFile image = request.getImage();
+            if(image.getSize() > fileSizeAvatar){
+                return new BaseResponse(ErrorCodeDefs.IMAGE, "File vượt quá dung lượng cho phép");
+            }
+            Bson cond = Filters.eq(DbKeyConfig.ID, request.getIdProfile());
+            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if (profile == null) {
-            response.setFailed("Không tồn tại id profile này");
-            return response;
-        }
+            if (profile == null) {
+                response.setFailed("Không tồn tại id profile này");
+                return response;
+            }
 
-        deleteFile(AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE)));
-        String fileName = saveFile(image);
+            deleteFile(AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE)));
+            String fileName = saveFile(image);
 
-        Bson update = Updates.combine(
-                Updates.set(DbKeyConfig.URL_IMAGE, domain + fileName),
-                Updates.set(DbKeyConfig.PATH_IMAGE, serverPath + fileName)
-        );
-        db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.URL_IMAGE, domain + fileName),
+                    Updates.set(DbKeyConfig.PATH_IMAGE, serverPath + fileName)
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
 
 
-        ImageEntity imageEntity = new ImageEntity(request.getIdProfile(), domain + fileName);
-        publishActionToRabbitMQ("update-image", imageEntity);
+            ImageEntity imageEntity = new ImageEntity(request.getIdProfile(), domain + fileName);
+            publishActionToRabbitMQ("update-image", imageEntity);
 
 //        rabbit.publishImageToRabbit("update-image", imageEntity);
+        } catch (Throwable ex) {
 
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        }
         response.setSuccess();
         return response;
     }
@@ -87,27 +96,35 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
     @Override
     public BaseResponse deleteImageProfile(DeleteImageProfileRequest request) {
         BaseResponse response = new BaseResponse();
-        Bson cond = Filters.eq(DbKeyConfig.ID, request.getIdProfile());
-        Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+        try {
+            Bson cond = Filters.eq(DbKeyConfig.ID, request.getIdProfile());
+            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
-        if (profile == null) {
-            response.setFailed("Không tồn tại id profile này");
-            return response;
-        }
+            if (profile == null) {
+                response.setFailed("Không tồn tại id profile này");
+                return response;
+            }
 
-        deleteFile(AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE)));
+            deleteFile(AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE)));
 
-        Bson update = Updates.combine(
-                Updates.set(DbKeyConfig.URL_IMAGE, null),
-                Updates.set(DbKeyConfig.PATH_IMAGE, null)
-        );
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.URL_IMAGE, null),
+                    Updates.set(DbKeyConfig.PATH_IMAGE, null)
+            );
 
-        db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
 
-        ImageEntity imageEntity = new ImageEntity(request.getIdProfile(), null);
-        publishActionToRabbitMQ("delete-image", imageEntity);
+            ImageEntity imageEntity = new ImageEntity(request.getIdProfile(), null);
+            publishActionToRabbitMQ("delete-image", imageEntity);
 //        rabbit.publishImageToRabbit("delete-image", imageEntity);
 
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        }
         response.setSuccess();
         return null;
     }
