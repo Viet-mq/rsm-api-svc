@@ -40,23 +40,38 @@ public class DictionaryValidateProcessor implements Runnable {
     public void run() {
         try {
             if (type.equals(ThreadConfig.LIST_USER)) {
-                List<Document> list = null;
+                List<Document> list = new ArrayList<>();
                 List<String> listString = (List<String>) id;
-                if(listString != null && !listString.isEmpty()) {
-                    list = new ArrayList<>();
-                    for (String username : listString) {
-                        Bson cond = Filters.eq(DbKeyConfig.USERNAME, username);
-                        Document doc = db.findOne(CollectionNameDefs.COLL_USER, cond);
-                        if (doc == null) {
-                            result.setResult(false);
-                            result.setName("Không tồn tại username này!");
-                            return;
-                        }
-                        Document document = new Document();
-                        document.append(DbKeyConfig.USERNAME, username);
-                        document.append(DbKeyConfig.FULL_NAME, doc.get(DbKeyConfig.FULL_NAME));
-                        list.add(document);
+                for (String username : listString) {
+                    Bson cond = Filters.eq(DbKeyConfig.USERNAME, username);
+                    Document doc = db.findOne(CollectionNameDefs.COLL_USER, cond);
+                    if (doc == null) {
+                        result.setResult(false);
+                        result.setName("Không tồn tại username này!");
+                        return;
                     }
+                    Document document = new Document();
+                    document.append(DbKeyConfig.USERNAME, username);
+                    document.append(DbKeyConfig.FULL_NAME, doc.get(DbKeyConfig.FULL_NAME));
+                    list.add(document);
+                }
+                result.setResult(true);
+                result.setName(list);
+            } else if (type.equals(ThreadConfig.LIST_SKILL)) {
+                List<Document> list = new ArrayList<>();
+                List<String> listString = (List<String>) id;
+                for (String id : listString) {
+                    Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                    Document doc = db.findOne(CollectionNameDefs.COLL_SKILL, cond);
+                    if (doc == null) {
+                        result.setResult(false);
+                        result.setName("Không tồn tại username này!");
+                        return;
+                    }
+                    Document document = new Document();
+                    document.append(DbKeyConfig.ID, id);
+                    document.append(DbKeyConfig.NAME, doc.get(DbKeyConfig.NAME));
+                    list.add(document);
                 }
                 result.setResult(true);
                 result.setName(list);
@@ -74,13 +89,15 @@ public class DictionaryValidateProcessor implements Runnable {
                 }
                 setResult(doc);
             }
-        } catch (Throwable ex) {
+        } catch (
+                Throwable ex) {
             logger.error("Ex: ", ex);
             result.setResult(false);
             result.setName("Hệ thống đang bận");
         } finally {
             target.onValidatorResult(this.key, result);
         }
+
     }
 
     public DictionaryValidatorResult getResult() {
@@ -92,6 +109,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.PROFILE: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
+                result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)));
                 break;
             }
             case ThreadConfig.USER: {
@@ -108,6 +126,11 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.CALENDAR: {
                 result.setResult(true);
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
+                break;
+            }
+            case ThreadConfig.RECRUITMENT: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)));
                 break;
             }
             case ThreadConfig.BLACKLIST_EMAIL:
@@ -137,6 +160,7 @@ public class DictionaryValidateProcessor implements Runnable {
                     break;
                 }
             }
+
             default: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
@@ -201,7 +225,10 @@ public class DictionaryValidateProcessor implements Runnable {
                 return "talent pool";
             }
             case ThreadConfig.RECRUITMENT: {
-                return "id recruitment";
+                return "tin tuyển dụng";
+            }
+            case ThreadConfig.LIST_SKILL: {
+                return "kỹ năng công việc";
             }
             default: {
                 return null;
@@ -252,6 +279,9 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.RECRUITMENT: {
                 return CollectionNameDefs.COLL_RECRUITMENT;
+            }
+            case ThreadConfig.LIST_SKILL: {
+                return CollectionNameDefs.COLL_SKILL;
             }
             default: {
                 return null;

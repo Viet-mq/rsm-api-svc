@@ -78,8 +78,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             c.add(Filters.regex(DbKeyConfig.DEPARTMENT_ID, Pattern.compile(department)));
         }
         Bson cond = buildCondition(c);
+        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<ProfileEntity> rows = new ArrayList<>();
 
         if (lst != null) {
@@ -112,6 +113,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .departmentId(AppUtils.parseString(doc.get(DbKeyConfig.DEPARTMENT_ID)))
                         .departmentName(AppUtils.parseString(doc.get(DbKeyConfig.DEPARTMENT_NAME)))
                         .levelSchool(AppUtils.parseString(doc.get(DbKeyConfig.LEVEL_SCHOOL)))
+                        .recruitmentId(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)))
+                        .recruitmentName(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_NAME)))
+                        .mailRef(AppUtils.parseString(doc.get(DbKeyConfig.MAIL_REF)))
+                        .skill((List<SkillEntity>) doc.get(DbKeyConfig.SKILL))
                         .build();
                 rows.add(profile);
             }
@@ -170,6 +175,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .departmentId(AppUtils.parseString(one.get(DbKeyConfig.DEPARTMENT_ID)))
                 .departmentName(AppUtils.parseString(one.get(DbKeyConfig.DEPARTMENT_NAME)))
                 .levelSchool(AppUtils.parseString(one.get(DbKeyConfig.LEVEL_SCHOOL)))
+                .recruitmentId(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_ID)))
+                .recruitmentName(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_NAME)))
+                .mailRef(AppUtils.parseString(one.get(DbKeyConfig.MAIL_REF)))
+                .skill((List<SkillEntity>) one.get(DbKeyConfig.SKILL))
                 .build();
 
         response.setSuccess(profile);
@@ -188,7 +197,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         String idProfile = UUID.randomUUID().toString();
         String key = UUID.randomUUID().toString();
         try {
-
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             if (!Strings.isNullOrEmpty(request.getSchool())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SCHOOL, request.getSchool(), db, this));
@@ -196,18 +204,32 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitment(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getDepartment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getLevelJob())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            }
+            if (request.getSkill() != null && !request.getSkill().isEmpty()) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
+            }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+            if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+                dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
+                rs.add(dictionaryValidateProcessorPhoneNumber);
+            }
             DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
             dictionaryValidateProcessorEmail.setIdProfile(idProfile);
             rs.add(dictionaryValidateProcessorEmail);
-            DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
-            dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
-            rs.add(dictionaryValidateProcessorPhoneNumber);
             int total = rs.size();
 
             for (DictionaryValidateProcessor p : rs) {
@@ -272,7 +294,13 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
             profile.append(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName());
             profile.append(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool());
-
+            profile.append(DbKeyConfig.MAIL_REF, request.getMailRef());
+            profile.append(DbKeyConfig.SKILL, dictionaryNames.getSkill());
+            profile.append(DbKeyConfig.RECRUITMENT_ID, request.getRecruitment());
+            profile.append(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName());
+            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
+                profile.append(DbKeyConfig.RECRUITMENT_TIME, System.currentTimeMillis());
+            }
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
 
@@ -317,19 +345,32 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitment(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getDepartment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getLevelJob())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            }
+            if (request.getSkill() != null && !request.getSkill().isEmpty()) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
+            }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+            if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+                dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
+                rs.add(dictionaryValidateProcessorPhoneNumber);
+            }
             DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
             dictionaryValidateProcessorEmail.setIdProfile(idProfile);
             rs.add(dictionaryValidateProcessorEmail);
-            DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
-            dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
-            rs.add(dictionaryValidateProcessorPhoneNumber);
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -376,6 +417,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, id, updateProfile, true);
             }
 
+            long recruitmentTime = 0;
+            if (!Strings.isNullOrEmpty(request.getRecruitment()) && !request.getRecruitment().equals(dictionaryNames.getRecruitmentId())) {
+                recruitmentTime = System.currentTimeMillis();
+            }
+
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
@@ -401,7 +447,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                     Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool())
+                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                    Updates.set(DbKeyConfig.RECRUITMENT_ID, request.getRecruitment()),
+                    Updates.set(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName()),
+                    Updates.set(DbKeyConfig.RECRUITMENT_TIME, recruitmentTime)
+
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
@@ -446,19 +496,32 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitment(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getDepartment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getLevelJob())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            }
+            if (request.getSkill() != null && !request.getSkill().isEmpty()) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
+            }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+            if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+                dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
+                rs.add(dictionaryValidateProcessorPhoneNumber);
+            }
             DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
             dictionaryValidateProcessorEmail.setIdProfile(idProfile);
             rs.add(dictionaryValidateProcessorEmail);
-            DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
-            dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
-            rs.add(dictionaryValidateProcessorPhoneNumber);
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -505,6 +568,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, id, updateProfile, true);
             }
 
+            long recruitmentTime = 0;
+            if (!Strings.isNullOrEmpty(request.getRecruitment()) && !request.getRecruitment().equals(dictionaryNames.getRecruitmentId())) {
+                recruitmentTime = System.currentTimeMillis();
+            }
+
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
@@ -532,7 +600,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                     Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool())
+                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                    Updates.set(DbKeyConfig.RECRUITMENT_ID, request.getRecruitment()),
+                    Updates.set(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName()),
+                    Updates.set(DbKeyConfig.RECRUITMENT_TIME, recruitmentTime)
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
@@ -593,7 +664,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             response.setSuccess();
 
             return response;
-        }catch (Throwable e){
+        } catch (Throwable e) {
             logger.info("Exception: ", e);
             response.setFailed("Hệ thống đang bận");
             return response;
@@ -602,7 +673,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
     @Override
     public BaseResponse updateStatusProfile(UpdateStatusProfileRequest request) {
-
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
 
@@ -713,10 +783,19 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
                 case ThreadConfig.PROFILE: {
                     dictionaryNames.setEmail((String) r.getResult().getName());
+                    dictionaryNames.setRecruitmentId(r.getResult().getIdProfile());
                     break;
                 }
                 case ThreadConfig.STATUS_CV: {
                     dictionaryNames.setStatusCVName((String) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.RECRUITMENT: {
+                    dictionaryNames.setRecruitmentName((String) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.LIST_SKILL: {
+                    dictionaryNames.setSkill((List<Document>) r.getResult().getName());
                     break;
                 }
                 default: {
@@ -760,6 +839,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setDepartmentId(request.getDepartment());
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
         profileEntity.setLevelSchool(request.getLevelSchool());
+        profileEntity.setMailRef(request.getMailRef());
+        profileEntity.setSkill(request.getSkill());
         return profileEntity;
     }
 
@@ -787,6 +868,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setDepartmentId(request.getDepartment());
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
         profileEntity.setLevelSchool(request.getLevelSchool());
+        profileEntity.setMailRef(request.getMailRef());
+        profileEntity.setSkill(request.getSkill());
         return profileEntity;
     }
 
@@ -816,6 +899,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setLevelSchool(request.getLevelSchool());
         profileEntity.setEvaluation(request.getEvaluation());
         profileEntity.setLastApply(request.getLastApply());
+        profileEntity.setMailRef(request.getMailRef());
+        profileEntity.setSkill(request.getSkill());
         return profileEntity;
     }
 

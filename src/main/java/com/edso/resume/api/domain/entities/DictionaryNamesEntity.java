@@ -15,6 +15,9 @@ public class DictionaryNamesEntity {
     private String departmentName;
     private String statusCVName;
     private String idProfile;
+    private String recruitmentName;
+    private String recruitmentId;
     private String email;
     private List<Document> interviewer;
+    private List<Document> skill;
 }

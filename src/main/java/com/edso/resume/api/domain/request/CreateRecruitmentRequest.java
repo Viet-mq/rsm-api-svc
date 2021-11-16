@@ -14,7 +14,7 @@ import java.util.List;
 @ToString(callSuper = true)
 public class CreateRecruitmentRequest extends BaseAuthRequest {
     private String title;
-    private String levelJob;
+    private String job;
     private String address;
     private String typeOfJob;
     private Long quantity;
@@ -31,7 +31,7 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(title) || title.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.TITLE, "Vui lòng nhập tiêu đề tin tuyển dụng");
         }
-        if (Strings.isNullOrEmpty(levelJob) || levelJob.length() > 255) {
+        if (Strings.isNullOrEmpty(job) || job.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.LEVEL_JOB, "Vui lòng nhập vị trí tuyển dụng");
         }
         if (Strings.isNullOrEmpty(address) || address.length() > 255) {

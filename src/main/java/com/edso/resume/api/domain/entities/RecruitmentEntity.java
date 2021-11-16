@@ -10,8 +10,8 @@ import java.util.List;
 public class RecruitmentEntity {
     private String id;
     private String title;
-    private String levelJobId;
-    private String levelJobName;
+    private String jobId;
+    private String jobName;
     private String address;
     private String typeOfJob;
     private String quantity;

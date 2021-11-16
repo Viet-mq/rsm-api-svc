@@ -3,6 +3,8 @@ package com.edso.resume.api.domain.entities;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class ProfileDetailEntity {
@@ -22,7 +24,9 @@ public class ProfileDetailEntity {
     private String sourceCVId;
     private String sourceCVName;
     private String hrRef;
+    private String mailRef;
     private Long dateOfApply;
+    private List<SkillEntity> skill;
     private Long lastApply;
     private Long dateOfCreate;
     private Long dateOfUpdate;
@@ -36,5 +40,7 @@ public class ProfileDetailEntity {
     private String departmentId;
     private String departmentName;
     private String levelSchool;
+    private String recruitmentId;
+    private String recruitmentName;
 
 }

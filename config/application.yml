@@ -83,13 +83,13 @@ excel:
   fileSize: 15728640 #Byte 15MB
 
 note:
-  domain: http://192.168.50.33:8182/file-rs/attachment/
+  domain: http://192.168.50.33:8182/attachment/
 #  serverpath: /usr/share/nginx/file-rs/attachment/
   serverPath: D:\
   fileSize: 15728640 #Byte 15MB
 
 avatar:
-  domain: http://192.168.50.33:8182/file-rs/avatar/
+  domain: http://192.168.50.33:8182/avatar/
 #  serverpath: /usr/share/nginx/file-rs/avatar/
   serverPath: D:\
   fileSize: 15728640 #Byte 15MB

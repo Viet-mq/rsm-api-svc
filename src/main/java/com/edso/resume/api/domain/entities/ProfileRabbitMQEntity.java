@@ -2,6 +2,8 @@ package com.edso.resume.api.domain.entities;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class ProfileRabbitMQEntity {
     private String id;
@@ -20,6 +22,8 @@ public class ProfileRabbitMQEntity {
     private String sourceCVId;
     private String sourceCVName;
     private String hrRef;
+    private String mailRef;
+    private List<String> skill;
     private Long dateOfApply;
     private String statusCVId;
     private String statusCVName;
@@ -31,5 +35,7 @@ public class ProfileRabbitMQEntity {
     private String departmentId;
     private String departmentName;
     private String levelSchool;
+    private String recruitmentId;
+    private String recruitmentName;
 
 }

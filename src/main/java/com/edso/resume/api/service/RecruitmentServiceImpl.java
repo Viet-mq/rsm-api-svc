@@ -50,8 +50,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 RecruitmentEntity sourceCV = RecruitmentEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .title(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)))
-                        .levelJobId(AppUtils.parseString(doc.get(DbKeyConfig.LEVEL_JOB_ID)))
-                        .levelJobName(AppUtils.parseString(doc.get(DbKeyConfig.LEVEL_JOB_NAME)))
+                        .jobId(AppUtils.parseString(doc.get(DbKeyConfig.JOB_ID)))
+                        .jobName(AppUtils.parseString(doc.get(DbKeyConfig.JOB_NAME)))
                         .address(AppUtils.parseString(doc.get(DbKeyConfig.ADDRESS)))
                         .typeOfJob(AppUtils.parseString(doc.get(DbKeyConfig.TYPE_OF_JOB)))
                         .quantity(AppUtils.parseString(doc.get(DbKeyConfig.QUANTITY)))
@@ -83,8 +83,10 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
+            if(request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
+            }
             int total = rs.size();
 
             for (DictionaryValidateProcessor p : rs) {
@@ -126,8 +128,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             Document recruitment = new Document();
             recruitment.append(DbKeyConfig.ID, idProfile);
             recruitment.append(DbKeyConfig.TITLE, request.getTitle());
-            recruitment.append(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob());
-            recruitment.append(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName());
+            recruitment.append(DbKeyConfig.JOB_ID, request.getJob());
+            recruitment.append(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName());
             recruitment.append(DbKeyConfig.ADDRESS, request.getAddress());
             recruitment.append(DbKeyConfig.TYPE_OF_JOB, request.getTypeOfJob());
             recruitment.append(DbKeyConfig.QUANTITY, request.getQuantity());
@@ -173,8 +175,10 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getId(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
+            if(request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
+            }
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -216,8 +220,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.ID, request.getId()),
                     Updates.set(DbKeyConfig.TITLE, request.getTitle()),
-                    Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
+                    Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
+                    Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                     Updates.set(DbKeyConfig.ADDRESS, request.getAddress()),
                     Updates.set(DbKeyConfig.TYPE_OF_JOB, request.getTypeOfJob()),
                     Updates.set(DbKeyConfig.QUANTITY, request.getQuantity()),
@@ -275,8 +279,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         DictionaryNamesEntity dictionaryNames = new DictionaryNamesEntity();
         for (DictionaryValidateProcessor r : rs) {
             switch (r.getResult().getType()) {
-                case ThreadConfig.JOB_LEVEL: {
-                    dictionaryNames.setLevelJobName(AppUtils.parseString(r.getResult().getName()));
+                case ThreadConfig.JOB: {
+                    dictionaryNames.setJobName(AppUtils.parseString(r.getResult().getName()));
                     break;
                 }
                 case ThreadConfig.TALENT_POOL: {

@@ -21,7 +21,6 @@ import java.util.UUID;
 @Service
 public class HistoryServiceImpl extends BaseService implements HistoryService {
 
-
     public HistoryServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
     }
