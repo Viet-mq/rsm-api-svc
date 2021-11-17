@@ -14,6 +14,7 @@ import java.util.List;
 @ToString(callSuper = true)
 public class CreateCalendarProfileRequest extends BaseAuthRequest {
     private String idProfile;
+    private String title;
     private Long time;
     private String address;
     private String form;

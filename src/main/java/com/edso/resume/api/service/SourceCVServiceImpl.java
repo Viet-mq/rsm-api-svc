@@ -2,13 +2,13 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.SourceCVEntity;
-import com.edso.resume.api.domain.entities.SourceEntity;
 import com.edso.resume.api.domain.request.CreateSourceCVRequest;
 import com.edso.resume.api.domain.request.DeleteSourceCVRequest;
 import com.edso.resume.api.domain.request.UpdateSourceCVRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.common.NameConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -39,15 +39,18 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
+        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_SOURCE_CV, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_SOURCE_CV, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<SourceCVEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
                 SourceCVEntity sourceCV = SourceCVEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                        .email(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)))
+                        .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
                         .build();
                 rows.add(sourceCV);
             }
@@ -76,6 +79,8 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
             Document sourceCV = new Document();
             sourceCV.append(DbKeyConfig.ID, UUID.randomUUID().toString());
             sourceCV.append(DbKeyConfig.NAME, name);
+            sourceCV.append(DbKeyConfig.EMAIL, request.getEmail());
+            sourceCV.append(DbKeyConfig.STATUS, NameConfig.DANG_SU_DUNG);
             sourceCV.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
             sourceCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             sourceCV.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
@@ -131,6 +136,8 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.NAME, name),
+                    Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
+                    Updates.set(DbKeyConfig.STATUS, request.getStatus()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())

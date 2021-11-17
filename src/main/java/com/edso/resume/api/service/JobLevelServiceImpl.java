@@ -38,9 +38,10 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
+        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_JOB_LEVEL, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_JOB_LEVEL, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<JobLevelEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {

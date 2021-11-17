@@ -9,6 +9,7 @@ import com.edso.resume.api.domain.validator.DictionaryNameValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryNameValidator;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.common.NameConfig;
 import com.edso.resume.lib.common.ThreadConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -216,7 +217,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 continue;
             }
             if (!Strings.isNullOrEmpty(profiles.getGender())) {
-                if (!profiles.getGender().equals("Nữ") && !profiles.getGender().equals("Nam")) {
+                if (!profiles.getGender().equals(NameConfig.NU) && !profiles.getGender().equals(NameConfig.NAM)) {
                     logger.info("Giới tính chỉ có thể là Nam hoặc Nữ!");
                     continue;
                 }

@@ -22,6 +22,7 @@ import org.bson.conversions.Bson;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,6 +53,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
                             .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                             .idCompany(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_ID)))
                             .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                            .description(AppUtils.parseString(doc.get(DbKeyConfig.DESCRIPTION)))
                             .build();
                     rows.add(department);
                 } else {
@@ -64,6 +66,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
                             SubDepartmentEntity subDepartmentEntity = SubDepartmentEntity.builder()
                                     .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                                     .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                                    .description(AppUtils.parseString(doc.get(DbKeyConfig.DESCRIPTION)))
                                     .build();
 
                             //De quy
@@ -78,6 +81,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
         }
         resp.setSuccess();
         resp.setTotal(db.countAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, null));
+        Collections.reverse(rows);
         resp.setRows(rows);
         return resp;
     }
@@ -94,6 +98,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
                     SubDepartmentEntity subDepartmentEntity = SubDepartmentEntity.builder()
                             .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                             .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                            .description(AppUtils.parseString(doc.get(DbKeyConfig.DESCRIPTION)))
                             .build();
 
                     recursiveFunction(lst, subDepartmentEntity);
@@ -138,6 +143,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
             Document department = new Document();
             department.append(DbKeyConfig.ID, UUID.randomUUID().toString());
             department.append(DbKeyConfig.NAME, request.getName());
+            department.append(DbKeyConfig.DESCRIPTION, request.getDescription());
             department.append(DbKeyConfig.COMPANY_ID, null);
             department.append(DbKeyConfig.PARENT_ID, idParent);
             department.append(DbKeyConfig.PARENT_NAME, parentName);
@@ -196,6 +202,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
                     // update roles
                     updates = Updates.combine(
                             Updates.set(DbKeyConfig.NAME, request.getName()),
+                            Updates.set(DbKeyConfig.DESCRIPTION, request.getDescription()),
                             Updates.set(DbKeyConfig.PARENT_NAME, parentName),
                             Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
                             Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
@@ -210,6 +217,7 @@ public class DepartmentServiceImpl extends BaseService implements DepartmentServ
                     // update roles
                     updates = Updates.combine(
                             Updates.set(DbKeyConfig.NAME, request.getName()),
+                            Updates.set(DbKeyConfig.DESCRIPTION, request.getDescription()),
                             Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
                             Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                             Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())

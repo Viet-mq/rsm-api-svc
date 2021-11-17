@@ -58,8 +58,9 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
+        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, null, 0, 0);
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, sort, 0, 0);
         List<CalendarEntity> calendars = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {

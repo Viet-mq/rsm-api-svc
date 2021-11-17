@@ -7,18 +7,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.List;
-
-@EqualsAndHashCode(callSuper = true)
-@Data
 @ToString(callSuper = true)
-public class CreateSkillRequest extends BaseAuthRequest{
-    private String name;
-    private List<String> jobs;
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class DeleteReasonRejectRequest extends BaseAuthRequest {
+    private String id;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(name) || name.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên kỹ năng công việc");
+        if (Strings.isNullOrEmpty(id) || id.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng chọn id");
         }
         return null;
     }

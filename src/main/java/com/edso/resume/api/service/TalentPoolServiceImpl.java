@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.request.DeleteTalentPoolRequest;
 import com.edso.resume.api.domain.request.UpdateTalentPoolRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -39,9 +40,10 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
         }
+        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_TALENT_POOL, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_TALENT_POOL, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<TalentPoolEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {

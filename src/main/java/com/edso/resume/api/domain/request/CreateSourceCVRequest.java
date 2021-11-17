@@ -13,10 +13,17 @@ import lombok.ToString;
 public class CreateSourceCVRequest extends BaseAuthRequest {
 
     private String name;
+    private String email;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên nguồn CV");
+        }
+        if (Strings.isNullOrEmpty(email)) {
+            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập địa chỉ email cung cấp hồ sơ ứng viên");
+        }
+        if (email.length() >255 || !validateEmail(email)) {
+            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
         }
         return null;
     }

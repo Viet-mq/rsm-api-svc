@@ -43,7 +43,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
     @Override
     public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size) {
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_RECRUITMENT, null, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_RECRUITMENT, null, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<RecruitmentEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {

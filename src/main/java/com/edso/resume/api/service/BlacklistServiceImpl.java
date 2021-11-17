@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.request.DeleteBlacklistRequest;
 import com.edso.resume.api.domain.request.UpdateBlacklistRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
@@ -38,10 +39,11 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
         }
+        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         long total = db.countAll(CollectionNameDefs.COLL_BLACKLIST, cond);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_BLACKLIST, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_BLACKLIST, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<BlacklistEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {

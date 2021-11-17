@@ -38,9 +38,10 @@ public class JobServiceImpl extends BaseService implements JobService {
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
+        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_JOB, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_JOB, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<CategoryEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {

@@ -1,6 +1,7 @@
 package com.edso.resume.api.domain.request;
 
 import com.edso.resume.lib.common.ErrorCodeDefs;
+import com.edso.resume.lib.common.NameConfig;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;
@@ -50,7 +51,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(gender)) {
             return new BaseResponse(ErrorCodeDefs.GENDER, "Vui lòng nhập giới tính");
         }
-        if (!gender.equals("Nam") && !gender.equals("Nữ")) {
+        if (!gender.equals(NameConfig.NAM) && !gender.equals(NameConfig.NU)) {
             return new BaseResponse(ErrorCodeDefs.GENDER, "Vui lòng nhập Nam hoặc Nữ");
         }
         if (!Strings.isNullOrEmpty(hometown) && hometown.length() > 255) {

@@ -10,6 +10,7 @@ import java.util.List;
 public class DepartmentEntity {
     private String id;
     private String name;
+    private String description;
     private String idCompany;
     private List<SubDepartmentEntity> children;
 
