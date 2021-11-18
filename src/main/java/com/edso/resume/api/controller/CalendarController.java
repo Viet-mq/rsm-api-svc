@@ -1,10 +1,12 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.entities.CalendarEntity;
-import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
+import com.edso.resume.api.domain.entities.CalendarEntity2;
+import com.edso.resume.api.domain.request.CreateCalendarProfileRequest2;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
+import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest2;
 import com.edso.resume.api.service.CalendarService;
+import com.edso.resume.api.service.CalendarService2;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayCalendarResponse;
@@ -19,24 +21,27 @@ import java.util.Map;
 public class CalendarController extends BaseController {
 
     private final CalendarService calendarService;
+    private final CalendarService2 calendarService2;
 
-    public CalendarController(CalendarService calendarService) {
+    public CalendarController(CalendarService calendarService, CalendarService2 calendarService2) {
         this.calendarService = calendarService;
+        this.calendarService2 = calendarService2;
     }
+
 
     @GetMapping("/list")
     public BaseResponse findAllCalendar(
             @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "idProfile") String idProfile) {
+            @RequestParam(value = "idProfile", required = false) String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>findAllCalendar u: {}, idProfile: {}", headerInfo, idProfile);
-        GetArrayCalendarResponse<CalendarEntity> resp = calendarService.findAllCalendar(headerInfo, idProfile);
+        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, idProfile);
         logger.info("<=findAllCalendar u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
         return resp;
     }
 
     @PostMapping("/create")
-    public BaseResponse createCalendarProfile(@RequestHeader Map<String, String> headers, @RequestBody CreateCalendarProfileRequest request) {
+    public BaseResponse createCalendarProfile(@RequestHeader Map<String, String> headers, @RequestBody CreateCalendarProfileRequest2 request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>createCalendarProfile u: {}, req: {}", headerInfo, request);
@@ -46,7 +51,7 @@ public class CalendarController extends BaseController {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = calendarService.createCalendarProfile(request);
+                response = calendarService2.createCalendarProfile(request);
             }
         }
         logger.info("<=createCalendarProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
@@ -54,7 +59,7 @@ public class CalendarController extends BaseController {
     }
 
     @PostMapping("/update")
-    public BaseResponse updateCalendarProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateCalendarProfileRequest request) {
+    public BaseResponse updateCalendarProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateCalendarProfileRequest2 request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>updateCalendarProfile u: {}, req: {}", headerInfo, request);
@@ -64,7 +69,7 @@ public class CalendarController extends BaseController {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = calendarService.updateCalendarProfile(request);
+                response = calendarService2.updateCalendarProfile(request);
             }
         }
         logger.info("<=updateCalendarProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
@@ -82,7 +87,7 @@ public class CalendarController extends BaseController {
             if (response == null) {
                 HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
                 request.setInfo(headerInfo);
-                response = calendarService.deleteCalendarProfile(request);
+                response = calendarService2.deleteCalendarProfile(request);
             }
         }
         logger.info("<=deleteCalendarProfile req: {}, resp: {}", request, response);
@@ -91,7 +96,7 @@ public class CalendarController extends BaseController {
 
     @Scheduled(fixedRate = 60000)
     public void alarmInterview() {
-        calendarService.alarmInterview();
+        calendarService2.alarmInterview();
     }
 
 }

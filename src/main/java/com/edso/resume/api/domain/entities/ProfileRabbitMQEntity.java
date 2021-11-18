@@ -37,5 +37,6 @@ public class ProfileRabbitMQEntity {
     private String levelSchool;
     private String recruitmentId;
     private String recruitmentName;
-
+    private String avatarColor;
+    private Boolean isNew;
 }

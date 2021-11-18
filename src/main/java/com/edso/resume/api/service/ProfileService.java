@@ -24,4 +24,6 @@ public interface ProfileService {
 
     BaseResponse updateStatusProfile(UpdateStatusProfileRequest request);
 
+    void isOld(String id);
+
 }

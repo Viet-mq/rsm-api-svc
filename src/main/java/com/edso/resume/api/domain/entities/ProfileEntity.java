@@ -39,4 +39,6 @@ public class ProfileEntity {
     private String image;
     private String cv;
     private String urlCV;
+    private String avatarColor;
+    private String isNew;
 }

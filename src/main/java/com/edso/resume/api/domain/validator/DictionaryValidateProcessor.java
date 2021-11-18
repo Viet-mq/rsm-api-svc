@@ -65,7 +65,7 @@ public class DictionaryValidateProcessor implements Runnable {
                     Document doc = db.findOne(CollectionNameDefs.COLL_SKILL, cond);
                     if (doc == null) {
                         result.setResult(false);
-                        result.setName("Không tồn tại username này!");
+                        result.setName("Không tồn tại kỹ năng công việc này!");
                         return;
                     }
                     Document document = new Document();

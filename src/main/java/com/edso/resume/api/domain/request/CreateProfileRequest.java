@@ -33,6 +33,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private String hrRef;
     private String mailRef;
     private String department;
+    private String avatarColor;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(fullName)) {

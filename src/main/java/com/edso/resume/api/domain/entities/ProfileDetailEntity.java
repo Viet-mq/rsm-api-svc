@@ -42,5 +42,6 @@ public class ProfileDetailEntity {
     private String levelSchool;
     private String recruitmentId;
     private String recruitmentName;
+    private String avatarColor;
 
 }

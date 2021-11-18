@@ -11,7 +11,6 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-@AllArgsConstructor
 public class DeleteCalendarProfileRequest extends BaseAuthRequest {
     private String id;
 

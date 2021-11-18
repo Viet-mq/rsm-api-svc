@@ -33,7 +33,7 @@ public class RabbitMQAccess {
     @Value("${spring.rabbitmq.port}")
     private int port;
 
-//    @Bean("myRabbitMQ")
+    @Bean("myRabbitMQ")
     public Channel getChannel() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(host);

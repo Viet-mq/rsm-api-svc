@@ -117,6 +117,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .recruitmentName(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_NAME)))
                         .mailRef(AppUtils.parseString(doc.get(DbKeyConfig.MAIL_REF)))
                         .skill((List<SkillEntity>) doc.get(DbKeyConfig.SKILL))
+                        .avatarColor(AppUtils.parseString(doc.get(DbKeyConfig.AVATAR_COLOR)))
+                        .isNew(AppUtils.parseString(doc.get(DbKeyConfig.IS_NEW)))
                         .build();
                 rows.add(profile);
             }
@@ -179,6 +181,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .recruitmentName(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_NAME)))
                 .mailRef(AppUtils.parseString(one.get(DbKeyConfig.MAIL_REF)))
                 .skill((List<SkillEntity>) one.get(DbKeyConfig.SKILL))
+                .avatarColor(AppUtils.parseString(one.get(DbKeyConfig.AVATAR_COLOR)))
                 .build();
 
         response.setSuccess(profile);
@@ -298,16 +301,17 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.SKILL, dictionaryNames.getSkill());
             profile.append(DbKeyConfig.RECRUITMENT_ID, request.getRecruitment());
             profile.append(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName());
+            profile.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
+            profile.append(DbKeyConfig.IS_NEW, true);
             if (!Strings.isNullOrEmpty(request.getRecruitment())) {
                 profile.append(DbKeyConfig.RECRUITMENT_TIME, System.currentTimeMillis());
             }
-            // insert to database
-            db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
 
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(idProfile, request, dictionaryNames);
             publishActionToRabbitMQ(RabbitMQConfig.CREATE, profileRabbitMQ);
-
+            // insert to database
+            db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo().getUsername());
 
@@ -360,6 +364,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (request.getSkill() != null && !request.getSkill().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
             }
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
@@ -453,16 +458,16 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.RECRUITMENT_TIME, recruitmentTime)
 
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
-            response.setSuccess();
-
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(request, dictionaryNames);
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE, profileRabbitMQ);
 
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
 
+            response.setSuccess();
             return response;
 
         } catch (Throwable ex) {
@@ -511,6 +516,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (request.getSkill() != null && !request.getSkill().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
             }
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
@@ -605,16 +611,16 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName()),
                     Updates.set(DbKeyConfig.RECRUITMENT_TIME, recruitmentTime)
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
-            response.setSuccess();
-
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(request, dictionaryNames);
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE_DETAIL, profileRabbitMQ);
 
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
 
+            response.setSuccess();
             return response;
 
         } catch (Throwable ex) {
@@ -646,6 +652,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             deleteFile(AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV)));
 
+            // insert to rabbitmq
+            publishActionToRabbitMQ(RabbitMQConfig.DELETE, request);
+
             //Xóa profile
             db.delete(CollectionNameDefs.COLL_PROFILE, cond);
 
@@ -657,9 +666,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //Xóa lịch sử
             historyService.deleteHistory(id);
-
-            // insert to rabbitmq
-            publishActionToRabbitMQ(RabbitMQConfig.DELETE, request);
 
             response.setSuccess();
 
@@ -753,6 +759,25 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         }
     }
 
+    @Override
+    public void isOld(String id) {
+        try {
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.IS_NEW, false)
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+            ProfileRabbitMQEntity profileRabbitMQ = new ProfileRabbitMQEntity();
+            profileRabbitMQ.setId(id);
+            profileRabbitMQ.setIsNew(false);
+            publishActionToRabbitMQ(RabbitMQConfig.IS_OLD, profileRabbitMQ);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+    }
+
     private DictionaryNamesEntity getDictionayNames(List<DictionaryValidateProcessor> rs) {
         DictionaryNamesEntity dictionaryNames = new DictionaryNamesEntity();
         for (DictionaryValidateProcessor r : rs) {
@@ -841,6 +866,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setLevelSchool(request.getLevelSchool());
         profileEntity.setMailRef(request.getMailRef());
         profileEntity.setSkill(request.getSkill());
+        profileEntity.setAvatarColor(request.getAvatarColor());
+        profileEntity.setIsNew(true);
         return profileEntity;
     }
 

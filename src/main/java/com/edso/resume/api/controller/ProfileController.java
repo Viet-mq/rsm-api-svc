@@ -105,6 +105,13 @@ public class ProfileController extends BaseController {
         return response;
     }
 
+    @PostMapping("/isold")
+    public void isOld(@RequestParam String id) {
+        logger.info("=>isOld id: {}", id);
+        profileService.isOld(id);
+        logger.info("<=isOld id: {}", id);
+    }
+
     @PostMapping("/delete")
     public BaseResponse deleteProfile(@RequestHeader Map<String, String> headers, @RequestBody DeleteProfileRequest request) {
         logger.info("=>deleteProfile req: {}", request);

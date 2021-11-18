@@ -8,7 +8,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
-//@Component
+@Component
 public class Consumer {
     private final UrlConsumerService urlConsumerService;
 
