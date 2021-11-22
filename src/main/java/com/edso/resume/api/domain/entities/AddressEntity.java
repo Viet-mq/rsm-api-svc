@@ -3,14 +3,10 @@ package com.edso.resume.api.domain.entities;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 @Builder
-public class StatusCVEntity {
+public class AddressEntity {
     private String id;
+    private String officeName;
     private String name;
-    private List<ChildrenStatusCVEntity> children;
-    private Integer round;
-
 }

@@ -11,15 +11,18 @@ public class CalendarEntity2 {
 
     private String id;
     private String idProfile;
+    private String fullName;
     private String recruitmentId;
     private String recruitmentName;
     private Long date;
-    private Integer interviewTime;
-    private String interviewAddress;
+    private Long interviewTime;
+    private String interviewAddressId;
+    private String interviewAddressName;
     private String floor;
     private String type;
     private List<UserEntity> interviewers;
     private String note;
+    private String avatarColor;
 //    private String sendEmailToInterviewee;
 //    private String sendEmailToInterviewer;
 

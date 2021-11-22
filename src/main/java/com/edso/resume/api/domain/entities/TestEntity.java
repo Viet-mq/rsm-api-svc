@@ -1,0 +1,13 @@
+package com.edso.resume.api.domain.entities;
+
+import io.swagger.models.auth.In;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@AllArgsConstructor
+@Data
+public class TestEntity {
+    private Integer id;
+    private String name;
+    private String desc;
+}

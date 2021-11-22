@@ -18,12 +18,13 @@ public class CreateCalendarProfileRequest2 extends BaseAuthRequest{
     private String idProfile;
     private String recruitmentId;
     private Long date;
-    private Integer interviewTime;
+    private Long interviewTime;
     private String interviewAddress;
     private String floor;
     private String type;
     private List<String> interviewers;
     private String note;
+    private String avatarColor;
 //    private String sendEmailToInterviewee;
 //    private String sendEmailToInterviewer;
 
@@ -31,9 +32,9 @@ public class CreateCalendarProfileRequest2 extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID_PROFILE, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");
-        }
+//        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
+//            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");
+//        }
         if (date == null || date <= 0) {
             return new BaseResponse(ErrorCodeDefs.DATE, "Vui lòng nhập thời gian phỏng vấn");
         }

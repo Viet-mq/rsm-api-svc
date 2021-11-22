@@ -47,18 +47,24 @@ public class NoteController extends BaseController {
     @PostMapping("/create")
     public BaseResponse createNoteProfile(@RequestHeader Map<String, String> headers, @ModelAttribute CreateNoteProfileRequest request) {
         BaseResponse response = new BaseResponse();
-        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>createNoteProfile u: {}, req: {}", headerInfo, request);
-        if (request == null) {
-            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
-        } else {
-            response = request.validate();
-            if (response == null) {
-                request.setInfo(headerInfo);
-                response = noteService.createNoteProfile(request);
+        try {
+            HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+            logger.info("=>createNoteProfile u: {}, req: {}", headerInfo, request);
+            if (request == null) {
+                response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+            } else {
+                response = request.validate();
+                if (response == null) {
+                    request.setInfo(headerInfo);
+                    response = noteService.createNoteProfile(request);
+                }
             }
+            logger.info("<=createNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+            response.setFailed("File sai");
+            return response;
         }
-        logger.info("<=createNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 

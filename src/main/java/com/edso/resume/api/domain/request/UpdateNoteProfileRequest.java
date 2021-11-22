@@ -3,17 +3,14 @@ package com.edso.resume.api.domain.request;
 import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-@AllArgsConstructor
 public class UpdateNoteProfileRequest extends BaseAuthRequest {
     private String id;
     private String username;

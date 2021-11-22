@@ -3,6 +3,7 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
 import com.edso.resume.api.domain.entities.RecruitmentEntity;
+import com.edso.resume.api.domain.entities.RoundEntity;
 import com.edso.resume.api.domain.entities.UserEntity;
 import com.edso.resume.api.domain.request.CreateRecruitmentRequest;
 import com.edso.resume.api.domain.request.DeleteRecruitmentRequest;
@@ -63,6 +64,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .talentPoolId(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_ID)))
                         .talentPoolName(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_NAME)))
                         .interviewer((List<UserEntity>) doc.get(DbKeyConfig.INTERVIEWER))
+                        .interviewProcess((List<RoundEntity>) doc.get(DbKeyConfig.INTERVIEW_PROCESS))
                         .build();
                 rows.add(sourceCV);
             }
@@ -85,7 +87,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
-            if(request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
+            if (request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
             }
             int total = rs.size();
@@ -125,6 +127,14 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
 
             DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
+            List<Document> interviewProcess = new ArrayList<>();
+            for (RoundEntity roundEntity : request.getInterviewProcess()) {
+                Document round = new Document();
+                round.append(DbKeyConfig.ID, roundEntity.getId());
+                round.append(DbKeyConfig.NAME, roundEntity.getName());
+                interviewProcess.add(round);
+            }
+
             // conventions
             Document recruitment = new Document();
             recruitment.append(DbKeyConfig.ID, idProfile);
@@ -141,6 +151,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool());
             recruitment.append(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName());
             recruitment.append(DbKeyConfig.INTERVIEWER, dictionaryNames.getInterviewer());
+            recruitment.append(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess);
             recruitment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             recruitment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -177,7 +188,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
-            if(request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
+            if (request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
             }
             int total = rs.size();
@@ -217,6 +228,14 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
 
             DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
+            List<Document> interviewProcess = new ArrayList<>();
+            for (RoundEntity roundEntity : request.getInterviewProcess()) {
+                Document round = new Document();
+                round.append(DbKeyConfig.ID, roundEntity.getId());
+                round.append(DbKeyConfig.NAME, roundEntity.getName());
+                interviewProcess.add(round);
+            }
+
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.ID, request.getId()),
@@ -233,6 +252,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool()),
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.INTERVIEWER, dictionaryNames.getInterviewer()),
+                    Updates.set(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

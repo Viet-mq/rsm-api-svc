@@ -1,5 +1,6 @@
 package com.edso.resume.api.domain.request;
 
+import com.edso.resume.api.domain.entities.RoundEntity;
 import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
@@ -27,6 +28,7 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
     private Long deadLine;
     private String talentPool;
     private List<String> interviewer;
+    private List<RoundEntity> interviewProcess;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
@@ -69,6 +71,9 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
         }
         if (Strings.isNullOrEmpty(talentPool) || talentPool.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.TALENT_POOL, "Vui lòng nhập talent pool");
+        }
+        if(interviewProcess == null || interviewProcess.isEmpty()){
+            return new BaseResponse(ErrorCodeDefs.INTERVIEW_PROCESS, "Vui lòng nhập quy trình tuyển dụng");
         }
         return null;
     }

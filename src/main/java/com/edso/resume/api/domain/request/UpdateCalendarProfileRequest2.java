@@ -18,7 +18,7 @@ public class UpdateCalendarProfileRequest2 extends BaseAuthRequest {
     private String id;
     private String recruitmentId;
     private Long date;
-    private Integer interviewTime;
+    private Long interviewTime;
     private String interviewAddress;
     private String floor;
     private String type;
@@ -31,9 +31,9 @@ public class UpdateCalendarProfileRequest2 extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
         }
-        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");
-        }
+//        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
+//            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");
+//        }
         if (date == null || date <= 0) {
             return new BaseResponse(ErrorCodeDefs.DATE, "Vui lòng nhập thời gian phỏng vấn");
         }

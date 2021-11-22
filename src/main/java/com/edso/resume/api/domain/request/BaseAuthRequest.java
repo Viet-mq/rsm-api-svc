@@ -2,6 +2,7 @@ package com.edso.resume.api.domain.request;
 
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +25,7 @@ public class BaseAuthRequest {
     private static Pattern fullNamePattern;
     private static Matcher matcher;
     @JsonIgnore
+
     protected HeaderInfo info;
 
     public BaseAuthRequest() {

@@ -26,12 +26,12 @@ public class UpdateSkillRequest extends BaseAuthRequest{
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên kỹ năng công việc");
         }
-        if (Strings.isNullOrEmpty(status) || status.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái");
-        }
-        if (!status.equals(NameConfig.DANG_SU_DUNG) && !status.equals(NameConfig.NGUNG_SU_DUNG)) {
-            return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái: Đang sử dụng hoặc Ngừng sử dụng");
-        }
+//        if (Strings.isNullOrEmpty(status) || status.length() > 255) {
+//            return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái");
+//        }
+//        if (!status.equals(NameConfig.DANG_SU_DUNG) && !status.equals(NameConfig.NGUNG_SU_DUNG)) {
+//            return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái: Đang sử dụng hoặc Ngừng sử dụng");
+//        }
         return null;
     }
 }

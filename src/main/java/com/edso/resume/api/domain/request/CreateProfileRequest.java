@@ -28,7 +28,6 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private String job;
     private List<String> skill;
     private String levelJob;
-    private String recruitment;
     private String talentPool;
     private String hrRef;
     private String mailRef;
@@ -94,9 +93,6 @@ public class CreateProfileRequest extends BaseAuthRequest {
         }
         if (!Strings.isNullOrEmpty(department) && department.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.DEPARTMENT, "Vui lòng nhập phòng ban ít hơn 255 ký tự");
-        }
-        if (!Strings.isNullOrEmpty(recruitment) && recruitment.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng ít hơn 255 ký tự");
         }
         return null;
     }

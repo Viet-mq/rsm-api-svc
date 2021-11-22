@@ -1,6 +1,7 @@
 package com.edso.resume.api.domain.validator;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.edso.resume.api.domain.entities.RoundEntity;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -26,6 +27,7 @@ public class DictionaryValidateProcessor implements Runnable {
     private final String type;
     private final Object id;
     private String idProfile;
+    private String recruitmentId;
 
     public DictionaryValidateProcessor(String key, String type, Object id, MongoDbOnlineSyncActions db, IDictionaryValidator target) {
         this.key = key;
@@ -39,55 +41,82 @@ public class DictionaryValidateProcessor implements Runnable {
     @Override
     public void run() {
         try {
-            if (type.equals(ThreadConfig.LIST_USER)) {
-                List<Document> list = new ArrayList<>();
-                List<String> listString = (List<String>) id;
-                for (String username : listString) {
-                    Bson cond = Filters.eq(DbKeyConfig.USERNAME, username);
-                    Document doc = db.findOne(CollectionNameDefs.COLL_USER, cond);
+            switch (type) {
+                case ThreadConfig.LIST_USER: {
+                    List<Document> list = new ArrayList<>();
+                    List<String> listString = (List<String>) id;
+                    for (String username : listString) {
+                        Bson cond = Filters.eq(DbKeyConfig.USERNAME, username);
+                        Document doc = db.findOne(CollectionNameDefs.COLL_USER, cond);
+                        if (doc == null) {
+                            result.setResult(false);
+                            result.setName("Không tồn tại username này!");
+                            return;
+                        }
+                        Document document = new Document();
+                        document.append(DbKeyConfig.USERNAME, username);
+                        document.append(DbKeyConfig.FULL_NAME, doc.get(DbKeyConfig.FULL_NAME));
+                        list.add(document);
+                    }
+                    result.setResult(true);
+                    result.setName(list);
+                    break;
+                }
+                case ThreadConfig.LIST_SKILL: {
+                    List<Document> list = new ArrayList<>();
+                    List<String> listString = (List<String>) id;
+                    for (String id : listString) {
+                        Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                        Document doc = db.findOne(CollectionNameDefs.COLL_SKILL, cond);
+                        if (doc == null) {
+                            result.setResult(false);
+                            result.setName("Không tồn tại kỹ năng công việc này!");
+                            return;
+                        }
+                        Document document = new Document();
+                        document.append(DbKeyConfig.ID, id);
+                        document.append(DbKeyConfig.NAME, doc.get(DbKeyConfig.NAME));
+                        list.add(document);
+                    }
+                    result.setResult(true);
+                    result.setName(list);
+                    break;
+                }
+                case ThreadConfig.STATUS_CV: {
+                    Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, recruitmentId), Filters.eq("interview_process.id", id));
+                    Document doc = db.findOne(getCollectionName(), cond);
                     if (doc == null) {
                         result.setResult(false);
-                        result.setName("Không tồn tại username này!");
+                        result.setName("Không tồn tại vòng tuyển dụng này!");
                         return;
                     }
-                    Document document = new Document();
-                    document.append(DbKeyConfig.USERNAME, username);
-                    document.append(DbKeyConfig.FULL_NAME, doc.get(DbKeyConfig.FULL_NAME));
-                    list.add(document);
+                    List<Document> list = (List<Document>) doc.get(DbKeyConfig.INTERVIEW_PROCESS);
+                    if (list != null && !list.isEmpty()) {
+                        for (Document roundEntity : list) {
+                            if (roundEntity.get(DbKeyConfig.ID).equals(id)) {
+                                result.setResult(true);
+                                result.setName(roundEntity.get(DbKeyConfig.NAME));
+                                break;
+                            }
+                        }
+                    }
+                    break;
                 }
-                result.setResult(true);
-                result.setName(list);
-            } else if (type.equals(ThreadConfig.LIST_SKILL)) {
-                List<Document> list = new ArrayList<>();
-                List<String> listString = (List<String>) id;
-                for (String id : listString) {
-                    Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                    Document doc = db.findOne(CollectionNameDefs.COLL_SKILL, cond);
+                default: {
+                    Bson cond = getCondition();
+                    Document doc = db.findOne(getCollectionName(), cond);
                     if (doc == null) {
+                        if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
+                            result.setResult(true);
+                            return;
+                        }
                         result.setResult(false);
-                        result.setName("Không tồn tại kỹ năng công việc này!");
+                        result.setName("Không tồn tại " + getDictionaryName() + " này!");
                         return;
                     }
-                    Document document = new Document();
-                    document.append(DbKeyConfig.ID, id);
-                    document.append(DbKeyConfig.NAME, doc.get(DbKeyConfig.NAME));
-                    list.add(document);
+                    setResult(doc);
+                    break;
                 }
-                result.setResult(true);
-                result.setName(list);
-            } else {
-                Bson cond = getCondition();
-                Document doc = db.findOne(getCollectionName(), cond);
-                if (doc == null) {
-                    if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
-                        result.setResult(true);
-                        return;
-                    }
-                    result.setResult(false);
-                    result.setName("Không tồn tại " + getDictionaryName() + " này!");
-                    return;
-                }
-                setResult(doc);
             }
         } catch (
                 Throwable ex) {
@@ -110,6 +139,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)));
+                result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
                 break;
             }
             case ThreadConfig.USER: {
@@ -160,7 +190,6 @@ public class DictionaryValidateProcessor implements Runnable {
                     break;
                 }
             }
-
             default: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
@@ -230,6 +259,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.LIST_SKILL: {
                 return "kỹ năng công việc";
             }
+            case ThreadConfig.ADDRESS: {
+                return "địa chỉ";
+            }
             default: {
                 return null;
             }
@@ -256,7 +288,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return CollectionNameDefs.COLL_PROFILE;
             }
             case ThreadConfig.STATUS_CV: {
-                return CollectionNameDefs.COLL_STATUS_CV;
+                return CollectionNameDefs.COLL_RECRUITMENT;
             }
             case ThreadConfig.DEPARTMENT: {
                 return CollectionNameDefs.COLL_DEPARTMENT_COMPANY;
@@ -282,6 +314,9 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.LIST_SKILL: {
                 return CollectionNameDefs.COLL_SKILL;
+            }
+            case ThreadConfig.ADDRESS: {
+                return CollectionNameDefs.COLL_ADDRESS;
             }
             default: {
                 return null;

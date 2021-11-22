@@ -9,6 +9,7 @@ import java.util.List;
 public class DictionaryNamesEntity {
     private String schoolName;
     private String jobName;
+    private String fullName;
     private String levelJobName;
     private String sourceCVName;
     private String talentPoolName;
@@ -16,6 +17,7 @@ public class DictionaryNamesEntity {
     private String statusCVName;
     private String idProfile;
     private String recruitmentName;
+    private String addressName;
     private String recruitmentId;
     private String email;
     private List<Document> interviewer;

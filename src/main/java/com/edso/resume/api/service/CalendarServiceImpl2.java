@@ -69,15 +69,18 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                 CalendarEntity2 calendar = CalendarEntity2.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .idProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)))
+                        .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
                         .recruitmentId(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)))
                         .recruitmentName(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_NAME)))
                         .date(AppUtils.parseLong(doc.get(DbKeyConfig.DATE)))
-                        .interviewTime(AppUtils.parseInt(doc.get(DbKeyConfig.INTERVIEW_TIME)))
-                        .interviewAddress(AppUtils.parseString(doc.get(DbKeyConfig.INTERVIEW_ADDRESS)))
+                        .interviewTime(AppUtils.parseLong(doc.get(DbKeyConfig.INTERVIEW_TIME)))
+                        .interviewAddressId(AppUtils.parseString(doc.get(DbKeyConfig.INTERVIEW_ADDRESS_ID)))
+                        .interviewAddressName(AppUtils.parseString(doc.get(DbKeyConfig.INTERVIEW_ADDRESS_NAME)))
                         .floor(AppUtils.parseString(doc.get(DbKeyConfig.FLOOR)))
                         .type(AppUtils.parseString(doc.get(DbKeyConfig.TYPE)))
                         .interviewers((List<UserEntity>) doc.get(DbKeyConfig.INTERVIEWERS))
                         .note(AppUtils.parseString(doc.get(DbKeyConfig.NOTE)))
+                        .avatarColor(AppUtils.parseString(doc.get(DbKeyConfig.AVATAR_COLOR)))
 //                        .sendEmailToInterviewee(AppUtils.parseString(doc.get(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWEE)))
 //                        .sendEmailToInterviewer(AppUtils.parseString(doc.get(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWER)))
                         .build();
@@ -102,10 +105,11 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
-            if(request.getInterviewers() != null && !request.getInterviewers().isEmpty()) {
+            if (request.getInterviewers() != null && !request.getInterviewers().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewers(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
+//            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getInterviewAddress(), db, this));
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -147,15 +151,18 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             Document calendar = new Document();
             calendar.append(DbKeyConfig.ID, id);
             calendar.append(DbKeyConfig.ID_PROFILE, idProfile);
+            calendar.append(DbKeyConfig.FULL_NAME, dictionaryNames.getFullName());
             calendar.append(DbKeyConfig.RECRUITMENT_ID, request.getRecruitmentId());
             calendar.append(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName());
             calendar.append(DbKeyConfig.DATE, request.getDate());
             calendar.append(DbKeyConfig.INTERVIEW_TIME, request.getInterviewTime());
-            calendar.append(DbKeyConfig.INTERVIEW_ADDRESS, request.getInterviewAddress());
+            calendar.append(DbKeyConfig.INTERVIEW_ADDRESS_ID, request.getInterviewAddress());
+            calendar.append(DbKeyConfig.INTERVIEW_ADDRESS_NAME, dictionaryNames.getAddressName());
             calendar.append(DbKeyConfig.FLOOR, request.getFloor());
             calendar.append(DbKeyConfig.TYPE, request.getType());
             calendar.append(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer());
             calendar.append(DbKeyConfig.NOTE, request.getNote());
+            calendar.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
 //            calendar.append(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWEE, request.getSendEmailToInterviewee());
 //            calendar.append(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWER, request.getSendEmailToInterviewer());
             calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
@@ -197,10 +204,11 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR, id, db, this));
-            if(request.getInterviewers() != null && !request.getInterviewers().isEmpty()) {
+            if (request.getInterviewers() != null && !request.getInterviewers().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewers(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
+//            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getInterviewAddress(), db, this));
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -244,7 +252,8 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                     Updates.set(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName()),
                     Updates.set(DbKeyConfig.DATE, request.getDate()),
                     Updates.set(DbKeyConfig.INTERVIEW_TIME, request.getInterviewTime()),
-                    Updates.set(DbKeyConfig.INTERVIEW_ADDRESS, request.getInterviewAddress()),
+                    Updates.set(DbKeyConfig.INTERVIEW_ADDRESS_ID, request.getInterviewAddress()),
+                    Updates.set(DbKeyConfig.INTERVIEW_ADDRESS_NAME, dictionaryNames.getAddressName()),
                     Updates.set(DbKeyConfig.FLOOR, request.getFloor()),
                     Updates.set(DbKeyConfig.TYPE, request.getType()),
                     Updates.set(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer()),
@@ -368,6 +377,14 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                 }
                 case ThreadConfig.RECRUITMENT: {
                     dictionaryNames.setRecruitmentName((String) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.ADDRESS: {
+                    dictionaryNames.setAddressName((String) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.PROFILE: {
+                    dictionaryNames.setFullName(r.getResult().getFullName());
                     break;
                 }
                 default: {

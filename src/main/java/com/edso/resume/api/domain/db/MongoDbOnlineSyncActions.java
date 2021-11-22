@@ -2,6 +2,7 @@ package com.edso.resume.api.domain.db;
 
 import com.mongodb.MongoClient;
 import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.BulkWriteOptions;
@@ -97,6 +98,20 @@ public class MongoDbOnlineSyncActions extends BaseAction {
             logger.error("Exception: ", ex);
         }
         return 0;
+    }
+
+    public AggregateIterable<Document> countGroupBy(String collection, List<Bson> query) {
+        try {
+            MongoClient mongoClient = mongoDbAccess.getMongo();
+            MongoDatabase database = mongoClient.getDatabase(dbName);
+            if (query == null) {
+                query = new ArrayList<>();
+            }
+            return database.getCollection(collection).aggregate(query);
+        } catch (Exception ex) {
+            logger.error("Exception: ", ex);
+        }
+        return null;
     }
 
     public Document findOne(String collectionName, Bson params) {

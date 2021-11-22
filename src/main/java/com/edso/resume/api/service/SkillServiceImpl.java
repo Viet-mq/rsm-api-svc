@@ -49,8 +49,8 @@ public class SkillServiceImpl extends BaseService implements SkillService {
                 SkillEntity skill = SkillEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
-                        .jobs((List<CategoryEntity>) doc.get(DbKeyConfig.JOBS))
-                        .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
+//                        .jobs((List<CategoryEntity>) doc.get(DbKeyConfig.JOBS))
+//                        .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
                         .build();
                 rows.add(skill);
             }
@@ -96,8 +96,8 @@ public class SkillServiceImpl extends BaseService implements SkillService {
             Document skill = new Document();
             skill.append(DbKeyConfig.ID, UUID.randomUUID().toString());
             skill.append(DbKeyConfig.NAME, name);
-            skill.append(DbKeyConfig.JOBS, jobs);
-            skill.append(DbKeyConfig.STATUS, NameConfig.DANG_SU_DUNG);
+//            skill.append(DbKeyConfig.JOBS, jobs);
+//            skill.append(DbKeyConfig.STATUS, NameConfig.DANG_SU_DUNG);
             skill.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
             skill.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             skill.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
@@ -169,8 +169,8 @@ public class SkillServiceImpl extends BaseService implements SkillService {
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.NAME, name),
-                    Updates.set(DbKeyConfig.JOBS, jobs),
-                    Updates.set(DbKeyConfig.STATUS, request.getStatus()),
+//                    Updates.set(DbKeyConfig.JOBS, jobs),
+//                    Updates.set(DbKeyConfig.STATUS, request.getStatus()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())

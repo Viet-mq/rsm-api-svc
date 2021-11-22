@@ -9,6 +9,7 @@ public class DictionaryValidatorResult {
     private boolean result;
     private Object name;
     private String idProfile;
+    private String fullName;
     private String key;
 
     public DictionaryValidatorResult(String type) {
@@ -16,6 +17,7 @@ public class DictionaryValidatorResult {
         this.result = false;
         this.name = "";
         this.idProfile = "";
+        this.fullName = "";
     }
 
 }

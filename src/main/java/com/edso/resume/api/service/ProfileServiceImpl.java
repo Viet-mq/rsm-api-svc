@@ -207,9 +207,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             }
-            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitment(), db, this));
-            }
             if (!Strings.isNullOrEmpty(request.getTalentPool())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             }
@@ -299,13 +296,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool());
             profile.append(DbKeyConfig.MAIL_REF, request.getMailRef());
             profile.append(DbKeyConfig.SKILL, dictionaryNames.getSkill());
-            profile.append(DbKeyConfig.RECRUITMENT_ID, request.getRecruitment());
-            profile.append(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName());
             profile.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
             profile.append(DbKeyConfig.IS_NEW, true);
-            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
-                profile.append(DbKeyConfig.RECRUITMENT_TIME, System.currentTimeMillis());
-            }
 
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(idProfile, request, dictionaryNames);
@@ -348,9 +340,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             if (!Strings.isNullOrEmpty(request.getJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
-            }
-            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitment(), db, this));
             }
             if (!Strings.isNullOrEmpty(request.getTalentPool())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
@@ -413,20 +402,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
-            //Update coll calendar
-            if (!dictionaryNames.getEmail().equals(request.getEmail())) {
-                Bson id = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
-                Bson updateProfile = Updates.combine(
-                        Updates.set(DbKeyConfig.EMAIL, request.getEmail())
-                );
-                db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, id, updateProfile, true);
-            }
-
-            long recruitmentTime = 0;
-            if (!Strings.isNullOrEmpty(request.getRecruitment()) && !request.getRecruitment().equals(dictionaryNames.getRecruitmentId())) {
-                recruitmentTime = System.currentTimeMillis();
-            }
-
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
@@ -452,10 +427,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                     Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
-                    Updates.set(DbKeyConfig.RECRUITMENT_ID, request.getRecruitment()),
-                    Updates.set(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName()),
-                    Updates.set(DbKeyConfig.RECRUITMENT_TIME, recruitmentTime)
+                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool())
 
             );
             // insert to rabbitmq
@@ -501,9 +473,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             }
-            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitment(), db, this));
-            }
             if (!Strings.isNullOrEmpty(request.getTalentPool())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             }
@@ -574,11 +543,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, id, updateProfile, true);
             }
 
-            long recruitmentTime = 0;
-            if (!Strings.isNullOrEmpty(request.getRecruitment()) && !request.getRecruitment().equals(dictionaryNames.getRecruitmentId())) {
-                recruitmentTime = System.currentTimeMillis();
-            }
-
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
@@ -606,10 +570,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                     Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
-                    Updates.set(DbKeyConfig.RECRUITMENT_ID, request.getRecruitment()),
-                    Updates.set(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName()),
-                    Updates.set(DbKeyConfig.RECRUITMENT_TIME, recruitmentTime)
+                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool())
             );
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(request, dictionaryNames);
@@ -689,7 +650,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatusCV(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
+            DictionaryValidateProcessor dictionaryValidateProcessor = new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatusCV(), db, this);
+            dictionaryValidateProcessor.setRecruitmentId(request.getRecruitmentId());
+            rs.add(dictionaryValidateProcessor);
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -813,10 +777,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
                 case ThreadConfig.STATUS_CV: {
                     dictionaryNames.setStatusCVName((String) r.getResult().getName());
-                    break;
-                }
-                case ThreadConfig.RECRUITMENT: {
-                    dictionaryNames.setRecruitmentName((String) r.getResult().getName());
                     break;
                 }
                 case ThreadConfig.LIST_SKILL: {

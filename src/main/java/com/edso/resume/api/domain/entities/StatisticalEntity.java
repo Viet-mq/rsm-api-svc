@@ -9,5 +9,5 @@ import java.util.List;
 @Builder
 public class StatisticalEntity {
     private String title;
-    private List<SourceEntity> Sources;
+    private List<SourceEntity> sources;
 }

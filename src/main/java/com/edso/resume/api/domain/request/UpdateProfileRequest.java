@@ -28,7 +28,6 @@ public class UpdateProfileRequest extends BaseAuthRequest {
     private String job;
     private List<String> skill;
     private String levelJob;
-    private String recruitment;
     private String talentPool;
     private String hrRef;
     private String mailRef;
@@ -74,10 +73,10 @@ public class UpdateProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(job) || job.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.JOB, "Vui lòng nhập vị trí công việc");
         }
-        if (!Strings.isNullOrEmpty(levelJob) && levelJob.length() > 255 ) {
+        if (!Strings.isNullOrEmpty(levelJob) && levelJob.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.LEVEL_JOB, "Vui lòng nhập cấp bậc công việc ít hơn 255 ký tự");
         }
-        if (Strings.isNullOrEmpty(sourceCV)|| sourceCV.length() > 255) {
+        if (Strings.isNullOrEmpty(sourceCV) || sourceCV.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.SOURCE_CV, "Vui lòng nhập nguồn ứng viên");
         }
         if (!Strings.isNullOrEmpty(hrRef) && hrRef.length() > 255) {
@@ -96,9 +95,6 @@ public class UpdateProfileRequest extends BaseAuthRequest {
         }
         if (!Strings.isNullOrEmpty(department) && department.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.DEPARTMENT, "Vui lòng nhập phòng ban ít hơn 255 ký tự");
-        }
-        if (!Strings.isNullOrEmpty(recruitment) && recruitment.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng ít hơn 255 ký tự");
         }
         return null;
     }

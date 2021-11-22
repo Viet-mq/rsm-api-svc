@@ -13,11 +13,15 @@ import lombok.ToString;
 public class UpdateStatusProfileRequest extends BaseAuthRequest {
 
     private String id;
+    private String recruitmentId;
     private String statusCV;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
+        }
+        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập id recruitment");
         }
         if (Strings.isNullOrEmpty(statusCV) || statusCV.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.STATUS_CV, "Vui lòng nhập trạng thái cv");

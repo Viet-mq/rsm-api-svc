@@ -22,4 +22,5 @@ public class RecruitmentEntity {
     private String talentPoolId;
     private String talentPoolName;
     private List<UserEntity> interviewer;
+    private List<RoundEntity> interviewProcess;
 }

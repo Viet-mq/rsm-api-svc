@@ -3,7 +3,7 @@ package com.edso.resume.api.domain.entities;
 import lombok.Data;
 
 @Data
-public class SourceEntity {
+public class RoundEntity {
+    private String id;
     private String name;
-    private Integer count;
 }
