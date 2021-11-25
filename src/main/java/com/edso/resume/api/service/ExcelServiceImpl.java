@@ -67,7 +67,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
             // Create row
             Row row = sheet.createRow(rowIndex);
             // Write data on row
-            writeBook(profile, sheet, row);
+            writeProfile(profile, sheet, row);
             rowIndex++;
         }
 
@@ -193,7 +193,7 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
     }
 
     // Write data
-    private static void writeBook(ProfileExcelEntity profile, Sheet sheet, Row row) {
+    private static void writeProfile(ProfileExcelEntity profile, Sheet sheet, Row row) {
 
         CellStyle cellStyle = createStyleForRow(sheet);
 
@@ -352,8 +352,8 @@ public class ExcelServiceImpl extends BaseService implements ExcelService {
                 }
             }
             return writeExcel(profiles, path);
-        }catch (Throwable e){
-            logger.error("Exception: ",e);
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
             return null;
         }
     }

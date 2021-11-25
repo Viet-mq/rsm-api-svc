@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class StatisticalEntity {
-    private String title;
+public class ReportByDepartmentEntity {
+    private String recruitmentName;
     private List<SourceEntity> sources;
 }

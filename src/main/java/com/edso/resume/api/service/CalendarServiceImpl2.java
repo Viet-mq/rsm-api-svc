@@ -51,16 +51,16 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     @Override
     public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile) {
         GetArrayCalendarResponse<CalendarEntity2> resp = new GetArrayCalendarResponse<>();
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
-        if (idProfileDocument == null) {
-            resp.setResult(ErrorCodeDefs.ID, "Id profile không tồn tại");
-            return resp;
-        }
+//        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
+//        if (idProfileDocument == null) {
+//            resp.setResult(ErrorCodeDefs.ID, "Id profile không tồn tại");
+//            return resp;
+//        }
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
-        Bson sort = Filters.eq(DbKeyConfig.DATE, -1);
+        Bson sort = Filters.eq(DbKeyConfig.DATE, 1);
         Bson cond = buildCondition(c);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, sort, 0, 0);
         List<CalendarEntity2> calendars = new ArrayList<>();

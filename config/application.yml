@@ -80,6 +80,7 @@ excel:
   serverPath: D:\
 #  path: /usr/share/nginx/file-rs/attachment/Profiles.xlsx
   path: D:\Profiles.xlsx
+  pathReport: D:\Report.xlsx
   fileSize: 15728640 #Byte 15MB
 
 note:
