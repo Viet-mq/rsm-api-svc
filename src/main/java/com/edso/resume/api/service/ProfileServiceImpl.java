@@ -59,23 +59,26 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, Integer page, Integer size) {
+    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, Integer page, Integer size) {
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(fullName.toLowerCase())));
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
-            c.add(Filters.regex(DbKeyConfig.TALENT_POOL_ID, Pattern.compile(talentPool)));
+            c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));
         }
         if (!Strings.isNullOrEmpty(job)) {
-            c.add(Filters.regex(DbKeyConfig.JOB_ID, Pattern.compile(job)));
+            c.add(Filters.eq(DbKeyConfig.JOB_ID, job));
         }
         if (!Strings.isNullOrEmpty(levelJob)) {
-            c.add(Filters.regex(DbKeyConfig.LEVEL_JOB_ID, Pattern.compile(levelJob)));
+            c.add(Filters.eq(DbKeyConfig.LEVEL_JOB_ID, levelJob));
         }
         if (!Strings.isNullOrEmpty(department)) {
-            c.add(Filters.regex(DbKeyConfig.DEPARTMENT_ID, Pattern.compile(department)));
+            c.add(Filters.eq(DbKeyConfig.DEPARTMENT_ID, department));
+        }
+        if (!Strings.isNullOrEmpty(department)) {
+            c.add(Filters.eq(DbKeyConfig.RECRUITMENT_ID, recruitment));
         }
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);

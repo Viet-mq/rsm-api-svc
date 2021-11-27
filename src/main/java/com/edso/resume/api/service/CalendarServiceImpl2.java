@@ -49,7 +49,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     }
 
     @Override
-    public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile) {
+    public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile, String key) {
         GetArrayCalendarResponse<CalendarEntity2> resp = new GetArrayCalendarResponse<>();
 //        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
 //        if (idProfileDocument == null) {
@@ -59,6 +59,14 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
+        }
+        if (!Strings.isNullOrEmpty(key) ) {
+            if(key.equals("create")){
+                c.add(Filters.eq(DbKeyConfig.CREATE_BY, info.getUsername()));
+            }
+            if(key.equals("join")){
+                c.add(Filters.eq(DbKeyConfig.JOIN_USERNAME, info.getUsername()));
+            }
         }
         Bson sort = Filters.eq(DbKeyConfig.DATE, 1);
         Bson cond = buildCondition(c);
@@ -163,8 +171,6 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             calendar.append(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer());
             calendar.append(DbKeyConfig.NOTE, request.getNote());
             calendar.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
-//            calendar.append(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWEE, request.getSendEmailToInterviewee());
-//            calendar.append(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWER, request.getSendEmailToInterviewer());
             calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -258,8 +264,6 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                     Updates.set(DbKeyConfig.TYPE, request.getType()),
                     Updates.set(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer()),
                     Updates.set(DbKeyConfig.NOTE, request.getNote()),
-//                    Updates.set(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWEE, request.getSendEmailToInterviewee()),
-//                    Updates.set(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWER, request.getSendEmailToInterviewer()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
@@ -281,6 +285,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                 queue.removeIf(s -> s.getKey().equals(key));
             }
         }
+
     }
 
     @Override

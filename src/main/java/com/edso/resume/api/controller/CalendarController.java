@@ -3,7 +3,6 @@ package com.edso.resume.api.controller;
 import com.edso.resume.api.domain.entities.CalendarEntity2;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest2;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
-import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest2;
 import com.edso.resume.api.service.CalendarService;
 import com.edso.resume.api.service.CalendarService2;
@@ -32,11 +31,12 @@ public class CalendarController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAllCalendar(
             @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "key", required = false) String key,
             @RequestParam(value = "idProfile", required = false) String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllCalendar u: {}, idProfile: {}", headerInfo, idProfile);
-        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, idProfile);
-        logger.info("<=findAllCalendar u: {}, idProfile: {}, resp: {}", headerInfo, idProfile, resp.info());
+        logger.info("=>findAllCalendar u: {}, key: {}, idProfile: {}", headerInfo, key, idProfile);
+        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, idProfile, key);
+        logger.info("<=findAllCalendar u: {}, key: {}, idProfile: {}, resp: {}", headerInfo, key, idProfile, resp.info());
         return resp;
     }
 

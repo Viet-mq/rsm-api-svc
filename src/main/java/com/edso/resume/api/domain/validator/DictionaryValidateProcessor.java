@@ -106,7 +106,7 @@ public class DictionaryValidateProcessor implements Runnable {
                     Bson cond = getCondition();
                     Document doc = db.findOne(getCollectionName(), cond);
                     if (doc == null) {
-                        if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
+                        if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER) || type.equals(ThreadConfig.RECRUITMENT_NAME)) {
                             result.setResult(true);
                             return;
                         }
@@ -118,8 +118,7 @@ public class DictionaryValidateProcessor implements Runnable {
                     break;
                 }
             }
-        } catch (
-                Throwable ex) {
+        } catch (Throwable ex) {
             logger.error("Ex: ", ex);
             result.setResult(false);
             result.setName("Hệ thống đang bận");
@@ -190,6 +189,17 @@ public class DictionaryValidateProcessor implements Runnable {
                     break;
                 }
             }
+            case ThreadConfig.RECRUITMENT_NAME: {
+                if (!AppUtils.parseString(doc.get(DbKeyConfig.ID)).equals(recruitmentId)) {
+                    result.setResult(false);
+                    result.setName("Đã tồn tại tên tin tuyển dụng này!");
+                    break;
+                } else {
+                    result.setResult(true);
+                    break;
+                }
+
+            }
             default: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.NAME)));
@@ -210,6 +220,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.PROFILE_PHONE_NUMBER:
             case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
                 return Filters.eq(DbKeyConfig.PHONE_NUMBER, this.id);
+            }
+            case ThreadConfig.RECRUITMENT_NAME: {
+                return Filters.eq(DbKeyConfig.TITLE, this.id);
             }
             default: {
                 return Filters.eq(DbKeyConfig.ID, this.id);
@@ -287,9 +300,6 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.PROFILE: {
                 return CollectionNameDefs.COLL_PROFILE;
             }
-            case ThreadConfig.STATUS_CV: {
-                return CollectionNameDefs.COLL_RECRUITMENT;
-            }
             case ThreadConfig.DEPARTMENT: {
                 return CollectionNameDefs.COLL_DEPARTMENT_COMPANY;
             }
@@ -309,6 +319,8 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.TALENT_POOL: {
                 return CollectionNameDefs.COLL_TALENT_POOL;
             }
+            case ThreadConfig.STATUS_CV:
+            case ThreadConfig.RECRUITMENT_NAME:
             case ThreadConfig.RECRUITMENT: {
                 return CollectionNameDefs.COLL_RECRUITMENT;
             }

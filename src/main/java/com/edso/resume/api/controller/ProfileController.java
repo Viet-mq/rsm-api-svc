@@ -31,12 +31,13 @@ public class ProfileController extends BaseController {
             @RequestParam(value = "job", required = false) String job,
             @RequestParam(value = "levelJob", required = false) String levelJob,
             @RequestParam(value = "department", required = false) String department,
+            @RequestParam(value = "recruitment", required = false) String recruitment,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, page, size);
-        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, department: {}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, page, size);
+        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, department: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, page, size, resp.info());
         return resp;
     }
 

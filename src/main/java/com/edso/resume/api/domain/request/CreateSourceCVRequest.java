@@ -22,7 +22,7 @@ public class CreateSourceCVRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(email)) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập địa chỉ email cung cấp hồ sơ ứng viên");
         }
-        if (email.length() >255 || !validateEmail(email)) {
+        if (email.length() > 255 || !validateEmail(email)) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
         }
         return null;
