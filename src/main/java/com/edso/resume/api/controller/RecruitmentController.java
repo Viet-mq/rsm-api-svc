@@ -1,7 +1,10 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.entities.RecruitmentEntity;
-import com.edso.resume.api.domain.request.*;
+import com.edso.resume.api.domain.request.CreateRecruitmentRequest;
+import com.edso.resume.api.domain.request.DeleteRecruitmentRequest;
+import com.edso.resume.api.domain.request.UpdateRecruitmentRequest;
+import com.edso.resume.api.domain.response.GetRecruitmentResponse;
 import com.edso.resume.api.service.RecruitmentService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -13,7 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/recruitment")
-public class RecruitmentController extends BaseController{
+public class RecruitmentController extends BaseController {
     private final RecruitmentService recruitmentService;
 
     public RecruitmentController(RecruitmentService recruitmentService) {
@@ -29,6 +32,17 @@ public class RecruitmentController extends BaseController{
         logger.info("=>findAllRecruitment u: {}, page: {}, size: {}", headerInfo, page, size);
         GetArrayResponse<RecruitmentEntity> resp = recruitmentService.findAll(headerInfo, page, size);
         logger.info("<=findAllRecruitment u: {}, page: {}, size: {}, resp: {}", headerInfo, page, size, resp.info());
+        return resp;
+    }
+
+    @GetMapping("/detail")
+    public BaseResponse findOneRecruitment(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "recruitmentId") String recruitmentId) {
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>findOneRecruitment u: {}, recruitmentId: {}", headerInfo, recruitmentId);
+        GetRecruitmentResponse<RecruitmentEntity> resp = recruitmentService.findOne(headerInfo, recruitmentId);
+        logger.info("<=findOneRecruitment u: {}, recruitmentId: {}, resp: {}", headerInfo, recruitmentId, resp.info());
         return resp;
     }
 

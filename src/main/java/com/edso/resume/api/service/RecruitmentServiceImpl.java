@@ -1,7 +1,10 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.*;
+import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
+import com.edso.resume.api.domain.entities.RecruitmentEntity;
+import com.edso.resume.api.domain.entities.RoundEntity;
+import com.edso.resume.api.domain.entities.UserEntity;
 import com.edso.resume.api.domain.request.CreateRecruitmentRequest;
 import com.edso.resume.api.domain.request.DeleteRecruitmentRequest;
 import com.edso.resume.api.domain.request.UpdateRecruitmentRequest;
@@ -9,12 +12,14 @@ import com.edso.resume.api.domain.response.GetRecruitmentResponse;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryValidator;
-import com.edso.resume.lib.common.*;
+import com.edso.resume.lib.common.AppUtils;
+import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.common.ThreadConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
-import com.edso.resume.lib.response.GetResponse;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -27,7 +32,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.regex.Pattern;
 
 @Service
 public class RecruitmentServiceImpl extends BaseService implements RecruitmentService, IDictionaryValidator {
@@ -46,7 +50,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         List<RecruitmentEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
-                RecruitmentEntity sourceCV = RecruitmentEntity.builder()
+                RecruitmentEntity recruitment = RecruitmentEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .title(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)))
                         .jobId(AppUtils.parseString(doc.get(DbKeyConfig.JOB_ID)))
@@ -63,7 +67,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .interviewer((List<UserEntity>) doc.get(DbKeyConfig.INTERVIEWER))
                         .interviewProcess((List<RoundEntity>) doc.get(DbKeyConfig.INTERVIEW_PROCESS))
                         .build();
-                rows.add(sourceCV);
+                rows.add(recruitment);
             }
         }
         GetArrayResponse<RecruitmentEntity> resp = new GetArrayResponse<>();
@@ -75,60 +79,36 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
 
     @Override
     public GetRecruitmentResponse<RecruitmentEntity> findOne(HeaderInfo info, String recruitmentId) {
-        GetResponse<ProfileDetailEntity> response = new GetResponse<>();
-
+        GetRecruitmentResponse<RecruitmentEntity> response = new GetRecruitmentResponse<>();
+        Bson cond = Filters.eq(DbKeyConfig.ID, recruitmentId);
         //Validate
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
-        if (idProfileDocument == null) {
-            response.setFailed("Id profile này không tồn tại");
+        Document one = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, cond);
+
+        if (one == null) {
+            response.setFailed("Id recruitment này không tồn tại");
             return response;
         }
 
-        Bson cond = Filters.regex(DbKeyConfig.ID, Pattern.compile(idProfile));
-        Document one = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-        ProfileDetailEntity profile = ProfileDetailEntity.builder()
+        RecruitmentEntity recruitment = RecruitmentEntity.builder()
                 .id(AppUtils.parseString(one.get(DbKeyConfig.ID)))
-                .fullName(AppUtils.parseString(one.get(DbKeyConfig.FULL_NAME)))
-                .dateOfBirth(AppUtils.parseLong(one.get(DbKeyConfig.DATE_OF_BIRTH)))
-                .hometown(AppUtils.parseString(one.get(DbKeyConfig.HOMETOWN)))
-                .schoolId(AppUtils.parseString(one.get(DbKeyConfig.SCHOOL_ID)))
-                .schoolName(AppUtils.parseString(one.get(DbKeyConfig.SCHOOL_NAME)))
-                .phoneNumber(AppUtils.parseString(one.get(DbKeyConfig.PHONE_NUMBER)))
-                .email(AppUtils.parseString(one.get(DbKeyConfig.EMAIL)))
+                .title(AppUtils.parseString(one.get(DbKeyConfig.TITLE)))
                 .jobId(AppUtils.parseString(one.get(DbKeyConfig.JOB_ID)))
                 .jobName(AppUtils.parseString(one.get(DbKeyConfig.JOB_NAME)))
-                .levelJobId(AppUtils.parseString(one.get(DbKeyConfig.LEVEL_JOB_ID)))
-                .levelJobName(AppUtils.parseString(one.get(DbKeyConfig.LEVEL_JOB_NAME)))
-                .sourceCVId(AppUtils.parseString(one.get(DbKeyConfig.SOURCE_CV_ID)))
-                .sourceCVName(AppUtils.parseString(one.get(DbKeyConfig.SOURCE_CV_NAME)))
-                .hrRef(AppUtils.parseString(one.get(DbKeyConfig.HR_REF)))
-                .dateOfApply(AppUtils.parseLong(one.get(DbKeyConfig.DATE_OF_APPLY)))
-                .statusCVId(AppUtils.parseString(one.get(DbKeyConfig.STATUS_CV_ID)))
-                .statusCVName(AppUtils.parseString(one.get(DbKeyConfig.STATUS_CV_NAME)))
-                .lastApply(AppUtils.parseLong(one.get(DbKeyConfig.LAST_APPLY)))
-                .gender(AppUtils.parseString(one.get(DbKeyConfig.GENDER)))
-                .dateOfCreate(AppUtils.parseLong(one.get(DbKeyConfig.CREATE_AT)))
-                .dateOfUpdate(AppUtils.parseLong(one.get(DbKeyConfig.UPDATE_AT)))
-                .evaluation(AppUtils.parseString(one.get(DbKeyConfig.EVALUATION)))
+                .address(AppUtils.parseString(one.get(DbKeyConfig.ADDRESS)))
+                .typeOfJob(AppUtils.parseString(one.get(DbKeyConfig.TYPE_OF_JOB)))
+                .quantity(AppUtils.parseString(one.get(DbKeyConfig.QUANTITY)))
+                .detailOfSalary(AppUtils.parseString(one.get(DbKeyConfig.DETAIL_OF_SALARY)))
+                .jobDescription(AppUtils.parseString(one.get(DbKeyConfig.JOB_DESCRIPTION)))
+                .jobName(AppUtils.parseString(one.get(DbKeyConfig.JOB_NAME)))
+                .requirementOfJob(AppUtils.parseString(one.get(DbKeyConfig.REQUIREMENT_OF_JOB)))
+                .deadLine(AppUtils.parseLong(one.get(DbKeyConfig.DEAD_LINE)))
                 .talentPoolId(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_ID)))
                 .talentPoolName(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_NAME)))
-                .image(AppUtils.parseString(one.get(DbKeyConfig.URL_IMAGE)))
-                .urlCV(AppUtils.parseString(one.get(DbKeyConfig.URL_CV)))
-                .departmentId(AppUtils.parseString(one.get(DbKeyConfig.DEPARTMENT_ID)))
-                .departmentName(AppUtils.parseString(one.get(DbKeyConfig.DEPARTMENT_NAME)))
-                .levelSchool(AppUtils.parseString(one.get(DbKeyConfig.LEVEL_SCHOOL)))
-                .recruitmentId(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_ID)))
-                .recruitmentName(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_NAME)))
-                .mailRef(AppUtils.parseString(one.get(DbKeyConfig.MAIL_REF)))
-                .skill((List<SkillEntity>) one.get(DbKeyConfig.SKILL))
-                .avatarColor(AppUtils.parseString(one.get(DbKeyConfig.AVATAR_COLOR)))
+                .interviewer((List<UserEntity>) one.get(DbKeyConfig.INTERVIEWER))
+                .interviewProcess((List<RoundEntity>) one.get(DbKeyConfig.INTERVIEW_PROCESS))
                 .build();
 
-        response.setSuccess(profile);
-
-        //Insert history to DB
-        historyService.createHistory(idProfile, TypeConfig.SELECT, "Xem chi tiết profile", info.getUsername());
-
+        response.setSuccess(recruitment);
         return response;
     }
 

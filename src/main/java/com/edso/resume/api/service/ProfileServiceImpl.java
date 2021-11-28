@@ -139,16 +139,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     public GetResponse<ProfileDetailEntity> findOne(HeaderInfo info, String idProfile) {
 
         GetResponse<ProfileDetailEntity> response = new GetResponse<>();
-
+        Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
         //Validate
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
-        if (idProfileDocument == null) {
+        Document one = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+        if (one == null) {
             response.setFailed("Id profile này không tồn tại");
             return response;
         }
 
-        Bson cond = Filters.regex(DbKeyConfig.ID, Pattern.compile(idProfile));
-        Document one = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
         ProfileDetailEntity profile = ProfileDetailEntity.builder()
                 .id(AppUtils.parseString(one.get(DbKeyConfig.ID)))
                 .fullName(AppUtils.parseString(one.get(DbKeyConfig.FULL_NAME)))
