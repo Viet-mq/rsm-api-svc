@@ -61,6 +61,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .detailOfSalary(AppUtils.parseString(doc.get(DbKeyConfig.DETAIL_OF_SALARY)))
                         .jobDescription(AppUtils.parseString(doc.get(DbKeyConfig.JOB_DESCRIPTION)))
                         .requirementOfJob(AppUtils.parseString(doc.get(DbKeyConfig.REQUIREMENT_OF_JOB)))
+                        .interest(AppUtils.parseString(doc.get(DbKeyConfig.INTEREST)))
                         .deadLine(AppUtils.parseLong(doc.get(DbKeyConfig.DEAD_LINE)))
                         .talentPoolId(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_ID)))
                         .talentPoolName(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_NAME)))
@@ -101,6 +102,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 .jobDescription(AppUtils.parseString(one.get(DbKeyConfig.JOB_DESCRIPTION)))
                 .jobName(AppUtils.parseString(one.get(DbKeyConfig.JOB_NAME)))
                 .requirementOfJob(AppUtils.parseString(one.get(DbKeyConfig.REQUIREMENT_OF_JOB)))
+                .interest(AppUtils.parseString(one.get(DbKeyConfig.INTEREST)))
                 .deadLine(AppUtils.parseLong(one.get(DbKeyConfig.DEAD_LINE)))
                 .talentPoolId(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_ID)))
                 .talentPoolName(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_NAME)))
@@ -184,6 +186,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.DETAIL_OF_SALARY, request.getDetailOfSalary());
             recruitment.append(DbKeyConfig.JOB_DESCRIPTION, request.getJobDescription());
             recruitment.append(DbKeyConfig.REQUIREMENT_OF_JOB, request.getRequirementOfJob());
+            recruitment.append(DbKeyConfig.INTEREST, request.getInterest());
             recruitment.append(DbKeyConfig.DEAD_LINE, request.getDeadLine());
             recruitment.append(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool());
             recruitment.append(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName());
@@ -286,6 +289,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.DETAIL_OF_SALARY, request.getDetailOfSalary()),
                     Updates.set(DbKeyConfig.JOB_DESCRIPTION, request.getJobDescription()),
                     Updates.set(DbKeyConfig.REQUIREMENT_OF_JOB, request.getRequirementOfJob()),
+                    Updates.set(DbKeyConfig.INTEREST, request.getInterest()),
                     Updates.set(DbKeyConfig.DEAD_LINE, request.getDeadLine()),
                     Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool()),
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),

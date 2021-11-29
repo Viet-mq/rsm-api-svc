@@ -24,6 +24,7 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
     private Long to;
     private String jobDescription;
     private String requirementOfJob;
+    private String interest;
     private Long deadLine;
     private String talentPool;
     private List<String> interviewer;
@@ -62,7 +63,10 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(requirementOfJob) || requirementOfJob.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.REQUIREMENT_OF_JOB, "Vui lòng nhập yêu cầu công việc");
         }
-        if (deadLine == null || deadLine < 0) {
+        if (!Strings.isNullOrEmpty(interest) && interest.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.INTEREST, "Vui lòng nhập quyền lợi");
+        }
+        if (deadLine == null || deadLine <= 0) {
             return new BaseResponse(ErrorCodeDefs.DEAD_LINE, "Vui lòng nhập hạn nộp hồ sơ");
         }
         if (Strings.isNullOrEmpty(talentPool) || talentPool.length() > 255) {

@@ -1,8 +1,11 @@
 package com.edso.resume.api.controller;
 
+import com.edso.resume.api.domain.entities.ReportByDepartmentEntity;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.api.service.ReportByDepartmentService;
 import com.edso.resume.lib.entities.HeaderInfo;
+import com.edso.resume.lib.response.BaseResponse;
+import com.edso.resume.lib.response.GetArrayStatisticalReponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -17,13 +20,24 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/report")
-public class ReportExporterController extends BaseController{
-
+@RequestMapping("/reportbydepartment")
+public class ReportByDepartmentController extends BaseController {
     private final ReportByDepartmentService reportByDepartmentService;
 
-    public ReportExporterController(ReportByDepartmentService reportByDepartmentService) {
+    public ReportByDepartmentController(ReportByDepartmentService reportByDepartmentService) {
         this.reportByDepartmentService = reportByDepartmentService;
+    }
+
+    @GetMapping("/list")
+    public BaseResponse getReportByDepartmentService(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "from", required = false) Long from,
+            @RequestParam(value = "to", required = false) Long to) {
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>getReportByDepartmentService u: {}", headerInfo);
+        GetArrayStatisticalReponse<ReportByDepartmentEntity> resp = reportByDepartmentService.findAll(from, to);
+        logger.info("<=getReportByDepartmentService u: {}, resp: {}", headerInfo, resp.info());
+        return resp;
     }
 
     @GetMapping("/export")
@@ -37,7 +51,7 @@ public class ReportExporterController extends BaseController{
         ByteArrayResource resource = null;
         try {
             resource = new ByteArrayResource(Files.readAllBytes(path));
-        }catch (Throwable e){
+        } catch (Throwable e) {
             logger.error("Exception: ", e);
         }
         HttpHeaders httpHeaders = new HttpHeaders();

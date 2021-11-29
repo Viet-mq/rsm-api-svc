@@ -18,6 +18,7 @@ public class RecruitmentEntity {
     private String detailOfSalary;
     private String jobDescription;
     private String requirementOfJob;
+    private String interest;
     private Long deadLine;
     private String talentPoolId;
     private String talentPoolName;

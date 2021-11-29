@@ -20,7 +20,7 @@ import java.util.Set;
 @Service
 public class PositionResumeExporter extends BaseExporter {
 
-    public ExportResponse export(List<ReportByDepartmentEntity> report, Set<String> headers, String excelFilePath, Long from, Long to) {
+    public ExportResponse exportReportByDepartment(List<ReportByDepartmentEntity> report, Set<String> headers, String excelFilePath, Long from, Long to) {
         ExportResponse response = new ExportResponse();
         try {
             // Create Workbook
