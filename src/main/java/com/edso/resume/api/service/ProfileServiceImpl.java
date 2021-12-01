@@ -59,7 +59,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, Integer page, Integer size) {
+    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, Integer page, Integer size) {
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
@@ -77,15 +77,22 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         if (!Strings.isNullOrEmpty(department)) {
             c.add(Filters.eq(DbKeyConfig.DEPARTMENT_ID, department));
         }
-        if (!Strings.isNullOrEmpty(department)) {
+        if (!Strings.isNullOrEmpty(recruitment)) {
             c.add(Filters.eq(DbKeyConfig.RECRUITMENT_ID, recruitment));
+        }
+        if (!Strings.isNullOrEmpty(calendar)) {
+            if (calendar.equals("set")) {
+                c.add(Filters.eq(DbKeyConfig.CALENDAR, 1));
+            }
+            if (calendar.equals("notset")) {
+                c.add(Filters.ne(DbKeyConfig.CALENDAR, 1));
+            }
         }
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<ProfileEntity> rows = new ArrayList<>();
-
         if (lst != null) {
             for (Document doc : lst) {
                 ProfileEntity profile = ProfileEntity.builder()

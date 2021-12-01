@@ -9,7 +9,10 @@ import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryValidator;
 import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.response.BaseResponse;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -89,6 +92,10 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                 }
 
                 DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
+                Bson update = Updates.combine(
+                        Updates.set(DbKeyConfig.CALENDAR, 1)
+                );
+                db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), update, true);
 
                 String id = UUID.randomUUID().toString();
                 Document calendar = new Document();

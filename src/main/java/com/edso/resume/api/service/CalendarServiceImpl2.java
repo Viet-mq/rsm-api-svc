@@ -60,11 +60,11 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
-        if (!Strings.isNullOrEmpty(key) ) {
-            if(key.equals("create")){
+        if (!Strings.isNullOrEmpty(key)) {
+            if (key.equals("create")) {
                 c.add(Filters.eq(DbKeyConfig.CREATE_BY, info.getUsername()));
             }
-            if(key.equals("join")){
+            if (key.equals("join")) {
                 c.add(Filters.eq(DbKeyConfig.JOIN_USERNAME, info.getUsername()));
             }
         }
@@ -154,6 +154,10 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             }
 
             DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.CALENDAR, 1)
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), update, true);
 
             String id = UUID.randomUUID().toString();
             Document calendar = new Document();
@@ -299,6 +303,11 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                 response.setFailed("Không tồn tại id calendar này");
                 return response;
             }
+
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.CALENDAR, null)
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idDocument.get(DbKeyConfig.ID_PROFILE)), update, true);
 
             db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 

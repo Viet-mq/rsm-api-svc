@@ -1,7 +1,6 @@
 package com.edso.resume.api.exporter;
 
-import com.edso.resume.api.domain.entities.ReportRecruitmentEfficiencyEntity;
-import com.edso.resume.api.domain.entities.StatusEntity;
+import com.edso.resume.api.domain.entities.ReportRecruitmentResultEntity;
 import com.edso.resume.api.domain.response.ExportResponse;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -15,12 +14,10 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @Component
-public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
-
-    public ExportResponse exportReportRecruitmentEfficiency(List<ReportRecruitmentEfficiencyEntity> report, Set<String> headers, String excelFilePath, Long from, Long to) {
+public class ReportRecruitmentResultExporter extends BaseExporter {
+    public ExportResponse exportReportRecruitmentActivities(List<ReportRecruitmentResultEntity> report, String excelFilePath, Long from, Long to) {
         ExportResponse response = new ExportResponse();
         try {
             // Create Workbook
@@ -29,18 +26,18 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
             // Create sheet
             Sheet sheet = workbook.createSheet("Report"); // Create sheet with sheet name
 
-            writeBanner(from, to, sheet, headers.size() + 2);
+            writeBanner(from, to, sheet);
 
             // Write header
-            writeHeader(headers, sheet);
+            writeHeader(sheet);
 
             // Write data
             int rowIndex = 5;
-            for (ReportRecruitmentEfficiencyEntity reportRecruitmentEfficiencyEntity : report) {
+            for (ReportRecruitmentResultEntity reportRecruitmentResultEntity : report) {
                 // Create row
                 Row row = sheet.createRow(rowIndex);
                 // Write data on row
-                writeReport(reportRecruitmentEfficiencyEntity, sheet, row, rowIndex - 4);
+                writeReport(reportRecruitmentResultEntity, sheet, row, rowIndex - 4);
                 rowIndex++;
             }
 
@@ -51,8 +48,7 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
             return response;
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);
-            response.setFailed("Hệ thống bận");
-            return response;
+            return null;
         }
     }
 
@@ -68,7 +64,7 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
     }
 
     // Write header with format
-    private static void writeHeader(Set<String> headers, Sheet sheet) {
+    private static void writeHeader(Sheet sheet) {
         // create CellStyle
         CellStyle cellStyle = createStyleForHeader(sheet);
 
@@ -82,28 +78,32 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
 
         cell = row.createCell(1);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue("Tin tuyển dụng");
+        cell.setCellValue("Vị trí tuyển dụng");
 
         cell = row.createCell(2);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue("Người đăng");
+        cell.setCellValue("Cần tuyển");
 
-        int i = 3;
-        for (String header : headers) {
-            cell = row.createCell(i);
-            cell.setCellStyle(cellStyle);
-            cell.setCellValue(header);
-            i++;
-        }
+        cell = row.createCell(3);
+        cell.setCellStyle(cellStyle);
+        cell.setCellValue("Đã tuyển");
+
+        cell = row.createCell(4);
+        cell.setCellStyle(cellStyle);
+        cell.setCellValue("Tỷ lệ hoàn thành");
+
     }
 
 
     // Write data
-    private static void writeReport(ReportRecruitmentEfficiencyEntity report, Sheet sheet, Row row, int stt) {
+    private static void writeReport(ReportRecruitmentResultEntity report, Sheet sheet, Row row, int stt) {
         CellStyle cellStyle = createStyleForRow(sheet);
 
         CellStyle cellStyleSTT = createStyleForRow(sheet);
         cellStyleSTT.setAlignment(HorizontalAlignment.CENTER);
+
+        CellStyle cellStylePercent = createStyleForRow(sheet);
+        cellStylePercent.setAlignment(HorizontalAlignment.RIGHT);
 
         Cell cell = row.createCell(0);
         cell.setCellStyle(cellStyleSTT);
@@ -115,29 +115,28 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
 
         cell = row.createCell(2);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue(report.getCreateBy());
+        cell.setCellValue(report.getNeedToRecruit());
 
-        int i = 3;
-        List<StatusEntity> list = report.getStatus();
-        for (StatusEntity statusEntity : list) {
-            cell = row.createCell(i);
-            cell.setCellStyle(cellStyle);
-            cell.setCellValue(statusEntity.getCount());
-            i++;
-        }
+        cell = row.createCell(3);
+        cell.setCellStyle(cellStyle);
+        cell.setCellValue(report.getRecruited());
+
+        cell = row.createCell(4);
+        cell.setCellStyle(cellStylePercent);
+        cell.setCellValue(report.getPercent());
 
     }
 
-    private static void writeBanner(Long from, Long to, Sheet sheet, int cellIndex) {
-        CellStyle cellStyle = createStyleForBanner(sheet, cellIndex);
-        CellStyle cellStyle2 = createStyleForBanner2(sheet, cellIndex);
+    private static void writeBanner(Long from, Long to, Sheet sheet) {
+        CellStyle cellStyle = createStyleForBanner(sheet);
+        CellStyle cellStyle2 = createStyleForBanner2(sheet);
 
         Row row1 = sheet.createRow(1);
         Row row2 = sheet.createRow(2);
 
         Cell cell = row1.createCell(0);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue("HIỆU QUẢ TUYỂN DỤNG");
+        cell.setCellValue("THỐNG KÊ KẾT QUẢ TUYỂN DỤNG THEO TIN TUYỂN DỤNG");
 
         cell = row2.createCell(0);
         cell.setCellStyle(cellStyle2);
@@ -173,14 +172,14 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
         return cellStyle;
     }
 
-    private static CellStyle createStyleForBanner(Sheet sheet, int cell) {
+    private static CellStyle createStyleForBanner(Sheet sheet) {
         // Create font
         Font font = sheet.getWorkbook().createFont();
         font.setFontName("Times New Roman");
         font.setBold(true);
         font.setFontHeightInPoints((short) 16); // font size
 
-        CellRangeAddress ca = new CellRangeAddress(1, 1, 0, cell);
+        CellRangeAddress ca = new CellRangeAddress(1, 1, 0, 4);
         sheet.addMergedRegion(ca);
 
         // Create CellStyle
@@ -191,13 +190,13 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
         return cellStyle;
     }
 
-    private static CellStyle createStyleForBanner2(Sheet sheet, int cell) {
+    private static CellStyle createStyleForBanner2(Sheet sheet) {
         // Create font
         Font font = sheet.getWorkbook().createFont();
         font.setFontName("Times New Roman");
         font.setFontHeightInPoints((short) 12); // font size
 
-        CellRangeAddress ca = new CellRangeAddress(2, 2, 0, cell);
+        CellRangeAddress ca = new CellRangeAddress(2, 2, 0, 4);
         sheet.addMergedRegion(ca);
 
         // Create CellStyle

@@ -80,7 +80,10 @@ excel:
   serverPath: D:\
 #  path: /usr/share/nginx/file-rs/attachment/Profiles.xlsx
   path: D:\Profiles.xlsx
-  pathReport: D:\Report.xlsx
+  pathReportByDepartment: D:\ReportByDepartment.xlsx
+  pathReportRecruitmentEfficiency: D:\ReportRecruitmentEfficiency.xlsx
+  pathReportRecruitmentActivities: D:\ReportRecruitmentActivities.xlsx
+  pathReportRecruitmentResult: D:\ReportRecruitmentResult.xlsx
   fileSize: 15728640 #Byte 15MB
 
 note:
@@ -94,3 +97,5 @@ avatar:
 #  serverpath: /usr/share/nginx/file-rs/avatar/
   serverPath: D:\
   fileSize: 15728640 #Byte 15MB
+id:
+  pass: 'cc281050-00d8-486c-af68-b10cd83f937c'

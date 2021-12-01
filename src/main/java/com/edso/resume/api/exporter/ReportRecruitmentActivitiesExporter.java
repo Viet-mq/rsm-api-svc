@@ -1,6 +1,6 @@
 package com.edso.resume.api.exporter;
 
-import com.edso.resume.api.domain.entities.ReportRecruitmentEfficiencyEntity;
+import com.edso.resume.api.domain.entities.ReportRecruitmentActivitiesEntity;
 import com.edso.resume.api.domain.entities.StatusEntity;
 import com.edso.resume.api.domain.response.ExportResponse;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -18,9 +18,8 @@ import java.util.List;
 import java.util.Set;
 
 @Component
-public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
-
-    public ExportResponse exportReportRecruitmentEfficiency(List<ReportRecruitmentEfficiencyEntity> report, Set<String> headers, String excelFilePath, Long from, Long to) {
+public class ReportRecruitmentActivitiesExporter extends BaseExporter {
+    public ExportResponse exportReportRecruitmentActivities(List<ReportRecruitmentActivitiesEntity> report, Set<String> headers, String excelFilePath, Long from, Long to) {
         ExportResponse response = new ExportResponse();
         try {
             // Create Workbook
@@ -29,18 +28,18 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
             // Create sheet
             Sheet sheet = workbook.createSheet("Report"); // Create sheet with sheet name
 
-            writeBanner(from, to, sheet, headers.size() + 2);
+            writeBanner(from, to, sheet, headers.size() + 4);
 
             // Write header
             writeHeader(headers, sheet);
 
             // Write data
             int rowIndex = 5;
-            for (ReportRecruitmentEfficiencyEntity reportRecruitmentEfficiencyEntity : report) {
+            for (ReportRecruitmentActivitiesEntity reportRecruitmentActivitiesEntity : report) {
                 // Create row
                 Row row = sheet.createRow(rowIndex);
                 // Write data on row
-                writeReport(reportRecruitmentEfficiencyEntity, sheet, row, rowIndex - 4);
+                writeReport(reportRecruitmentActivitiesEntity, sheet, row, rowIndex - 4);
                 rowIndex++;
             }
 
@@ -51,8 +50,7 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
             return response;
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);
-            response.setFailed("Hệ thống bận");
-            return response;
+            return null;
         }
     }
 
@@ -82,13 +80,21 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
 
         cell = row.createCell(1);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue("Tin tuyển dụng");
+        cell.setCellValue("Thành viên");
 
         cell = row.createCell(2);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue("Người đăng");
+        cell.setCellValue("Username");
 
-        int i = 3;
+        cell = row.createCell(3);
+        cell.setCellStyle(cellStyle);
+        cell.setCellValue("Tin đã tạo");
+
+        cell = row.createCell(4);
+        cell.setCellStyle(cellStyle);
+        cell.setCellValue("Đánh giá");
+
+        int i = 5;
         for (String header : headers) {
             cell = row.createCell(i);
             cell.setCellStyle(cellStyle);
@@ -99,7 +105,7 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
 
 
     // Write data
-    private static void writeReport(ReportRecruitmentEfficiencyEntity report, Sheet sheet, Row row, int stt) {
+    private static void writeReport(ReportRecruitmentActivitiesEntity report, Sheet sheet, Row row, int stt) {
         CellStyle cellStyle = createStyleForRow(sheet);
 
         CellStyle cellStyleSTT = createStyleForRow(sheet);
@@ -111,13 +117,21 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
 
         cell = row.createCell(1);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue(report.getRecruitmentName());
+        cell.setCellValue(report.getFullName());
 
         cell = row.createCell(2);
         cell.setCellStyle(cellStyle);
         cell.setCellValue(report.getCreateBy());
 
-        int i = 3;
+        cell = row.createCell(3);
+        cell.setCellStyle(cellStyle);
+        cell.setCellValue(report.getRecruitmentTotal());
+
+        cell = row.createCell(4);
+        cell.setCellStyle(cellStyle);
+        cell.setCellValue(report.getNoteTotal());
+
+        int i = 5;
         List<StatusEntity> list = report.getStatus();
         for (StatusEntity statusEntity : list) {
             cell = row.createCell(i);
@@ -137,7 +151,7 @@ public class ReportRecruitmentEfficiencyExporter extends BaseExporter {
 
         Cell cell = row1.createCell(0);
         cell.setCellStyle(cellStyle);
-        cell.setCellValue("HIỆU QUẢ TUYỂN DỤNG");
+        cell.setCellValue("TỔNG HỢP HOẠT ĐỘNG TUYỂN DỤNG");
 
         cell = row2.createCell(0);
         cell.setCellStyle(cellStyle2);

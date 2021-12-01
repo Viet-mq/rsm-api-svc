@@ -12,6 +12,7 @@ import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.response.BaseResponse;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,10 +42,10 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
         this.historyService = historyService;
     }
 
-    private void publishActionToRabbitMQ(String type, Object profile) {
-        EventEntity event = new EventEntity(type, profile);
+    private void publishActionToRabbitMQ(Object profile) {
+        EventEntity event = new EventEntity(RabbitMQConfig.UPDATE_RECRUITMENT, profile);
         rabbitTemplate.convertAndSend(exchange, routingkey, event);
-        logger.info("=>publishActionToRabbitMQ type: {}, profile: {}", type, profile);
+        logger.info("=>publishActionToRabbitMQ type: {}, profile: {}", RabbitMQConfig.UPDATE_RECRUITMENT, profile);
     }
 
     @Override
@@ -95,6 +96,7 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
             }
 
             DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
+            Document document = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, dictionaryNames.getCreateRecruitmentBy()));
 
             Bson update = Updates.combine(
                     Updates.set(DbKeyConfig.RECRUITMENT_ID, request.getRecruitmentId()),
@@ -102,6 +104,8 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
                     Updates.set(DbKeyConfig.RECRUITMENT_TIME, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatusCVId()),
                     Updates.set(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName()),
+                    Updates.set(DbKeyConfig.CREATE_RECRUITMENT_BY, dictionaryNames.getCreateRecruitmentBy()),
+                    Updates.set(DbKeyConfig.FULL_NAME_CREATOR, AppUtils.parseString(document.get(DbKeyConfig.FULL_NAME))),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
@@ -117,7 +121,7 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
             profileRabbitMQ.setStatusCVId(request.getStatusCVId());
             profileRabbitMQ.setStatusCVName(dictionaryNames.getStatusCVName());
 
-            publishActionToRabbitMQ(RabbitMQConfig.UPDATE_RECRUITMENT, profileRabbitMQ);
+            publishActionToRabbitMQ(profileRabbitMQ);
 
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);
@@ -143,6 +147,7 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
                 }
                 case ThreadConfig.RECRUITMENT: {
                     dictionaryNames.setRecruitmentName((String) r.getResult().getName());
+                    dictionaryNames.setCreateRecruitmentBy(r.getResult().getFullName());
                     break;
                 }
                 case ThreadConfig.STATUS_CV: {

@@ -7,6 +7,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.FileOutputStream;
@@ -17,7 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-@Service
+@Component
 public class PositionResumeExporter extends BaseExporter {
 
     public ExportResponse exportReportByDepartment(List<ReportByDepartmentEntity> report, Set<String> headers, String excelFilePath, Long from, Long to) {
@@ -53,8 +54,7 @@ public class PositionResumeExporter extends BaseExporter {
             return response;
         }catch (Throwable ex){
             logger.error("Exception: ", ex);
-            response.setFailed("Hệ thống bận");
-            return response;
+            return null;
         }
     }
 
@@ -221,10 +221,10 @@ public class PositionResumeExporter extends BaseExporter {
         cellStyle.setAlignment(HorizontalAlignment.CENTER);
         cellStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        cellStyle.setBorderBottom(BorderStyle.MEDIUM);
-        cellStyle.setBorderRight(BorderStyle.MEDIUM);
-        cellStyle.setBorderTop(BorderStyle.MEDIUM);
-        cellStyle.setBorderLeft(BorderStyle.MEDIUM);
+        cellStyle.setBorderBottom(BorderStyle.THIN);
+        cellStyle.setBorderRight(BorderStyle.THIN);
+        cellStyle.setBorderTop(BorderStyle.THIN);
+        cellStyle.setBorderLeft(BorderStyle.THIN);
         cellStyle.setFont(font);
         return cellStyle;
     }
@@ -257,10 +257,10 @@ public class PositionResumeExporter extends BaseExporter {
         // Create CellStyle
         CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
         cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-        cellStyle.setBorderBottom(BorderStyle.MEDIUM);
-        cellStyle.setBorderRight(BorderStyle.MEDIUM);
-        cellStyle.setBorderTop(BorderStyle.MEDIUM);
-        cellStyle.setBorderLeft(BorderStyle.MEDIUM);
+        cellStyle.setBorderBottom(BorderStyle.THIN);
+        cellStyle.setBorderRight(BorderStyle.THIN);
+        cellStyle.setBorderTop(BorderStyle.THIN);
+        cellStyle.setBorderLeft(BorderStyle.THIN);
         cellStyle.setFont(font);
         return cellStyle;
     }
@@ -290,10 +290,10 @@ public class PositionResumeExporter extends BaseExporter {
         // Create CellStyle
         CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
         cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-        cellStyle.setBorderBottom(BorderStyle.MEDIUM);
-        cellStyle.setBorderRight(BorderStyle.MEDIUM);
-        cellStyle.setBorderTop(BorderStyle.MEDIUM);
-        cellStyle.setBorderLeft(BorderStyle.MEDIUM);
+        cellStyle.setBorderBottom(BorderStyle.THIN);
+        cellStyle.setBorderRight(BorderStyle.THIN);
+        cellStyle.setBorderTop(BorderStyle.THIN);
+        cellStyle.setBorderLeft(BorderStyle.THIN);
         cellStyle.setFont(font);
         return cellStyle;
     }

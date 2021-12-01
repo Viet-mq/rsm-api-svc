@@ -160,6 +160,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.RECRUITMENT: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)));
+                result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)));
                 break;
             }
             case ThreadConfig.BLACKLIST_EMAIL:

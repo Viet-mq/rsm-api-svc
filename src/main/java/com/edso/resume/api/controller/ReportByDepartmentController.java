@@ -41,12 +41,13 @@ public class ReportByDepartmentController extends BaseController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<Resource> exportReportByDepartment(@RequestHeader Map<String, String> headers, @RequestParam Long from, @RequestParam Long to) {
+    public ResponseEntity<Resource> exportReportByDepartment(@RequestHeader Map<String, String> headers,
+                                                             @RequestParam(value = "from", required = false) Long from,
+                                                             @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>exportReportByDepartment u: {}", headerInfo);
         ExportResponse response = reportByDepartmentService.exportReportByDepartment(from, to);
-        String pathServer = response.getPath();
-        File file = new File(pathServer);
+        File file = new File(response.getPath());
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = null;
         try {
@@ -55,7 +56,7 @@ public class ReportByDepartmentController extends BaseController {
             logger.error("Exception: ", e);
         }
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Content-Disposition", "attachment; filename=" + "Report.xlsx");
+        httpHeaders.add("Content-Disposition", "attachment; filename=" + "ReportByDepartment.xlsx");
         logger.info("<=exportReportByDepartment u: {}, path: {}", headerInfo, path);
         return ResponseEntity.ok()
                 .contentLength(file.length())

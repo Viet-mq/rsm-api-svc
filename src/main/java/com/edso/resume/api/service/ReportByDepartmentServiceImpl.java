@@ -24,7 +24,7 @@ import java.util.Set;
 public class ReportByDepartmentServiceImpl extends BaseService implements ReportByDepartmentService {
 
     private final PositionResumeExporter exporter;
-    @Value("${excel.pathReport}")
+    @Value("${excel.pathReportByDepartment}")
     private String path;
 
     protected ReportByDepartmentServiceImpl(MongoDbOnlineSyncActions db, PositionResumeExporter exporter) {
@@ -37,76 +37,70 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
         GetArrayStatisticalReponse<ReportByDepartmentEntity> reponse = new GetArrayStatisticalReponse<>();
         List<ReportByDepartmentEntity> rows = new ArrayList<>();
 
-        try {
-            List<Bson> c = new ArrayList<>();
-            Document query1 = new Document();
-            Document match = new Document();
+        List<Bson> c = new ArrayList<>();
+        Document query1 = new Document();
+        Document match = new Document();
 
-            if (from != null && from > 0) {
-                match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$gte", from));
+        if (from != null && from > 0) {
+            match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$gte", from));
+        }
+
+        if (to != null && to > 0) {
+            match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$lte", to));
+        }
+
+        match.append("recruitment_name", new Document().append("$ne", null));
+        match.append("source_cv_name", new Document().append("$ne", null));
+        query1.append("$match", match);
+
+        Document query2 = new Document();
+        query2.append("$group", new Document()
+                .append("_id", new Document().append(DbKeyConfig.SOURCE_CV_NAME, "$source_cv_name").append(DbKeyConfig.RECRUITMENT_NAME, "$recruitment_name"))
+                .append("count", new Document().append("$sum", 1)
+                )
+        );
+
+        c.add(query1);
+        c.add(query2);
+
+        AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
+
+        if (lst != null) {
+            Set<String> sourceCVNames = new HashSet<>();
+            for (Document document : lst) {
+                Document id = (Document) document.get(DbKeyConfig._ID);
+                sourceCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)));
             }
 
-            if (to != null && to > 0) {
-                match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$lte", to));
+            Set<String> recruitmentNames = new HashSet<>();
+            for (Document document : lst) {
+                Document id = (Document) document.get(DbKeyConfig._ID);
+                recruitmentNames.add(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)));
             }
 
-            match.append("recruitment_name", new Document().append("$ne", null));
-            match.append("source_cv_name", new Document().append("$ne", null));
-            query1.append("$match", match);
-
-            Document query2 = new Document();
-            query2.append("$group", new Document()
-                    .append("_id", new Document().append(DbKeyConfig.SOURCE_CV_NAME, "$source_cv_name").append(DbKeyConfig.RECRUITMENT_NAME, "$recruitment_name"))
-                    .append("count", new Document().append("$sum", 1)
-                    )
-            );
-
-            c.add(query1);
-            c.add(query2);
-
-            AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
-
-            if (lst != null) {
-                Set<String> sourceCVNames = new HashSet<>();
-                for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    sourceCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)));
+            for (String recruitmentName : recruitmentNames) {
+                List<SourceEntity> sourceEntities = new ArrayList<>();
+                for (String name : sourceCVNames) {
+                    SourceEntity sourceEntity = SourceEntity.builder()
+                            .sourceCVName(name)
+                            .count(0L)
+                            .build();
+                    sourceEntities.add(sourceEntity);
                 }
-
-                Set<String> recruitmentNames = new HashSet<>();
-                for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    recruitmentNames.add(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)));
-                }
-
-                for (String recruitmentName : recruitmentNames) {
-                    List<SourceEntity> sourceEntities = new ArrayList<>();
-                    for (String name : sourceCVNames) {
-                        SourceEntity sourceEntity = SourceEntity.builder()
-                                .sourceCVName(name)
-                                .count(0L)
-                                .build();
-                        sourceEntities.add(sourceEntity);
-                    }
-                    for (SourceEntity sourceEntity : sourceEntities) {
-                        for (Document doc : lst) {
-                            Document id = (Document) doc.get(DbKeyConfig._ID);
-                            if (AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)).equals(sourceEntity.getSourceCVName()) && recruitmentName.equals(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)))) {
-                                sourceEntity.setCount(AppUtils.parseLong(doc.get(DbKeyConfig.COUNT)));
-                            }
+                for (SourceEntity sourceEntity : sourceEntities) {
+                    for (Document doc : lst) {
+                        Document id = (Document) doc.get(DbKeyConfig._ID);
+                        if (AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)).equals(sourceEntity.getSourceCVName()) && recruitmentName.equals(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)))) {
+                            sourceEntity.setCount(AppUtils.parseLong(doc.get(DbKeyConfig.COUNT)));
                         }
                     }
-                    ReportByDepartmentEntity reportByDepartmentEntity = ReportByDepartmentEntity.builder()
-                            .recruitmentName(recruitmentName)
-                            .sources(sourceEntities)
-                            .build();
-                    rows.add(reportByDepartmentEntity);
                 }
+                ReportByDepartmentEntity reportByDepartmentEntity = ReportByDepartmentEntity.builder()
+                        .recruitmentName(recruitmentName)
+                        .sources(sourceEntities)
+                        .build();
+                rows.add(reportByDepartmentEntity);
             }
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-            reponse.setFailed("Hệ thống bận");
-            return reponse;
         }
         reponse.setRows(rows);
         reponse.setTotal(rows.size());
@@ -116,79 +110,75 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
 
     @Override
     public ExportResponse exportReportByDepartment(Long from, Long to) {
-        ExportResponse response = new ExportResponse();
         List<ReportByDepartmentEntity> rows = new ArrayList<>();
+        List<Bson> c = new ArrayList<>();
+        Document query1 = new Document();
+        Document match = new Document();
 
-        try {
-            List<Bson> c = new ArrayList<>();
-            Document query1 = new Document();
-            Document match = new Document();
+        if (from != null && from > 0) {
+            match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$gte", from));
+        }else {
+            from = 0L;
+        }
 
-            if (from != null && from > 0) {
-                match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$gte", from));
+        if (to != null && to > 0) {
+            match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$lte", to));
+        }else {
+            to = System.currentTimeMillis();
+        }
+
+        match.append("recruitment_name", new Document().append("$ne", null));
+        match.append("source_cv_name", new Document().append("$ne", null));
+        query1.append("$match", match);
+
+        Document query2 = new Document();
+        query2.append("$group", new Document()
+                .append("_id", new Document().append(DbKeyConfig.SOURCE_CV_NAME, "$source_cv_name").append(DbKeyConfig.RECRUITMENT_NAME, "$recruitment_name"))
+                .append("count", new Document().append("$sum", 1)
+                )
+        );
+
+        c.add(query1);
+        c.add(query2);
+
+        AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
+        Set<String> sourceCVNames = new HashSet<>();
+        if (lst != null) {
+            for (Document document : lst) {
+                Document id = (Document) document.get(DbKeyConfig._ID);
+                sourceCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)));
             }
 
-            if (to != null && to > 0) {
-                match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$lte", to));
+            Set<String> recruitmentNames = new HashSet<>();
+            for (Document document : lst) {
+                Document id = (Document) document.get(DbKeyConfig._ID);
+                recruitmentNames.add(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)));
             }
 
-            match.append("recruitment_name", new Document().append("$ne", null));
-            match.append("source_cv_name", new Document().append("$ne", null));
-            query1.append("$match", match);
-
-            Document query2 = new Document();
-            query2.append("$group", new Document()
-                    .append("_id", new Document().append(DbKeyConfig.SOURCE_CV_NAME, "$source_cv_name").append(DbKeyConfig.RECRUITMENT_NAME, "$recruitment_name"))
-                    .append("count", new Document().append("$sum", 1)
-                    )
-            );
-
-            c.add(query1);
-            c.add(query2);
-
-            AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
-            Set<String> sourceCVNames = new HashSet<>();
-            if (lst != null) {
-                for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    sourceCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)));
+            for (String recruitmentName : recruitmentNames) {
+                List<SourceEntity> sourceEntities = new ArrayList<>();
+                for (String name : sourceCVNames) {
+                    SourceEntity sourceEntity = SourceEntity.builder()
+                            .sourceCVName(name)
+                            .count(0L)
+                            .build();
+                    sourceEntities.add(sourceEntity);
                 }
-
-                Set<String> recruitmentNames = new HashSet<>();
-                for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    recruitmentNames.add(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)));
-                }
-
-                for (String recruitmentName : recruitmentNames) {
-                    List<SourceEntity> sourceEntities = new ArrayList<>();
-                    for (String name : sourceCVNames) {
-                        SourceEntity sourceEntity = SourceEntity.builder()
-                                .sourceCVName(name)
-                                .count(0L)
-                                .build();
-                        sourceEntities.add(sourceEntity);
-                    }
-                    for (SourceEntity sourceEntity : sourceEntities) {
-                        for (Document doc : lst) {
-                            Document id = (Document) doc.get(DbKeyConfig._ID);
-                            if (AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)).equals(sourceEntity.getSourceCVName()) && recruitmentName.equals(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)))) {
-                                sourceEntity.setCount(AppUtils.parseLong(doc.get(DbKeyConfig.COUNT)));
-                            }
+                for (SourceEntity sourceEntity : sourceEntities) {
+                    for (Document doc : lst) {
+                        Document id = (Document) doc.get(DbKeyConfig._ID);
+                        if (AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)).equals(sourceEntity.getSourceCVName()) && recruitmentName.equals(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)))) {
+                            sourceEntity.setCount(AppUtils.parseLong(doc.get(DbKeyConfig.COUNT)));
                         }
                     }
-                    ReportByDepartmentEntity reportByDepartmentEntity = ReportByDepartmentEntity.builder()
-                            .recruitmentName(recruitmentName)
-                            .sources(sourceEntities)
-                            .build();
-                    rows.add(reportByDepartmentEntity);
                 }
+                ReportByDepartmentEntity reportByDepartmentEntity = ReportByDepartmentEntity.builder()
+                        .recruitmentName(recruitmentName)
+                        .sources(sourceEntities)
+                        .build();
+                rows.add(reportByDepartmentEntity);
             }
-            return exporter.exportReportByDepartment(rows, sourceCVNames, path, from, to);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-            response.setFailed("Hệ thống bận");
-            return response;
         }
+        return exporter.exportReportByDepartment(rows, sourceCVNames, path, from, to);
     }
 }

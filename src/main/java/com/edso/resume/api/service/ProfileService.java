@@ -10,7 +10,7 @@ import com.edso.resume.lib.response.GetResponse;
 
 public interface ProfileService {
 
-    GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, Integer page, Integer size);
+    GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, Integer page, Integer size);
 
     GetResponse<ProfileDetailEntity> findOne(HeaderInfo info, String idProfile);
 
