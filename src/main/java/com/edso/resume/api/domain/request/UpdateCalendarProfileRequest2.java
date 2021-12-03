@@ -24,16 +24,14 @@ public class UpdateCalendarProfileRequest2 extends BaseAuthRequest {
     private String type;
     private List<String> interviewers;
     private String note;
-//    private String sendEmailToInterviewee;
-//    private String sendEmailToInterviewer;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
         }
-//        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
-//            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");
-//        }
+        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");
+        }
         if (date == null || date <= 0) {
             return new BaseResponse(ErrorCodeDefs.DATE, "Vui lòng nhập thời gian phỏng vấn");
         }
@@ -58,12 +56,6 @@ public class UpdateCalendarProfileRequest2 extends BaseAuthRequest {
         if (!Strings.isNullOrEmpty(note) && note.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NOTE, "Vui lòng nhập ghi chép nội bộ ít hơn 255 ký tự");
         }
-//        if (!Strings.isNullOrEmpty(sendEmailToInterviewee) && sendEmailToInterviewee.length() > 1) {
-//            return new BaseResponse(ErrorCodeDefs.SEND_EMAIL_TO_INTERVIEWEE, "Vui lòng nhập gửi email cho ứng viên ít hơn 1 ký tự");
-//        }
-//        if (!Strings.isNullOrEmpty(sendEmailToInterviewer) && sendEmailToInterviewer.length() > 1) {
-//            return new BaseResponse(ErrorCodeDefs.SEND_EMAIL_TO_INTERVIEWER, "Vui lòng nhập gửi email cho hội đồng tuyển dụng ít hơn 1 ký tự");
-//        }
         return null;
     }
 }

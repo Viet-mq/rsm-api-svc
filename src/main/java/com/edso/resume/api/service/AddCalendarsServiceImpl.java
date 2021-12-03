@@ -9,10 +9,7 @@ import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryValidator;
 import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.response.BaseResponse;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -49,7 +46,7 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
             if (request.getInterviewers() != null && !request.getInterviewers().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewers(), db, this));
             }
-            //            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getInterviewAddress(), db, this));
 
             for (CreateTimeCalendarRequest request2 : list) {
@@ -92,10 +89,6 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                 }
 
                 DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
-                Bson update = Updates.combine(
-                        Updates.set(DbKeyConfig.CALENDAR, 1)
-                );
-                db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), update, true);
 
                 String id = UUID.randomUUID().toString();
                 Document calendar = new Document();
@@ -113,8 +106,8 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                 calendar.append(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer());
                 calendar.append(DbKeyConfig.NOTE, request.getNote());
                 calendar.append(DbKeyConfig.AVATAR_COLOR, request2.getAvatarColor());
-//            calendar.append(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWEE, request.getSendEmailToInterviewee());
-//            calendar.append(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWER, request.getSendEmailToInterviewer());
+                calendar.append(DbKeyConfig.FULL_NAME_SEARCH, dictionaryNames.getFullName().toLowerCase());
+                calendar.append(DbKeyConfig.RECRUITMENT_NAME_SEARCH, dictionaryNames.getRecruitmentName().toLowerCase());
                 calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                 calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
                 calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());

@@ -24,11 +24,11 @@ public class AddCalendarsRequest extends BaseAuthRequest {
 
     public BaseResponse validate() {
         if (times == null || times.isEmpty()) {
-            return new BaseResponse(1, "Vui lòng nhập danh sách lịch phỏng vấn");
+            return new BaseResponse(1, "Vui lòng thêm ứng viên tham gia phỏng vấn");
         }
-//        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
-//            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");
-//        }
+        if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");
+        }
         if (Strings.isNullOrEmpty(interviewAddress) || interviewAddress.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ADDRESS, "Vui lòng nhập địa điểm");
         }

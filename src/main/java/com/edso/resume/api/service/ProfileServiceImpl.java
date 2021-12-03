@@ -63,7 +63,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(fullName.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(fullName.toLowerCase().trim())));
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
             c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));

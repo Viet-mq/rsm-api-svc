@@ -27,7 +27,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class DepartmentServiceImpl extends BaseService implements DepartmentService {
+public class
+DepartmentServiceImpl extends BaseService implements DepartmentService {
 
     public DepartmentServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
