@@ -66,9 +66,9 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
     }
 
     @Override
-    public void createHistory(String idProfile, String type, String action, String username) {
+    public void createHistory(String idProfile, String type, String action, HeaderInfo info) {
         try {
-            Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
+            Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
 
             Document history = new Document();
             history.append(DbKeyConfig.ID, UUID.randomUUID().toString());
@@ -76,7 +76,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
             history.append(DbKeyConfig.TYPE, type);
             history.append(DbKeyConfig.TIME, System.currentTimeMillis());
             history.append(DbKeyConfig.ACTION, action);
-            history.append(DbKeyConfig.USERNAME, username);
+            history.append(DbKeyConfig.USERNAME, info.getUsername());
             history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
 
             // insert to database

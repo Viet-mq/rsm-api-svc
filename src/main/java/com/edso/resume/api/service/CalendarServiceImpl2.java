@@ -57,10 +57,9 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
 //            resp.setResult(ErrorCodeDefs.ID, "Id profile không tồn tại");
 //            return resp;
 //        }
-
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(keySearch)) {
-            c.add(Filters.or(Filters.regex(DbKeyConfig.FULL_NAME_SEARCH, Pattern.compile(keySearch.toLowerCase().trim())), Filters.regex(DbKeyConfig.RECRUITMENT_NAME_SEARCH, Pattern.compile(keySearch.toLowerCase().trim()))));
+            c.add(Filters.or(Filters.regex(DbKeyConfig.FULL_NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(keySearch))), Filters.regex(DbKeyConfig.RECRUITMENT_NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(keySearch)))));
         }
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
@@ -94,10 +93,8 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                         .interviewers((List<UserEntity>) doc.get(DbKeyConfig.INTERVIEWERS))
                         .note(AppUtils.parseString(doc.get(DbKeyConfig.NOTE)))
                         .avatarColor(AppUtils.parseString(doc.get(DbKeyConfig.AVATAR_COLOR)))
-                        .createAt(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_AT)))
+                        .createAt(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
                         .createBy(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)))
-//                        .sendEmailToInterviewee(AppUtils.parseString(doc.get(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWEE)))
-//                        .sendEmailToInterviewer(AppUtils.parseString(doc.get(DbKeyConfig.SEND_EMAIL_TO_INTERVIEWER)))
                         .build();
                 calendars.add(calendar);
             }
@@ -178,8 +175,8 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             calendar.append(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer());
             calendar.append(DbKeyConfig.NOTE, request.getNote());
             calendar.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
-            calendar.append(DbKeyConfig.FULL_NAME_SEARCH, dictionaryNames.getFullName().toLowerCase());
-            calendar.append(DbKeyConfig.RECRUITMENT_NAME_SEARCH, dictionaryNames.getRecruitmentName().toLowerCase());
+            calendar.append(DbKeyConfig.FULL_NAME_SEARCH, parseVietnameseToEnglish(dictionaryNames.getFullName()));
+            calendar.append(DbKeyConfig.RECRUITMENT_NAME_SEARCH, parseVietnameseToEnglish(dictionaryNames.getRecruitmentName()));
             calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -189,7 +186,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo());
 
             response.setSuccess();
             return response;
@@ -273,7 +270,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                     Updates.set(DbKeyConfig.TYPE, request.getType()),
                     Updates.set(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer()),
                     Updates.set(DbKeyConfig.NOTE, request.getNote()),
-                    Updates.set(DbKeyConfig.RECRUITMENT_NAME_SEARCH, dictionaryNames.getRecruitmentName().toLowerCase()),
+                    Updates.set(DbKeyConfig.RECRUITMENT_NAME_SEARCH, parseVietnameseToEnglish(dictionaryNames.getRecruitmentName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
@@ -281,7 +278,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(dictionaryNames.getIdProfile(), TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo().getUsername());
+            historyService.createHistory(dictionaryNames.getIdProfile(), TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo());
 
             return response;
         } catch (Throwable ex) {
@@ -318,7 +315,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
             //Insert history to DB
-            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo().getUsername());
+            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo());
             response.setSuccess();
         } catch (Throwable e) {
             logger.error("Exception: ", e);

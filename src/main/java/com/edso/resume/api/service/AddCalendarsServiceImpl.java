@@ -106,8 +106,8 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                 calendar.append(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer());
                 calendar.append(DbKeyConfig.NOTE, request.getNote());
                 calendar.append(DbKeyConfig.AVATAR_COLOR, request2.getAvatarColor());
-                calendar.append(DbKeyConfig.FULL_NAME_SEARCH, dictionaryNames.getFullName().toLowerCase());
-                calendar.append(DbKeyConfig.RECRUITMENT_NAME_SEARCH, dictionaryNames.getRecruitmentName().toLowerCase());
+                calendar.append(DbKeyConfig.FULL_NAME_SEARCH, parseVietnameseToEnglish(dictionaryNames.getFullName()    ));
+                calendar.append(DbKeyConfig.RECRUITMENT_NAME_SEARCH, parseVietnameseToEnglish(dictionaryNames.getRecruitmentName()));
                 calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                 calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
                 calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -117,7 +117,7 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                 db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
 
                 //Insert history to DB
-                historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo().getUsername());
+                historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo());
             }
             response.setSuccess();
             return response;

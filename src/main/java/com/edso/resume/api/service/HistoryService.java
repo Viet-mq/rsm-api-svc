@@ -6,7 +6,7 @@ import com.edso.resume.lib.response.GetArrayResponse;
 
 public interface HistoryService {
 
-    void createHistory(String idProfile, String type, String action, String username);
+    void createHistory(String idProfile, String type, String action, HeaderInfo info);
 
     void deleteHistory(String idProfile);
 

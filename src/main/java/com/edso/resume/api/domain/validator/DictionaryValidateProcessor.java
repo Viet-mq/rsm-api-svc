@@ -1,7 +1,6 @@
 package com.edso.resume.api.domain.validator;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.RoundEntity;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -141,6 +140,12 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
                 break;
             }
+            case ThreadConfig.REJECT_PROFILE: {
+                result.setResult(true);
+                result.setName(AppUtils.parseLong(doc.get(DbKeyConfig.RECRUITMENT_TIME)));
+                result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)));
+                break;
+            }
             case ThreadConfig.USER: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
@@ -155,6 +160,11 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.CALENDAR: {
                 result.setResult(true);
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
+                break;
+            }
+            case ThreadConfig.REASON: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.REASON)));
                 break;
             }
             case ThreadConfig.RECRUITMENT: {
@@ -245,6 +255,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.SOURCE_CV: {
                 return "nguồn cv";
             }
+            case ThreadConfig.REJECT_PROFILE:
             case ThreadConfig.PROFILE: {
                 return "id profile";
             }
@@ -276,6 +287,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.ADDRESS: {
                 return "địa chỉ";
             }
+            case ThreadConfig.REASON: {
+                return "lý do loại ứng viên";
+            }
             default: {
                 return null;
             }
@@ -298,6 +312,7 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.PROFILE_EMAIL:
             case ThreadConfig.PROFILE_PHONE_NUMBER:
+            case ThreadConfig.REJECT_PROFILE:
             case ThreadConfig.PROFILE: {
                 return CollectionNameDefs.COLL_PROFILE;
             }
@@ -330,6 +345,9 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.ADDRESS: {
                 return CollectionNameDefs.COLL_ADDRESS;
+            }
+            case ThreadConfig.REASON: {
+                return CollectionNameDefs.COLL_REASON_REJECT;
             }
             default: {
                 return null;

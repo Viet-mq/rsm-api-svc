@@ -107,6 +107,24 @@ public class ProfileController extends BaseController {
         return response;
     }
 
+    @PostMapping("/reject")
+    public BaseResponse updateRejectProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateRejectProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>updateRejectProfile u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.updateRejectProfile(request);
+            }
+        }
+        logger.info("<=updateRejectProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
     @PostMapping("/isold")
     public void isOld(@RequestParam String id) {
         logger.info("=>isOld id: {}", id);

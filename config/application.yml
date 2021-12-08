@@ -84,6 +84,7 @@ excel:
   pathReportRecruitmentEfficiency: D:\ReportRecruitmentEfficiency.xlsx
   pathReportRecruitmentActivities: D:\ReportRecruitmentActivities.xlsx
   pathReportRecruitmentResult: D:\ReportRecruitmentResult.xlsx
+  pathReportRejectProfile: D:\ReportRejectProfile.xlsx
   fileSize: 15728640 #Byte 15MB
 
 note:
@@ -99,3 +100,4 @@ avatar:
   fileSize: 15728640 #Byte 15MB
 id:
   pass: 'cc281050-00d8-486c-af68-b10cd83f937c'
+  reject: 'd0d08b54-4ac7-4947-9018-e8c4f991b7be'

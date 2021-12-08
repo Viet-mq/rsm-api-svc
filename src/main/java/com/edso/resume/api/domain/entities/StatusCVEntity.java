@@ -12,5 +12,6 @@ public class StatusCVEntity {
     private String name;
     private List<ChildrenStatusCVEntity> children;
     private Integer round;
+    private Boolean delete;
 
 }

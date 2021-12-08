@@ -50,6 +50,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
                         .children((List<ChildrenStatusCVEntity>) doc.get(DbKeyConfig.CHILDREN))
+                        .delete((Boolean) doc.get(DbKeyConfig.DELETE))
                         .build();
                 rows.add(statusCV);
             }
@@ -191,6 +192,12 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
 
             if (idDocument == null) {
                 response.setFailed("Id này không tồn tại");
+                return response;
+            }
+
+            boolean delete = (boolean) idDocument.get(DbKeyConfig.DELETE);
+            if(!delete){
+                response.setFailed("Không được xóa bản ghi này!");
                 return response;
             }
 

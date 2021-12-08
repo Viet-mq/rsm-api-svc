@@ -23,7 +23,7 @@ public class CalendarEntity2 {
     private List<UserEntity> interviewers;
     private String note;
     private String avatarColor;
-    private String createAt;
+    private Long createAt;
     private String createBy;
 //    private String sendEmailToInterviewee;
 //    private String sendEmailToInterviewer;

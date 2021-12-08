@@ -43,6 +43,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private String exchange;
     @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
+    @Value("${id.reject}")
+    private String idReject;
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService) {
         super(db);
@@ -63,7 +65,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(fullName.toLowerCase().trim())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(fullName))));
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
             c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));
@@ -195,7 +197,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         response.setSuccess(profile);
 
         //Insert history to DB
-        historyService.createHistory(idProfile, TypeConfig.SELECT, "Xem chi tiết profile", info.getUsername());
+        historyService.createHistory(idProfile, TypeConfig.SELECT, "Xem chi tiết profile", info);
 
         return response;
     }
@@ -294,7 +296,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName());
             profile.append(DbKeyConfig.HR_REF, request.getHrRef());
             profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
-            profile.append(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase());
+            profile.append(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName()));
             profile.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             profile.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             profile.append(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool());
@@ -313,7 +315,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo());
 
             response.setSuccess();
             return response;
@@ -428,7 +430,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                     Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool()),
@@ -445,7 +447,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa profile", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa profile", request.getInfo());
 
             response.setSuccess();
             return response;
@@ -571,7 +573,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                     Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, request.getFullName().toLowerCase()),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool()),
@@ -587,7 +589,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo());
 
             response.setSuccess();
             return response;
@@ -714,7 +716,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE_STATUS, profileRabbitMQ);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo());
 
             return response;
 
@@ -730,6 +732,94 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
         }
     }
+
+    @Override
+    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request) {
+
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
+
+        try {
+            //Validate
+            String idProfile = request.getIdProfile();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.REJECT_PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.REASON, request.getReason(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed((String) validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
+
+            // update roles
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, "Loại ứng viên"),
+                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+
+            Document reject = new Document();
+            reject.append(DbKeyConfig.ID_PROFILE, request.getIdProfile());
+            reject.append(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName());
+            reject.append(DbKeyConfig.RECRUITMENT_TIME, dictionaryNames.getRecruitmentTime());
+            reject.append(DbKeyConfig.REASON, dictionaryNames.getReason());
+
+            db.insertOne(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, reject);
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo());
+
+            response.setSuccess();
+            return response;
+
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
+        }
+    }
+
 
     @Override
     public void isOld(String id) {
@@ -758,6 +848,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     dictionaryNames.setJobName((String) r.getResult().getName());
                     break;
                 }
+                case ThreadConfig.REASON: {
+                    dictionaryNames.setReason((String) r.getResult().getName());
+                    break;
+                }
                 case ThreadConfig.JOB_LEVEL: {
                     dictionaryNames.setLevelJobName((String) r.getResult().getName());
                     break;
@@ -781,6 +875,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 case ThreadConfig.PROFILE: {
                     dictionaryNames.setEmail((String) r.getResult().getName());
                     dictionaryNames.setRecruitmentId(r.getResult().getIdProfile());
+                    break;
+                }
+                case ThreadConfig.REJECT_PROFILE: {
+                    dictionaryNames.setRecruitmentTime((Long) r.getResult().getName());
+                    dictionaryNames.setStatusCVName(r.getResult().getFullName());
                     break;
                 }
                 case ThreadConfig.STATUS_CV: {

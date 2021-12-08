@@ -7,9 +7,11 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public abstract class BaseService {
 
@@ -45,6 +47,17 @@ public abstract class BaseService {
         Date dateTime = new Date(time);
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
         return format.format(dateTime);
+    }
+
+    public static String parseVietnameseToEnglish(String str) {
+        try {
+            String temp = Normalizer.normalize(str, Normalizer.Form.NFD);
+            Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+            return pattern.matcher(temp).replaceAll("").trim().toLowerCase().replaceAll("đ", "d");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return "";
     }
 
 }

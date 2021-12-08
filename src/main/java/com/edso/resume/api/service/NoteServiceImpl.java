@@ -181,7 +181,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo().getUsername());
+            historyService.createHistory(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý",request.getInfo());
 
             return response;
         } catch (Throwable ex) {
@@ -293,7 +293,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo().getUsername());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chú ý",request.getInfo());
 
             return response;
         } catch (Throwable ex) {
@@ -329,7 +329,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
             //Insert history to DB
-            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo().getUsername());
+            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý",request.getInfo());
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);

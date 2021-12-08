@@ -365,7 +365,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.LEVEL_JOB_NAME, profile.getLevelJobName());
                     pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCVName());
                     pro.append(DbKeyConfig.SOURCE_CV_ID, sourceCVId);
-                    pro.append(DbKeyConfig.NAME_SEARCH, profile.getFullName().toLowerCase());
+                    pro.append(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(profile.getFullName()));
                     pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
                     pro.append(DbKeyConfig.TALENT_POOL_ID, talentPoolId);

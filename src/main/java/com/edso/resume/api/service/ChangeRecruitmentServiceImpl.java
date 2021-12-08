@@ -113,7 +113,7 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
             db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, request.getIdProfile()), update, true);
 
             //Insert history to DB
-            historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Chuyển tin tuyển dụng", request.getInfo().getUsername());
+            historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Chuyển tin tuyển dụng", request.getInfo());
 
             ProfileRabbitMQEntity profileRabbitMQ = new ProfileRabbitMQEntity();
             profileRabbitMQ.setRecruitmentId(request.getRecruitmentId());
