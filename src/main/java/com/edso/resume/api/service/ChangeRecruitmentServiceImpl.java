@@ -112,6 +112,25 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
 
             db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, request.getIdProfile()), update, true);
 
+            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", request.getStatusCVId()));
+
+            Document projection = new Document();
+            projection.append("_id", 0.0);
+            projection.append("interview_process", new Document()
+                    .append("$elemMatch", new Document()
+                            .append(DbKeyConfig.ID, request.getStatusCVId())
+                    )
+            );
+
+            Document interviewProcess = db.findOneArray(CollectionNameDefs.COLL_RECRUITMENT, cond, projection);
+            List<Document> doc = (List<Document>) interviewProcess.get("interview_process");
+
+            Bson updateTotal = Updates.combine(
+                    Updates.set("interview_process.$.total", AppUtils.parseLong(doc.get(0).get("total")) + 1)
+            );
+
+            db.update(CollectionNameDefs.COLL_RECRUITMENT, cond, updateTotal, true);
+
             //Insert history to DB
             historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Chuyển tin tuyển dụng", request.getInfo());
 

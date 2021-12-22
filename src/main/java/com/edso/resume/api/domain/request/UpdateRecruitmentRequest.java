@@ -28,6 +28,7 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
     private String interest;
     private Long deadLine;
     private String talentPool;
+    private String status;
     private List<String> interviewer;
     private List<RoundEntity> interviewProcess;
 
@@ -61,7 +62,7 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
         if (to != null && to < 0) {
             return new BaseResponse(ErrorCodeDefs.TO, "Vui lòng nhập mức lương đến bao nhiêu");
         }
-        if (Strings.isNullOrEmpty(jobDescription) || jobDescription.length() > 1000) {
+        if (Strings.isNullOrEmpty(jobDescription) || jobDescription.length() > 100000) {
             return new BaseResponse(ErrorCodeDefs.JOB_DESCRIPTION, "Vui lòng nhập mô tả công việc chi tiết");
         }
         if (Strings.isNullOrEmpty(requirementOfJob) || requirementOfJob.length() > 255) {
@@ -75,6 +76,9 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
         }
         if (Strings.isNullOrEmpty(talentPool) || talentPool.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.TALENT_POOL, "Vui lòng nhập talent pool");
+        }
+        if (!Strings.isNullOrEmpty(status) && status.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái tin tuyển dụng");
         }
         if(interviewProcess == null || interviewProcess.isEmpty()){
             return new BaseResponse(ErrorCodeDefs.INTERVIEW_PROCESS, "Vui lòng nhập quy trình tuyển dụng");

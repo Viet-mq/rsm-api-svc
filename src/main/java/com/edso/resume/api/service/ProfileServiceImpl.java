@@ -61,7 +61,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, Integer page, Integer size) {
+    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, String statusCV, Integer page, Integer size) {
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
@@ -81,6 +81,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         }
         if (!Strings.isNullOrEmpty(recruitment)) {
             c.add(Filters.eq(DbKeyConfig.RECRUITMENT_ID, recruitment));
+        }
+        if (!Strings.isNullOrEmpty(statusCV)) {
+            c.add(Filters.eq(DbKeyConfig.STATUS_CV_ID, statusCV));
         }
         if (!Strings.isNullOrEmpty(calendar)) {
             if (calendar.equals("set")) {
@@ -786,7 +789,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, "Loại ứng viên"),
+                    Updates.set(DbKeyConfig.STATUS_CV_ID, ""),
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, "Loại"),
                     Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
             );

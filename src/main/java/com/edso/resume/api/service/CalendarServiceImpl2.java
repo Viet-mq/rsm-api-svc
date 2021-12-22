@@ -212,7 +212,6 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
         String key = UUID.randomUUID().toString();
 
         try {
-
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR, id, db, this));

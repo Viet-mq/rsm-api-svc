@@ -7,14 +7,14 @@ spring:
       max-request-size: 100MB
   data:
     mongodb:
-      host: 192.168.50.33
+      host: 18.139.222.137
       port: 27017
       database: 'resume'
       username: 'resume'
-      password: 'MHFbdWe1KsjiMKtzDpuDrue1ZtcmDifxY1ousr5HXj12Uth65ZI1juLTaXVcYU6czsdgh'
+      password: 'abc123resume'
   rabbitmq:
-    host: 192.168.50.33
-    port: 5673
+    host: 18.139.222.137
+    port: 5672
     username: admin
     password: adminlgsp@123
     queue: cv.queue

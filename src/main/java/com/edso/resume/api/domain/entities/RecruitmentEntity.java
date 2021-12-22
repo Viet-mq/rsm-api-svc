@@ -16,12 +16,17 @@ public class RecruitmentEntity {
     private String typeOfJob;
     private String quantity;
     private String detailOfSalary;
+    private String from;
+    private String to;
     private String jobDescription;
     private String requirementOfJob;
     private String interest;
     private Long deadLine;
     private String talentPoolId;
     private String talentPoolName;
+    private String status;
+    private Long createAt;
+    private String createBy;
     private List<UserEntity> interviewer;
     private List<RoundEntity> interviewProcess;
 }

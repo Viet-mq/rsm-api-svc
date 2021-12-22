@@ -20,6 +20,7 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
+import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -43,10 +44,27 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
     }
 
     @Override
-    public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size) {
+    public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String key, Long from, Long to, String status) {
+        List<Bson> c = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(id)) {
+            c.add(Filters.eq(DbKeyConfig.ID, id));
+        }
+        if (!Strings.isNullOrEmpty(key)) {
+            c.add(Filters.eq(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(key)));
+        }
+        if (from != null && from > 0) {
+            c.add(Filters.gte(DbKeyConfig.DEAD_LINE, from));
+        }
+        if (to != null && to > 0) {
+            c.add(Filters.lte(DbKeyConfig.DEAD_LINE, to));
+        }
+        if (!Strings.isNullOrEmpty(status)) {
+            c.add(Filters.eq(DbKeyConfig.STATUS, status));
+        }
+        Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_RECRUITMENT, null, sort, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_RECRUITMENT, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<RecruitmentEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
@@ -59,12 +77,17 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .typeOfJob(AppUtils.parseString(doc.get(DbKeyConfig.TYPE_OF_JOB)))
                         .quantity(AppUtils.parseString(doc.get(DbKeyConfig.QUANTITY)))
                         .detailOfSalary(AppUtils.parseString(doc.get(DbKeyConfig.DETAIL_OF_SALARY)))
+                        .from(AppUtils.parseString(doc.get(DbKeyConfig.FROM)))
+                        .to(AppUtils.parseString(doc.get(DbKeyConfig.TO)))
                         .jobDescription(AppUtils.parseString(doc.get(DbKeyConfig.JOB_DESCRIPTION)))
                         .requirementOfJob(AppUtils.parseString(doc.get(DbKeyConfig.REQUIREMENT_OF_JOB)))
                         .interest(AppUtils.parseString(doc.get(DbKeyConfig.INTEREST)))
                         .deadLine(AppUtils.parseLong(doc.get(DbKeyConfig.DEAD_LINE)))
                         .talentPoolId(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_ID)))
                         .talentPoolName(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_NAME)))
+                        .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
+                        .createAt(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
+                        .createBy(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)))
                         .interviewer((List<UserEntity>) doc.get(DbKeyConfig.INTERVIEWER))
                         .interviewProcess((List<RoundEntity>) doc.get(DbKeyConfig.INTERVIEW_PROCESS))
                         .build();
@@ -98,7 +121,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 .address(AppUtils.parseString(one.get(DbKeyConfig.ADDRESS)))
                 .typeOfJob(AppUtils.parseString(one.get(DbKeyConfig.TYPE_OF_JOB)))
                 .quantity(AppUtils.parseString(one.get(DbKeyConfig.QUANTITY)))
-                .detailOfSalary(AppUtils.parseString(one.get(DbKeyConfig.DETAIL_OF_SALARY)))
+                .detailOfSalary(AppUtils.parseString(one.get(DbKeyConfig.SALARY)))
                 .jobDescription(AppUtils.parseString(one.get(DbKeyConfig.JOB_DESCRIPTION)))
                 .jobName(AppUtils.parseString(one.get(DbKeyConfig.JOB_NAME)))
                 .requirementOfJob(AppUtils.parseString(one.get(DbKeyConfig.REQUIREMENT_OF_JOB)))
@@ -184,6 +207,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.TYPE_OF_JOB, request.getTypeOfJob());
             recruitment.append(DbKeyConfig.QUANTITY, request.getQuantity());
             recruitment.append(DbKeyConfig.DETAIL_OF_SALARY, request.getDetailOfSalary());
+            recruitment.append(DbKeyConfig.FROM, request.getFrom());
+            recruitment.append(DbKeyConfig.TO, request.getTo());
             recruitment.append(DbKeyConfig.JOB_DESCRIPTION, request.getJobDescription());
             recruitment.append(DbKeyConfig.REQUIREMENT_OF_JOB, request.getRequirementOfJob());
             recruitment.append(DbKeyConfig.INTEREST, request.getInterest());
@@ -192,6 +217,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName());
             recruitment.append(DbKeyConfig.INTERVIEWER, dictionaryNames.getInterviewer());
             recruitment.append(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess);
+            recruitment.append(DbKeyConfig.STATUS, "Đang tuyển dụng");
+            recruitment.append(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getTitle()));
             recruitment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             recruitment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -287,6 +314,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.TYPE_OF_JOB, request.getTypeOfJob()),
                     Updates.set(DbKeyConfig.QUANTITY, request.getQuantity()),
                     Updates.set(DbKeyConfig.DETAIL_OF_SALARY, request.getDetailOfSalary()),
+                    Updates.set(DbKeyConfig.FROM, request.getFrom()),
+                    Updates.set(DbKeyConfig.TO, request.getTo()),
                     Updates.set(DbKeyConfig.JOB_DESCRIPTION, request.getJobDescription()),
                     Updates.set(DbKeyConfig.REQUIREMENT_OF_JOB, request.getRequirementOfJob()),
                     Updates.set(DbKeyConfig.INTEREST, request.getInterest()),
@@ -295,6 +324,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.INTERVIEWER, dictionaryNames.getInterviewer()),
                     Updates.set(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess),
+                    Updates.set(DbKeyConfig.STATUS, request.getStatus()),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getTitle())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

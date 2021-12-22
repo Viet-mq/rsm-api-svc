@@ -158,6 +158,11 @@ public class DictionaryValidateProcessor implements Runnable {
                 break;
             }
             case ThreadConfig.CALENDAR: {
+                if (AppUtils.parseLong(doc.get(DbKeyConfig.DATE)) < System.currentTimeMillis()) {
+                    result.setResult(false);
+                    result.setName("Không được sửa lịch này!");
+                    break;
+                }
                 result.setResult(true);
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
                 break;

@@ -125,6 +125,17 @@ public class MongoDbOnlineSyncActions extends BaseAction {
         return null;
     }
 
+    public Document findOneArray(String collectionName, Bson params, Bson projection) {
+        try {
+            MongoClient mongoClient = mongoDbAccess.getMongo();
+            MongoDatabase database = mongoClient.getDatabase(dbName);
+            return database.getCollection(collectionName).find(params).projection(projection).first();
+        } catch (Exception ex) {
+            logger.error("Exception: ", ex);
+        }
+        return null;
+    }
+
     public long update(String collectionName, Bson condition, Bson values) {
         try {
             MongoClient mongoClient = mongoDbAccess.getMongo();

@@ -6,4 +6,6 @@ import lombok.Data;
 public class UserEntity {
     private String username;
     private String fullName;
+    private String avatar;
+    private String email;
 }
