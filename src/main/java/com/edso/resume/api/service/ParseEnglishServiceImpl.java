@@ -19,14 +19,14 @@ public class ParseEnglishServiceImpl extends BaseService implements ParseEnglish
 
     @Override
     public void parseEnglish() {
-        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, null, null, 0, 0);
+        FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_RECRUITMENT, null, null, 0, 0);
         if (list != null) {
             for (Document document : list) {
                 Bson cond = Filters.eq(DbKeyConfig.ID, AppUtils.parseString(document.get(DbKeyConfig.ID)));
                 Bson update = Updates.combine(
-                        Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(AppUtils.parseString(document.get(DbKeyConfig.FULL_NAME))))
+                        Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(AppUtils.parseString(document.get(DbKeyConfig.TITLE))))
                 );
-                db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
+                db.update(CollectionNameDefs.COLL_RECRUITMENT, cond, update, true);
             }
         }
     }

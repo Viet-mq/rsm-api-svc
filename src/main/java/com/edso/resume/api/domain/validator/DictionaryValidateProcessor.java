@@ -138,12 +138,14 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)));
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
+                result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
                 break;
             }
             case ThreadConfig.REJECT_PROFILE: {
                 result.setResult(true);
                 result.setName(AppUtils.parseLong(doc.get(DbKeyConfig.RECRUITMENT_TIME)));
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)));
+                result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
                 break;
             }
             case ThreadConfig.USER: {

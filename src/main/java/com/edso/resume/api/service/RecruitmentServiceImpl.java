@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Pattern;
 
 @Service
 public class RecruitmentServiceImpl extends BaseService implements RecruitmentService, IDictionaryValidator {
@@ -44,13 +45,13 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
     }
 
     @Override
-    public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String key, Long from, Long to, String status) {
+    public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String key, String keySearch, Long from, Long to, String status) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(id)) {
             c.add(Filters.eq(DbKeyConfig.ID, id));
         }
-        if (!Strings.isNullOrEmpty(key)) {
-            c.add(Filters.eq(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(key)));
+        if (!Strings.isNullOrEmpty(keySearch)) {
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(keySearch))));
         }
         if (from != null && from > 0) {
             c.add(Filters.gte(DbKeyConfig.DEAD_LINE, from));
@@ -60,6 +61,14 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         }
         if (!Strings.isNullOrEmpty(status)) {
             c.add(Filters.eq(DbKeyConfig.STATUS, status));
+        }
+        if (!Strings.isNullOrEmpty(key)) {
+            if (key.equals("create")) {
+                c.add(Filters.eq(DbKeyConfig.CREATE_BY, info.getUsername()));
+            }
+            if (key.equals("join")) {
+                c.add(Filters.eq(DbKeyConfig.JOIN_USERNAME, info.getUsername()));
+            }
         }
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -88,7 +97,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
                         .createAt(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
                         .createBy(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)))
-                        .interviewer((List<UserEntity>) doc.get(DbKeyConfig.INTERVIEWER))
+                        .interviewer((List<UserEntity>) doc.get(DbKeyConfig.INTERVIEWERS))
                         .interviewProcess((List<RoundEntity>) doc.get(DbKeyConfig.INTERVIEW_PROCESS))
                         .build();
                 rows.add(recruitment);
@@ -129,7 +138,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 .deadLine(AppUtils.parseLong(one.get(DbKeyConfig.DEAD_LINE)))
                 .talentPoolId(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_ID)))
                 .talentPoolName(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_NAME)))
-                .interviewer((List<UserEntity>) one.get(DbKeyConfig.INTERVIEWER))
+                .interviewer((List<UserEntity>) one.get(DbKeyConfig.INTERVIEWERS))
                 .interviewProcess((List<RoundEntity>) one.get(DbKeyConfig.INTERVIEW_PROCESS))
                 .build();
 
@@ -215,7 +224,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.DEAD_LINE, request.getDeadLine());
             recruitment.append(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool());
             recruitment.append(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName());
-            recruitment.append(DbKeyConfig.INTERVIEWER, dictionaryNames.getInterviewer());
+            recruitment.append(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer());
             recruitment.append(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess);
             recruitment.append(DbKeyConfig.STATUS, "Đang tuyển dụng");
             recruitment.append(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getTitle()));
@@ -322,7 +331,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.DEAD_LINE, request.getDeadLine()),
                     Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool()),
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
-                    Updates.set(DbKeyConfig.INTERVIEWER, dictionaryNames.getInterviewer()),
+                    Updates.set(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer()),
                     Updates.set(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess),
                     Updates.set(DbKeyConfig.STATUS, request.getStatus()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getTitle())),

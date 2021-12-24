@@ -13,6 +13,7 @@ import lombok.ToString;
 public class UpdateRejectProfileRequest extends BaseAuthRequest {
     private String idProfile;
     private String reason;
+    private String recruitmentId;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 50) {
@@ -20,6 +21,9 @@ public class UpdateRejectProfileRequest extends BaseAuthRequest {
         }
         if (Strings.isNullOrEmpty(reason)) {
             return new BaseResponse(ErrorCodeDefs.REASON, "Vui lòng nhập lý do loại ứng viên");
+        }
+        if (Strings.isNullOrEmpty(recruitmentId)) {
+            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập recruitment id");
         }
         if (reason.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.REASON, "Vui lòng nhập lý do loại ứng viên ít hơn 255 ký tự");

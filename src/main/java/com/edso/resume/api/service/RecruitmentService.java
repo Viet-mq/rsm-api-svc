@@ -10,7 +10,7 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 
 public interface RecruitmentService {
-    GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String key, Long from, Long to, String status);
+    GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String key, String keySearch, Long from, Long to, String status);
 
     GetRecruitmentResponse<RecruitmentEntity> findOne(HeaderInfo info, String recruitmentId);
 

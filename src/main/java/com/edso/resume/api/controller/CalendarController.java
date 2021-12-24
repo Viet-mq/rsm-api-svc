@@ -33,11 +33,12 @@ public class CalendarController extends BaseController {
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "key", required = false) String key,
             @RequestParam(value = "keySearch", required = false) String keySearch,
+            @RequestParam(value = "recruitment", required = false) String recruitment,
             @RequestParam(value = "idProfile", required = false) String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllCalendar u: {}, key: {}, keySearch:{}, idProfile: {}", headerInfo, key, keySearch, idProfile);
-        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, idProfile, key, keySearch);
-        logger.info("<=findAllCalendar u: {}, key: {}, keySearch:{}, idProfile: {}, resp: {}", headerInfo, key, keySearch, idProfile, resp.info());
+        logger.info("=>findAllCalendar u: {}, key: {}, keySearch: {}, recruitment: {}, idProfile: {}", headerInfo, key, keySearch, recruitment, idProfile);
+        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, idProfile, key, keySearch, recruitment);
+        logger.info("<=findAllCalendar u: {}, key: {}, keySearch: {}, recruitment:{}, idProfile: {}, resp: {}", headerInfo, key, keySearch, recruitment, idProfile, resp.info());
         return resp;
     }
 

@@ -112,24 +112,27 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
 
             db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, request.getIdProfile()), update, true);
 
-            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", request.getStatusCVId()));
+            Bson cond = Filters.eq(DbKeyConfig.ID, request.getRecruitmentId());
 
-            Document projection = new Document();
-            projection.append("_id", 0.0);
-            projection.append("interview_process", new Document()
-                    .append("$elemMatch", new Document()
-                            .append(DbKeyConfig.ID, request.getStatusCVId())
-                    )
-            );
+            Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, cond);
+            List<Document> doc = (List<Document>) recruitment.get("interview_process");
 
-            Document interviewProcess = db.findOneArray(CollectionNameDefs.COLL_RECRUITMENT, cond, projection);
-            List<Document> doc = (List<Document>) interviewProcess.get("interview_process");
-
-            Bson updateTotal = Updates.combine(
-                    Updates.set("interview_process.$.total", AppUtils.parseLong(doc.get(0).get("total")) + 1)
-            );
-
-            db.update(CollectionNameDefs.COLL_RECRUITMENT, cond, updateTotal, true);
+            for (Document document1 : doc) {
+                if (AppUtils.parseString(document1.get(DbKeyConfig.ID)).equals(request.getStatusCVId())) {
+                    Bson cond1 = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", request.getStatusCVId()));
+                    Bson updateTotal = Updates.combine(
+                            Updates.set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) + 1)
+                    );
+                    db.update(CollectionNameDefs.COLL_RECRUITMENT, cond1, updateTotal, true);
+                }
+                if (AppUtils.parseString(document1.get(DbKeyConfig.ID)).equals(dictionaryNames.getStatusCVId())) {
+                    Bson cond2 = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", dictionaryNames.getStatusCVId()));
+                    Bson updateTotal = Updates.combine(
+                            Updates.set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) - 1)
+                    );
+                    db.update(CollectionNameDefs.COLL_RECRUITMENT, cond2, updateTotal, true);
+                }
+            }
 
             //Insert history to DB
             historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Chuyển tin tuyển dụng", request.getInfo());
@@ -162,6 +165,7 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
                 case ThreadConfig.PROFILE: {
                     dictionaryNames.setEmail((String) r.getResult().getName());
                     dictionaryNames.setRecruitmentId(r.getResult().getIdProfile());
+                    dictionaryNames.setStatusCVId(r.getResult().getStatusCVId());
                     break;
                 }
                 case ThreadConfig.RECRUITMENT: {

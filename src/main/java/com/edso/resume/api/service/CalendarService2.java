@@ -9,7 +9,7 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayCalendarResponse;
 
 public interface CalendarService2 {
-    GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile, String key, String keySearch);
+    GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile, String key, String keySearch, String recruitment);
 
     BaseResponse createCalendarProfile(CreateCalendarProfileRequest2 request);
 

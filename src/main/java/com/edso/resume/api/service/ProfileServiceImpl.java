@@ -750,6 +750,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.REJECT_PROFILE, idProfile, db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.REASON, request.getReason(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -796,6 +797,19 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
+            Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()));
+            List<Document> doc = (List<Document>) recruitment.get("interview_process");
+
+            for (Document document1 : doc) {
+                if (AppUtils.parseString(document1.get(DbKeyConfig.ID)).equals(dictionaryNames.getStatusCVId())) {
+                    Bson cond2 = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", dictionaryNames.getStatusCVId()));
+                    Bson updateTotal = Updates.combine(
+                            Updates.set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) - 1)
+                    );
+                    db.update(CollectionNameDefs.COLL_RECRUITMENT, cond2, updateTotal, true);
+                    break;
+                }
+            }
 
             Document reject = new Document();
             reject.append(DbKeyConfig.ID_PROFILE, request.getIdProfile());
@@ -884,6 +898,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 case ThreadConfig.REJECT_PROFILE: {
                     dictionaryNames.setRecruitmentTime((Long) r.getResult().getName());
                     dictionaryNames.setStatusCVName(r.getResult().getFullName());
+                    dictionaryNames.setStatusCVId(r.getResult().getStatusCVId());
                     break;
                 }
                 case ThreadConfig.STATUS_CV: {

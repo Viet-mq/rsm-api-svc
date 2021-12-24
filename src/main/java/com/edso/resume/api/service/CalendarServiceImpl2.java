@@ -50,7 +50,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     }
 
     @Override
-    public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile, String key, String keySearch) {
+    public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile, String key, String keySearch, String recruitment) {
         GetArrayCalendarResponse<CalendarEntity2> resp = new GetArrayCalendarResponse<>();
 //        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
 //        if (idProfileDocument == null) {
@@ -63,6 +63,9 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
         }
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
+        }
+        if (!Strings.isNullOrEmpty(recruitment)) {
+            c.add(Filters.eq(DbKeyConfig.RECRUITMENT_ID, recruitment));
         }
         if (!Strings.isNullOrEmpty(key)) {
             if (key.equals("create")) {
