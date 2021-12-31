@@ -55,7 +55,7 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
         try {
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getIdProfile(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CHANGE_RECRUITMENT_PROFILE, request.getIdProfile(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
             DictionaryValidateProcessor dictionaryValidateProcessor = new DictionaryValidateProcessor(key, ThreadConfig.STATUS_CV, request.getStatusCVId(), db, this);
             dictionaryValidateProcessor.setRecruitmentId(request.getRecruitmentId());
@@ -112,28 +112,37 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
 
             db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, request.getIdProfile()), update, true);
 
-            Bson cond = Filters.eq(DbKeyConfig.ID, request.getRecruitmentId());
+            Document recruitment1 = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.ID, dictionaryNames.getRecruitmentId()));
+            if (recruitment1 != null) {
+                List<Document> doc1 = (List<Document>) recruitment1.get(DbKeyConfig.INTERVIEW_PROCESS);
 
-            Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, cond);
-            List<Document> doc = (List<Document>) recruitment.get("interview_process");
-
-            for (Document document1 : doc) {
-                if (AppUtils.parseString(document1.get(DbKeyConfig.ID)).equals(request.getStatusCVId())) {
-                    Bson cond1 = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", request.getStatusCVId()));
-                    Bson updateTotal = Updates.combine(
-                            Updates.set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) + 1)
-                    );
-                    db.update(CollectionNameDefs.COLL_RECRUITMENT, cond1, updateTotal, true);
-                }
-                if (AppUtils.parseString(document1.get(DbKeyConfig.ID)).equals(dictionaryNames.getStatusCVId())) {
-                    Bson cond2 = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", dictionaryNames.getStatusCVId()));
-                    Bson updateTotal = Updates.combine(
-                            Updates.set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) - 1)
-                    );
-                    db.update(CollectionNameDefs.COLL_RECRUITMENT, cond2, updateTotal, true);
+                for (Document document1 : doc1) {
+                    if (AppUtils.parseString(document1.get(DbKeyConfig.ID)).equals(dictionaryNames.getStatusCVId())) {
+                        Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, dictionaryNames.getRecruitmentId()), Filters.eq("interview_process.id", dictionaryNames.getStatusCVId()));
+                        Bson updateTotal = Updates.combine(
+                                Updates.set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) - 1)
+                        );
+                        db.update(CollectionNameDefs.COLL_RECRUITMENT, cond, updateTotal, true);
+                        break;
+                    }
                 }
             }
 
+            Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()));
+            if (recruitment != null) {
+                List<Document> doc = (List<Document>) recruitment.get(DbKeyConfig.INTERVIEW_PROCESS);
+
+                for (Document document1 : doc) {
+                    if (AppUtils.parseString(document1.get(DbKeyConfig.ID)).equals(request.getStatusCVId())) {
+                        Bson cond1 = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", request.getStatusCVId()));
+                        Bson updateTotal = Updates.combine(
+                                Updates.set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) + 1)
+                        );
+                        db.update(CollectionNameDefs.COLL_RECRUITMENT, cond1, updateTotal, true);
+                        break;
+                    }
+                }
+            }
             //Insert history to DB
             historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Chuyển tin tuyển dụng", request.getInfo());
 
@@ -162,9 +171,8 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
         DictionaryNamesEntity dictionaryNames = new DictionaryNamesEntity();
         for (DictionaryValidateProcessor r : rs) {
             switch (r.getResult().getType()) {
-                case ThreadConfig.PROFILE: {
-                    dictionaryNames.setEmail((String) r.getResult().getName());
-                    dictionaryNames.setRecruitmentId(r.getResult().getIdProfile());
+                case ThreadConfig.CHANGE_RECRUITMENT_PROFILE: {
+                    dictionaryNames.setRecruitmentId((String) r.getResult().getName());
                     dictionaryNames.setStatusCVId(r.getResult().getStatusCVId());
                     break;
                 }

@@ -162,7 +162,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         profiles.setSchoolName((String) getCellValue(cell));
                         break;
                     case COLUMN_LEVEL_JOB_NAME:
-                        profiles.setLevelJobName((String) getCellValue(cell));
+                        profiles.setJobName((String) getCellValue(cell));
                         break;
                     case COLUMN_DATE_OF_APPLY:
                         profiles.setDateOfApply((String) getCellValue(cell));
@@ -193,7 +193,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             if (Strings.isNullOrEmpty(profiles.getEmail())) {
                 continue;
             }
-            if (Strings.isNullOrEmpty(profiles.getLevelJobName())) {
+            if (Strings.isNullOrEmpty(profiles.getJobName())) {
                 continue;
             }
             if (Strings.isNullOrEmpty(profiles.getDateOfApply())) {
@@ -268,7 +268,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail(), db, this));
                     rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
                     rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.TALENT_POOL, profile.getTalentPoolName(), db, this));
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB_LEVEL, profile.getLevelJobName(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB, profile.getJobName(), db, this));
                     rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.DEPARTMENT, profile.getDepartmentName(), db, this));
 
                     int total = rs.size();
@@ -303,7 +303,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     String schoolId = null;
                     String sourceCVId = null;
                     String talentPoolId = null;
-                    String levelJobId = null;
+                    String jobId = null;
                     String departmentId = null;
 
                     for (DictionaryNameValidateProcessor r : rs) {
@@ -321,7 +321,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                                 break;
                             }
                             case ThreadConfig.JOB_LEVEL: {
-                                levelJobId = r.getResult().getId();
+                                jobId = r.getResult().getId();
                                 break;
                             }
                             case ThreadConfig.DEPARTMENT: {
@@ -361,8 +361,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.SCHOOL_NAME, profile.getSchoolName());
                     pro.append(DbKeyConfig.SCHOOL_ID, schoolId);
                     pro.append(DbKeyConfig.DATE_OF_APPLY, dateOfApply);
-                    pro.append(DbKeyConfig.LEVEL_JOB_ID, levelJobId);
-                    pro.append(DbKeyConfig.LEVEL_JOB_NAME, profile.getLevelJobName());
+                    pro.append(DbKeyConfig.JOB_ID, jobId);
+                    pro.append(DbKeyConfig.JOB_NAME, profile.getJobName());
                     pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCVName());
                     pro.append(DbKeyConfig.SOURCE_CV_ID, sourceCVId);
                     pro.append(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(profile.getFullName()));
@@ -389,8 +389,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     profileEntity.setDateOfApply(dateOfApply);
                     profileEntity.setSourceCVId(sourceCVId);
                     profileEntity.setLevelSchool(profile.getLevelSchool());
-                    profileEntity.setLevelJobId(levelJobId);
-                    profileEntity.setLevelJobName(profile.getLevelJobName());
+                    profileEntity.setJobId(jobId);
+                    profileEntity.setJobName(profile.getJobName());
                     profileEntity.setSourceCVName(profile.getSourceCVName());
                     profileEntity.setTalentPoolId(talentPoolId);
                     profileEntity.setTalentPoolName(profile.getTalentPoolName());

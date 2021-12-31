@@ -12,7 +12,7 @@ public class ProfileUploadEntity {
     private String hometown;
     private String levelSchool;
     private String schoolName;
-    private String levelJobName;
+    private String jobName;
     private String dateOfApply;
     private String sourceCVName;
     private String talentPoolName;

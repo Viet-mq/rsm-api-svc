@@ -26,6 +26,8 @@ public interface ProfileService {
 
     BaseResponse updateRejectProfile(UpdateRejectProfileRequest request);
 
+    BaseResponse updateTalentPoolProfile(UpdateTalentPoolProfileRequest request);
+
     void isOld(String id);
 
 }

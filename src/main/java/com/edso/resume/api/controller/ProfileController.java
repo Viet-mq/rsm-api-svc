@@ -126,6 +126,24 @@ public class ProfileController extends BaseController {
         return response;
     }
 
+    @PostMapping("/talentpool")
+    public BaseResponse updateTalentPoolProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateTalentPoolProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>updateTalentPoolProfile u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.updateTalentPoolProfile(request);
+            }
+        }
+        logger.info("<=updateTalentPoolProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
     @PostMapping("/isold")
     public void isOld(@RequestParam String id) {
         logger.info("=>isOld id: {}", id);

@@ -141,7 +141,18 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
                 break;
             }
+            case ThreadConfig.CHANGE_RECRUITMENT_PROFILE: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)));
+                result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
+                break;
+            }
             case ThreadConfig.REJECT_PROFILE: {
+                if(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)).equals("")){
+                    result.setResult(false);
+                    result.setName("Không thể loại ứng viên đã bị loại!");
+                    break;
+                }
                 result.setResult(true);
                 result.setName(AppUtils.parseLong(doc.get(DbKeyConfig.RECRUITMENT_TIME)));
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)));
@@ -262,7 +273,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.SOURCE_CV: {
                 return "nguồn cv";
             }
+            case ThreadConfig.TALENT_POOL_PROFILE:
             case ThreadConfig.REJECT_PROFILE:
+            case ThreadConfig.CHANGE_RECRUITMENT_PROFILE:
             case ThreadConfig.PROFILE: {
                 return "id profile";
             }
@@ -317,6 +330,8 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.SOURCE_CV: {
                 return CollectionNameDefs.COLL_SOURCE_CV;
             }
+            case ThreadConfig.TALENT_POOL_PROFILE:
+            case ThreadConfig.CHANGE_RECRUITMENT_PROFILE:
             case ThreadConfig.PROFILE_EMAIL:
             case ThreadConfig.PROFILE_PHONE_NUMBER:
             case ThreadConfig.REJECT_PROFILE:

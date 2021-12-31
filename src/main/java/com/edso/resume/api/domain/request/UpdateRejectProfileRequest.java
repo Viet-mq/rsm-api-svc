@@ -22,11 +22,11 @@ public class UpdateRejectProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(reason)) {
             return new BaseResponse(ErrorCodeDefs.REASON, "Vui lòng nhập lý do loại ứng viên");
         }
-        if (Strings.isNullOrEmpty(recruitmentId)) {
-            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập recruitment id");
-        }
         if (reason.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.REASON, "Vui lòng nhập lý do loại ứng viên ít hơn 255 ký tự");
+        }
+        if (Strings.isNullOrEmpty(recruitmentId)) {
+            return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập recruitment id");
         }
         return null;
     }

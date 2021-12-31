@@ -28,7 +28,6 @@ public class UpdateProfileRequest extends BaseAuthRequest {
     private String job;
     private List<String> skill;
     private String levelJob;
-    private String talentPool;
     private String hrRef;
     private String mailRef;
     private String department;
@@ -89,9 +88,6 @@ public class UpdateProfileRequest extends BaseAuthRequest {
         }
         if (dateOfApply == null || dateOfApply < 0) {
             return new BaseResponse(ErrorCodeDefs.DATE_OF_APPLY, "Vui lòng nhập ngày ứng tuyển");
-        }
-        if (!Strings.isNullOrEmpty(talentPool) && talentPool.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.TALENT_POOL, "Vui lòng nhập talent pool ít hơn 255 ký tự");
         }
         if (!Strings.isNullOrEmpty(department) && department.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.DEPARTMENT, "Vui lòng nhập phòng ban ít hơn 255 ký tự");
