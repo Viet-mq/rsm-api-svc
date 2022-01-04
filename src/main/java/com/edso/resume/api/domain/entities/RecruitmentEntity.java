@@ -12,7 +12,8 @@ public class RecruitmentEntity {
     private String title;
     private String jobId;
     private String jobName;
-    private String address;
+    private String addressId;
+    private String addressName;
     private String typeOfJob;
     private String quantity;
     private String detailOfSalary;

@@ -82,7 +82,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .title(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)))
                         .jobId(AppUtils.parseString(doc.get(DbKeyConfig.JOB_ID)))
                         .jobName(AppUtils.parseString(doc.get(DbKeyConfig.JOB_NAME)))
-                        .address(AppUtils.parseString(doc.get(DbKeyConfig.ADDRESS)))
+                        .addressId(AppUtils.parseString(doc.get(DbKeyConfig.ADDRESS_ID)))
+                        .addressName(AppUtils.parseString(doc.get(DbKeyConfig.ADDRESS_NAME)))
                         .typeOfJob(AppUtils.parseString(doc.get(DbKeyConfig.TYPE_OF_JOB)))
                         .quantity(AppUtils.parseString(doc.get(DbKeyConfig.QUANTITY)))
                         .detailOfSalary(AppUtils.parseString(doc.get(DbKeyConfig.DETAIL_OF_SALARY)))
@@ -127,7 +128,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 .title(AppUtils.parseString(one.get(DbKeyConfig.TITLE)))
                 .jobId(AppUtils.parseString(one.get(DbKeyConfig.JOB_ID)))
                 .jobName(AppUtils.parseString(one.get(DbKeyConfig.JOB_NAME)))
-                .address(AppUtils.parseString(one.get(DbKeyConfig.ADDRESS)))
+                .addressId(AppUtils.parseString(one.get(DbKeyConfig.ADDRESS_ID)))
+                .addressName(AppUtils.parseString(one.get(DbKeyConfig.ADDRESS_NAME)))
                 .typeOfJob(AppUtils.parseString(one.get(DbKeyConfig.TYPE_OF_JOB)))
                 .quantity(AppUtils.parseString(one.get(DbKeyConfig.QUANTITY)))
                 .detailOfSalary(AppUtils.parseString(one.get(DbKeyConfig.SALARY)))
@@ -157,6 +159,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, request.getTitle(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             if (request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewer(), db, this));
@@ -212,7 +215,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.TITLE, request.getTitle());
             recruitment.append(DbKeyConfig.JOB_ID, request.getJob());
             recruitment.append(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName());
-            recruitment.append(DbKeyConfig.ADDRESS, request.getAddress());
+            recruitment.append(DbKeyConfig.ADDRESS_ID, request.getAddress());
+            recruitment.append(DbKeyConfig.ADDRESS_NAME, dictionaryNames.getAddressName());
             recruitment.append(DbKeyConfig.TYPE_OF_JOB, request.getTypeOfJob());
             recruitment.append(DbKeyConfig.QUANTITY, request.getQuantity());
             recruitment.append(DbKeyConfig.DETAIL_OF_SALARY, request.getDetailOfSalary());
@@ -262,6 +266,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, request.getTitle(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
@@ -319,7 +324,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.TITLE, request.getTitle()),
                     Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
                     Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
-                    Updates.set(DbKeyConfig.ADDRESS, request.getAddress()),
+                    Updates.set(DbKeyConfig.ADDRESS_ID, request.getAddress()),
+                    Updates.set(DbKeyConfig.ADDRESS_NAME, dictionaryNames.getAddressName()),
                     Updates.set(DbKeyConfig.TYPE_OF_JOB, request.getTypeOfJob()),
                     Updates.set(DbKeyConfig.QUANTITY, request.getQuantity()),
                     Updates.set(DbKeyConfig.DETAIL_OF_SALARY, request.getDetailOfSalary()),
@@ -359,15 +365,23 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
     public BaseResponse deleteRecruitment(DeleteRecruitmentRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, cond);
+            Document recruitment = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.RECRUITMENT_ID, request.getId()));
+            if (recruitment == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+                db.delete(CollectionNameDefs.COLL_RECRUITMENT, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa tin tuyển dụng này!");
                 return response;
             }
-            db.delete(CollectionNameDefs.COLL_RECRUITMENT, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -375,7 +389,6 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 
     private DictionaryNamesEntity getDictionayNames(List<DictionaryValidateProcessor> rs) {
@@ -392,6 +405,10 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 }
                 case ThreadConfig.LIST_USER: {
                     dictionaryNames.setInterviewer((List<Document>) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.ADDRESS: {
+                    dictionaryNames.setAddressName((String) r.getResult().getName());
                     break;
                 }
                 default: {

@@ -7,10 +7,7 @@ import com.edso.resume.api.domain.entities.ProfileUploadEntity;
 import com.edso.resume.api.domain.validator.DictionaryNameValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryNameValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryNameValidator;
-import com.edso.resume.lib.common.CollectionNameDefs;
-import com.edso.resume.lib.common.DbKeyConfig;
-import com.edso.resume.lib.common.NameConfig;
-import com.edso.resume.lib.common.ThreadConfig;
+import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,8 +26,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class UploadProfilesServiceImpl extends BaseService implements UploadProfilesService, IDictionaryNameValidator {
@@ -57,11 +52,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     private String routingkey;
 
     private final Queue<DictionaryNameValidatorResult> queue = new LinkedBlockingQueue<>();
-    private static final String EMAIL_REGEX = "^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$";
-    private static final String FULL_NAME_REGEX = "^[\\p{L} .'-]+$";
-    private static Pattern patternEmail;
-    private static Pattern fullNamePattern;
-    private static Matcher matcher;
 
     @JsonIgnore
     protected HeaderInfo info;
@@ -72,8 +62,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     public UploadProfilesServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate) {
         super(db);
         this.rabbitTemplate = rabbitTemplate;
-        patternEmail = Pattern.compile(EMAIL_REGEX);
-        fullNamePattern = Pattern.compile(FULL_NAME_REGEX);
     }
 
     // Get cell value
@@ -208,11 +196,11 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             if (Strings.isNullOrEmpty(profiles.getDepartmentName())) {
                 continue;
             }
-            if (!validateFullName(profiles.getFullName())) {
+            if (!AppUtils.validateFullName(profiles.getFullName())) {
                 logger.info("Họ và tên không đúng định dạng! fullName: {}", profiles.getFullName());
                 continue;
             }
-            if (!validateEmail(profiles.getEmail())) {
+            if (!AppUtils.validateEmail(profiles.getEmail())) {
                 logger.info("Email không đúng định dạng! email: {}", profiles.getEmail());
                 continue;
             }
@@ -405,7 +393,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     }
                 }
             }
-        }catch (Throwable ex){
+        } catch (Throwable ex) {
             logger.error("Exception: ", ex);
         }
         response.setSuccess();
@@ -433,16 +421,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
         fos.write(file.getBytes());
         fos.close();
         return convFile;
-    }
-
-    public boolean validateEmail(String email) {
-        matcher = patternEmail.matcher(email);
-        return matcher.matches();
-    }
-
-    public boolean validateFullName(String fullName) {
-        matcher = fullNamePattern.matcher(fullName);
-        return matcher.matches();
     }
 
     @Override

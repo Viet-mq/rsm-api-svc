@@ -38,6 +38,19 @@ public class StatusCVController extends BaseController {
         return resp;
     }
 
+    @GetMapping("/recruitment")
+    public BaseResponse findAllStatusCVForRecruitment(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size) {
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>findAllStatusCVForRecruitment u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
+        GetArrayResponse<StatusCVEntity> resp = statusCVService.findAllStatusCVForRecruitment(headerInfo, name, page, size);
+        logger.info("<=findAllStatusCVForRecruitment u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
+        return resp;
+    }
+
     @PostMapping("/create")
     public BaseResponse createStatusCV(@RequestHeader Map<String, String> headers,
                                        @RequestBody CreateStatusCVRequest request,
@@ -79,11 +92,11 @@ public class StatusCVController extends BaseController {
     }
 
     @PostMapping("/update-all")
-    public BaseResponse updateStatusCV(@RequestHeader Map<String, String> headers,
+    public BaseResponse updateAllStatusCV(@RequestHeader Map<String, String> headers,
                                        @RequestBody UpdateAllStatusCVRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateStatusCV u: {}, req: {}", headerInfo, request);
+        logger.info("=>updateAllStatusCV u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
@@ -93,7 +106,7 @@ public class StatusCVController extends BaseController {
                 response = statusCVService.updateAllStatusCV(request);
             }
         }
-        logger.info("<=updateStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=updateAllStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 

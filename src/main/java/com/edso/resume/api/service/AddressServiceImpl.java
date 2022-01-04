@@ -124,7 +124,12 @@ public class AddressServiceImpl extends BaseService implements AddressService {
                     Updates.set(DbKeyConfig.ADDRESS_NAME, request.getName())
             );
             db.update(CollectionNameDefs.COLL_RECRUITMENT, idAddress, updateRecruitment, true);
-            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, idAddress, updateRecruitment, true);
+
+            Bson address = Filters.eq(DbKeyConfig.INTERVIEW_ADDRESS_ID, request.getId());
+            Bson updateCalendar = Updates.combine(
+                    Updates.set(DbKeyConfig.INTERVIEW_ADDRESS_NAME, request.getName())
+            );
+            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, address, updateCalendar, true);
 
 
             // update roles
@@ -152,7 +157,7 @@ public class AddressServiceImpl extends BaseService implements AddressService {
         BaseResponse response = new BaseResponse();
         try {
             Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.ADDRESS_ID, request.getId()));
-            Document calendar = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ADDRESS_ID, request.getId()));
+            Document calendar = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.INTERVIEW_ADDRESS_ID, request.getId()));
             if (recruitment == null && calendar == null) {
                 String id = request.getId();
                 Bson cond = Filters.eq(DbKeyConfig.ID, id);

@@ -1,7 +1,6 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.ChildrenStatusCVEntity;
 import com.edso.resume.api.domain.entities.StatusCV;
 import com.edso.resume.api.domain.entities.StatusCVEntity;
 import com.edso.resume.api.domain.request.CreateStatusCVRequest;
@@ -50,7 +49,35 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
                 StatusCVEntity statusCV = StatusCVEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
-                        .children((List<ChildrenStatusCVEntity>) doc.get(DbKeyConfig.CHILDREN))
+//                        .children((List<ChildrenStatusCVEntity>) doc.get(DbKeyConfig.CHILDREN))
+                        .isDragDisabled((Boolean) doc.get(DbKeyConfig.DELETE))
+                        .build();
+                rows.add(statusCV);
+            }
+        }
+        GetArrayResponse<StatusCVEntity> resp = new GetArrayResponse<>();
+        resp.setSuccess();
+        resp.setTotal(db.countAll(CollectionNameDefs.COLL_STATUS_CV, cond));
+        resp.setRows(rows);
+        return resp;
+    }
+
+    @Override
+    public GetArrayResponse<StatusCVEntity> findAllStatusCVForRecruitment(HeaderInfo info, String name, Integer page, Integer size) {
+        List<Bson> c = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(name)) {
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+        }
+        Bson cond = buildCondition(c);
+        PagingInfo pagingInfo = PagingInfo.parse(page, size);
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_STATUS_CV, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
+        List<StatusCVEntity> rows = new ArrayList<>();
+        if (lst != null) {
+            for (Document doc : lst) {
+                StatusCVEntity statusCV = StatusCVEntity.builder()
+                        .id(UUID.randomUUID().toString())
+                        .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+//                        .children((List<ChildrenStatusCVEntity>) doc.get(DbKeyConfig.CHILDREN))
                         .isDragDisabled((Boolean) doc.get(DbKeyConfig.DELETE))
                         .build();
                 rows.add(statusCV);
@@ -78,7 +105,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             }
 
             List<Document> list = new ArrayList<>();
-            if (children != null) {
+            if (children != null && children.isEmpty()) {
                 for (String child : children) {
                     Document idDoc = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, child));
                     if (idDoc == null) {
@@ -142,7 +169,8 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             }
 
             List<Document> list = new ArrayList<>();
-            if (children != null) {
+
+            if (children != null && children.isEmpty()) {
                 for (String child : children) {
                     Document idDoc = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.ID, child));
                     if (id == null) {
@@ -156,13 +184,6 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
                     }
                 }
             }
-
-            Bson idStatusCV = Filters.eq(DbKeyConfig.STATUS_CV_ID, request.getId());
-            Bson update = Updates.combine(
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
-            );
-            db.update(CollectionNameDefs.COLL_PROFILE, idStatusCV, update, true);
-            db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, idStatusCV, update, true);
 
             Bson updateRecruitment = Updates.combine(
                     Updates.set(DbKeyConfig.RECRUITMENT_STATUS_CV_NAME, request.getName())
@@ -222,30 +243,25 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     public BaseResponse deleteStatusCV(DeleteStatusCVRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            Document status = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.RECRUITMENT_STATUS_CV_ID, request.getId()));
-            if (status == null) {
-                String id = request.getId();
-                Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
 
-                if (idDocument == null) {
-                    response.setFailed("Id này không tồn tại");
-                    return response;
-                }
-
-                boolean delete = (boolean) idDocument.get(DbKeyConfig.DELETE);
-                if (!delete) {
-                    response.setFailed("Không được xóa bản ghi này!");
-                    return response;
-                }
-
-                db.delete(CollectionNameDefs.COLL_STATUS_CV, cond);
-                response.setSuccess();
-                return response;
-            } else {
-                response.setFailed("Không thể xóa vòng tuyển dụng này!");
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
                 return response;
             }
+
+            boolean delete = (boolean) idDocument.get(DbKeyConfig.DELETE);
+
+            if (delete) {
+                response.setFailed("Không được xóa bản ghi này!");
+                return response;
+            }
+
+            db.delete(CollectionNameDefs.COLL_STATUS_CV, cond);
+            response.setSuccess();
+            return response;
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);

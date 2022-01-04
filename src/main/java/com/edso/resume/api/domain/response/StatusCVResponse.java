@@ -9,4 +9,5 @@ import lombok.EqualsAndHashCode;
 public class StatusCVResponse extends BaseResponse {
     private String id;
     private String name;
+    private Boolean isDragDisabled;
 }

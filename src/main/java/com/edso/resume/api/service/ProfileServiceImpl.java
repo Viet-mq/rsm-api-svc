@@ -198,7 +198,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         response.setSuccess(profile);
 
         //Insert history to DB
-        historyService.createHistory(idProfile, TypeConfig.SELECT, "Xem chi tiết profile", info);
+        historyService.createHistory(idProfile, TypeConfig.SELECT, "Xem chi tiết thông tin ứng viên", info);
 
         return response;
     }
@@ -316,7 +316,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo profile", request.getInfo());
+            historyService.createHistory(idProfile, TypeConfig.CREATE, "Thêm ứng viên", request.getInfo());
 
             response.setSuccess();
             return response;
@@ -443,7 +443,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa profile", request.getInfo());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật thông tin ứng viên", request.getInfo());
 
             response.setSuccess();
             return response;
@@ -580,7 +580,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chi tiết profile", request.getInfo());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật thông tin chi tiết ứng viên", request.getInfo());
 
             response.setSuccess();
             return response;
@@ -707,7 +707,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE_STATUS, profileRabbitMQ);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển vòng tuyển dụng", request.getInfo());
 
             return response;
 
@@ -811,7 +811,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, request.getIdProfile()), reject,true);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Loại ứng viên", request.getInfo());
 
             response.setSuccess();
             return response;

@@ -227,7 +227,6 @@ public class DictionaryValidateProcessor implements Runnable {
                     result.setResult(true);
                     break;
                 }
-
             }
             default: {
                 result.setResult(true);
