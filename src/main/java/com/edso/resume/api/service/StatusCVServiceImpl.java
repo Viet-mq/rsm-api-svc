@@ -62,6 +62,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         return resp;
     }
 
+    //RES-293
     @Override
     public GetArrayResponse<StatusCVEntity> findAllStatusCVForRecruitment(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();

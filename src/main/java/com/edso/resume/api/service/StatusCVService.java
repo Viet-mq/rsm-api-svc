@@ -15,6 +15,7 @@ public interface StatusCVService {
 
     GetArrayResponse<StatusCVEntity> findAll(HeaderInfo info, String name, Integer page, Integer size);
 
+    //RES-293
     GetArrayResponse<StatusCVEntity> findAllStatusCVForRecruitment(HeaderInfo info, String name, Integer page, Integer size);
 
     BaseResponse createStatusCV(CreateStatusCVRequest request, List<String> children);

@@ -38,6 +38,7 @@ public class StatusCVController extends BaseController {
         return resp;
     }
 
+    //RES-293
     @GetMapping("/recruitment")
     public BaseResponse findAllStatusCVForRecruitment(
             @RequestHeader Map<String, String> headers,
