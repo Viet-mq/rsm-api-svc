@@ -152,15 +152,23 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
     public BaseResponse deleteJobLevel(DeleteJobLevelRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+            Document levelJob = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.LEVEL_JOB_ID, request.getId()));
+            if (levelJob == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB_LEVEL, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+                db.delete(CollectionNameDefs.COLL_JOB_LEVEL, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa cấp bậc công việc này!");
                 return response;
             }
-            db.delete(CollectionNameDefs.COLL_JOB_LEVEL, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -168,6 +176,5 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 }

@@ -24,18 +24,17 @@ public class UpdateSourceCVRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên nguồn CV");
         }
-        if (Strings.isNullOrEmpty(email)) {
-            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập địa chỉ email cung cấp hồ sơ ứng viên");
+        if (!Strings.isNullOrEmpty(email)) {
+            if (email.length() > 255 || !validateEmail(email)) {
+                return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
+            }
         }
-        if (email.length() >255 || !validateEmail(email)) {
-            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
-        }
-        if (Strings.isNullOrEmpty(status) || status.length() > 255) {
+        if (!Strings.isNullOrEmpty(status) && status.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái");
         }
-        if (!status.equals(NameConfig.DANG_SU_DUNG) && !status.equals(NameConfig.NGUNG_SU_DUNG)) {
-            return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái: Đang sử dụng hoặc Ngừng sử dụng");
-        }
+//        if (!status.equals(NameConfig.DANG_SU_DUNG) && !status.equals(NameConfig.NGUNG_SU_DUNG)) {
+//            return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái: Đang sử dụng hoặc Ngừng sử dụng");
+//        }
         return null;
     }
 }

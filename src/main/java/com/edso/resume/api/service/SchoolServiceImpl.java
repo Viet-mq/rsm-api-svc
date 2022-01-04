@@ -152,15 +152,23 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
     public BaseResponse deleteSchool(DeleteSchoolRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, cond);
+            Document school = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.SCHOOL_ID, request.getId()));
+            if (school == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_SCHOOL, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+                db.delete(CollectionNameDefs.COLL_SCHOOL, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa trường học này!");
                 return response;
             }
-            db.delete(CollectionNameDefs.COLL_SCHOOL, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -168,7 +176,6 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 
 }

@@ -151,16 +151,24 @@ public class JobServiceImpl extends BaseService implements JobService {
     public BaseResponse deleteJob(DeleteJobRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB, cond);
+            Document job = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.JOB_ID, request.getId()));
+            if (job == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+
+                db.delete(CollectionNameDefs.COLL_JOB, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa vị trí công việc này!");
                 return response;
             }
-
-            db.delete(CollectionNameDefs.COLL_JOB, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -168,7 +176,6 @@ public class JobServiceImpl extends BaseService implements JobService {
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 
 }

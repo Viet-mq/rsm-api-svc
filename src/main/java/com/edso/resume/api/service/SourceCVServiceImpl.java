@@ -159,16 +159,24 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
     public BaseResponse deleteSourceCV(DeleteSourceCVRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, cond);
+            Document source = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.SOURCE_CV_ID, request.getId()));
+            if (source == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+
+                db.delete(CollectionNameDefs.COLL_SOURCE_CV, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa nguồn cv này!");
                 return response;
             }
-
-            db.delete(CollectionNameDefs.COLL_SOURCE_CV, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -176,7 +184,6 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 
 }

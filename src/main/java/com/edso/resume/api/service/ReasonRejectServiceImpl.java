@@ -91,6 +91,11 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
                 return response;
             }
 
+            Bson updateReject = Updates.combine(
+                    Updates.set(DbKeyConfig.REASON, request.getReason())
+            );
+            db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.REASON_ID, request.getId()), updateReject);
+
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.REASON, request.getReason()),
@@ -113,15 +118,23 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
     public BaseResponse deleteReasonReject(DeleteReasonRejectRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_REASON_REJECT, cond);
+            Document reason = db.findOne(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.REASON_ID, request.getId()));
+            if (reason == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_REASON_REJECT, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+                db.delete(CollectionNameDefs.COLL_REASON_REJECT, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa lý do loại này!");
                 return response;
             }
-            db.delete(CollectionNameDefs.COLL_REASON_REJECT, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -129,6 +142,5 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 }

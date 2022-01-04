@@ -800,13 +800,15 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            Document reject = new Document();
-            reject.append(DbKeyConfig.ID_PROFILE, request.getIdProfile());
-            reject.append(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName());
-            reject.append(DbKeyConfig.RECRUITMENT_TIME, dictionaryNames.getRecruitmentTime());
-            reject.append(DbKeyConfig.REASON, dictionaryNames.getReason());
-
-            db.insertOne(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, reject);
+            Bson reject = Updates.combine(
+                    Updates.set(DbKeyConfig.ID_PROFILE, request.getIdProfile()),
+                    Updates.set(DbKeyConfig.STATUS_CV_ID, dictionaryNames.getStatusCVId()),
+                    Updates.set(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName()),
+                    Updates.set(DbKeyConfig.RECRUITMENT_TIME, dictionaryNames.getRecruitmentTime()),
+                    Updates.set(DbKeyConfig.REASON_ID, request.getReason()),
+                    Updates.set(DbKeyConfig.REASON, dictionaryNames.getReason())
+            );
+            db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, request.getIdProfile()), reject,true);
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật trạng thái profile", request.getInfo());

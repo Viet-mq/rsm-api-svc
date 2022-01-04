@@ -1,12 +1,14 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.CategoryEntity;
 import com.edso.resume.api.domain.entities.SkillEntity;
 import com.edso.resume.api.domain.request.CreateSkillRequest;
 import com.edso.resume.api.domain.request.DeleteSkillRequest;
 import com.edso.resume.api.domain.request.UpdateSkillRequest;
-import com.edso.resume.lib.common.*;
+import com.edso.resume.lib.common.AppUtils;
+import com.edso.resume.lib.common.CollectionNameDefs;
+import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -192,15 +194,23 @@ public class SkillServiceImpl extends BaseService implements SkillService {
     public BaseResponse deleteSkill(DeleteSkillRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_SKILL, cond);
+            Document skill = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.SKILL_ID, request.getId()));
+            if (skill == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_SKILL, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+                db.delete(CollectionNameDefs.COLL_SKILL, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa kỹ năng công việc này!");
                 return response;
             }
-            db.delete(CollectionNameDefs.COLL_SKILL, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -208,6 +218,5 @@ public class SkillServiceImpl extends BaseService implements SkillService {
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 }

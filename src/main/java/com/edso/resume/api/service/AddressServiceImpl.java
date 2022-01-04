@@ -124,6 +124,7 @@ public class AddressServiceImpl extends BaseService implements AddressService {
                     Updates.set(DbKeyConfig.ADDRESS_NAME, request.getName())
             );
             db.update(CollectionNameDefs.COLL_RECRUITMENT, idAddress, updateRecruitment, true);
+            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, idAddress, updateRecruitment, true);
 
 
             // update roles
@@ -150,15 +151,24 @@ public class AddressServiceImpl extends BaseService implements AddressService {
     public BaseResponse deleteAddress(DeleteAddressRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_ADDRESS, cond);
+            Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.ADDRESS_ID, request.getId()));
+            Document calendar = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ADDRESS_ID, request.getId()));
+            if (recruitment == null && calendar == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_ADDRESS, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+                db.delete(CollectionNameDefs.COLL_ADDRESS, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa địa chỉ này!");
                 return response;
             }
-            db.delete(CollectionNameDefs.COLL_ADDRESS, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -166,6 +176,5 @@ public class AddressServiceImpl extends BaseService implements AddressService {
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 }

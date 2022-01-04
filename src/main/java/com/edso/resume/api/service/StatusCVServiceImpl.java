@@ -2,9 +2,11 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.ChildrenStatusCVEntity;
+import com.edso.resume.api.domain.entities.StatusCV;
 import com.edso.resume.api.domain.entities.StatusCVEntity;
 import com.edso.resume.api.domain.request.CreateStatusCVRequest;
 import com.edso.resume.api.domain.request.DeleteStatusCVRequest;
+import com.edso.resume.api.domain.request.UpdateAllStatusCVRequest;
 import com.edso.resume.api.domain.request.UpdateStatusCVRequest;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
@@ -39,10 +41,9 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
         }
-        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_STATUS_CV, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_STATUS_CV, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<StatusCVEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
@@ -50,7 +51,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
                         .children((List<ChildrenStatusCVEntity>) doc.get(DbKeyConfig.CHILDREN))
-                        .delete((Boolean) doc.get(DbKeyConfig.DELETE))
+                        .isDragDisabled((Boolean) doc.get(DbKeyConfig.DELETE))
                         .build();
                 rows.add(statusCV);
             }
@@ -96,6 +97,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             statusCV.append(DbKeyConfig.ID, UUID.randomUUID().toString());
             statusCV.append(DbKeyConfig.NAME, name);
             statusCV.append(DbKeyConfig.CHILDREN, list);
+            statusCV.append(DbKeyConfig.DELETE, false);
             statusCV.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
             statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             statusCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -160,6 +162,12 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
                     Updates.set(DbKeyConfig.STATUS_CV_NAME, request.getName())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, idStatusCV, update, true);
+            db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, idStatusCV, update, true);
+
+            Bson updateRecruitment = Updates.combine(
+                    Updates.set(DbKeyConfig.RECRUITMENT_STATUS_CV_NAME, request.getName())
+            );
+            db.update(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.RECRUITMENT_STATUS_CV_ID, request.getId()), updateRecruitment, true);
 
             // update roles
             Bson updates = Updates.combine(
@@ -183,25 +191,61 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     }
 
     @Override
+    public BaseResponse updateAllStatusCV(UpdateAllStatusCVRequest request) {
+        BaseResponse response = new BaseResponse();
+        try {
+            db.delete(CollectionNameDefs.COLL_STATUS_CV, null);
+            List<StatusCV> list = request.getStatusCVS();
+            List<Document> documentList = new ArrayList<>();
+            for (StatusCV statusCV : list) {
+                Document status = new Document();
+                status.append(DbKeyConfig.ID, statusCV.getId());
+                status.append(DbKeyConfig.NAME, statusCV.getName());
+//                status.append(DbKeyConfig.CHILDREN, list);
+                status.append(DbKeyConfig.DELETE, statusCV.getIsDragDisabled());
+                status.append(DbKeyConfig.NAME_SEARCH, statusCV.getName().toLowerCase());
+                status.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+                status.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+                documentList.add(status);
+            }
+            db.insertMany(CollectionNameDefs.COLL_STATUS_CV, documentList);
+            response.setSuccess();
+            return response;
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+        }
+    }
+
+    @Override
     public BaseResponse deleteStatusCV(DeleteStatusCVRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String id = request.getId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, id);
-            Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
+            Document status = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.RECRUITMENT_STATUS_CV_ID, request.getId()));
+            if (status == null) {
+                String id = request.getId();
+                Bson cond = Filters.eq(DbKeyConfig.ID, id);
+                Document idDocument = db.findOne(CollectionNameDefs.COLL_STATUS_CV, cond);
 
-            if (idDocument == null) {
-                response.setFailed("Id này không tồn tại");
+                if (idDocument == null) {
+                    response.setFailed("Id này không tồn tại");
+                    return response;
+                }
+
+                boolean delete = (boolean) idDocument.get(DbKeyConfig.DELETE);
+                if (!delete) {
+                    response.setFailed("Không được xóa bản ghi này!");
+                    return response;
+                }
+
+                db.delete(CollectionNameDefs.COLL_STATUS_CV, cond);
+                response.setSuccess();
+                return response;
+            } else {
+                response.setFailed("Không thể xóa vòng tuyển dụng này!");
                 return response;
             }
-
-            boolean delete = (boolean) idDocument.get(DbKeyConfig.DELETE);
-            if(!delete){
-                response.setFailed("Không được xóa bản ghi này!");
-                return response;
-            }
-
-            db.delete(CollectionNameDefs.COLL_STATUS_CV, cond);
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -209,7 +253,6 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             return response;
 
         }
-        return new BaseResponse(0, "OK");
     }
 
 }

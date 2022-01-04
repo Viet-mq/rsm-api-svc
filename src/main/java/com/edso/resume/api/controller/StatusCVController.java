@@ -3,6 +3,7 @@ package com.edso.resume.api.controller;
 import com.edso.resume.api.domain.entities.StatusCVEntity;
 import com.edso.resume.api.domain.request.CreateStatusCVRequest;
 import com.edso.resume.api.domain.request.DeleteStatusCVRequest;
+import com.edso.resume.api.domain.request.UpdateAllStatusCVRequest;
 import com.edso.resume.api.domain.request.UpdateStatusCVRequest;
 import com.edso.resume.api.service.StatusCVService;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -71,6 +72,25 @@ public class StatusCVController extends BaseController {
             if (response == null) {
                 request.setInfo(headerInfo);
                 response = statusCVService.updateStatusCV(request, children);
+            }
+        }
+        logger.info("<=updateStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
+    @PostMapping("/update-all")
+    public BaseResponse updateStatusCV(@RequestHeader Map<String, String> headers,
+                                       @RequestBody UpdateAllStatusCVRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>updateStatusCV u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = statusCVService.updateAllStatusCV(request, children);
             }
         }
         logger.info("<=updateStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);
