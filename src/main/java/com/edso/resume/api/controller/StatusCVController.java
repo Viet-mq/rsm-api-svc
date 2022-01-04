@@ -90,7 +90,7 @@ public class StatusCVController extends BaseController {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = statusCVService.updateAllStatusCV(request, children);
+                response = statusCVService.updateAllStatusCV(request);
             }
         }
         logger.info("<=updateStatusCV u: {}, req: {}, resp: {}", headerInfo, request, response);
