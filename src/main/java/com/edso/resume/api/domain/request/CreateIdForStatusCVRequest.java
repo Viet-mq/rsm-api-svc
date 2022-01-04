@@ -14,8 +14,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class CreateIdForStatusCVRequest extends BaseAuthRequest{
-    private final List<StatusCV> statusCVS;
-    private final String name;
+    private List<StatusCV> statusCVS;
+    private String name;
 
     public BaseResponse validate(){
         if(Strings.isNullOrEmpty(name)){

@@ -212,6 +212,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
 
     }
 
+    //RES-295
     @Override
     public BaseResponse updateAllStatusCV(UpdateAllStatusCVRequest request) {
         BaseResponse response = new BaseResponse();
