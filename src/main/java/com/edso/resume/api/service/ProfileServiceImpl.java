@@ -872,11 +872,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             List<Bson> c = new ArrayList<>();
             c.add(cond);
-            c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, request.getTalentPoolId()));
+            c.add(Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis())
+                    Updates.set(DbKeyConfig.TALENTPOOL_TIME, System.currentTimeMillis())
             );
 
             db.update(CollectionNameDefs.COLL_PROFILE, buildCondition(c), updates, true);
