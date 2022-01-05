@@ -869,7 +869,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, idProfile), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getProfileId()));
+            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, idProfile), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
             Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
             if (document == null) {
                 Document talentPool = new Document();
