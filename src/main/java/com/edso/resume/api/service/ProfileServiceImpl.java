@@ -830,7 +830,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         try {
             //Validate
             String idProfile = request.getProfileId();
-            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL_PROFILE, idProfile, db, this));
@@ -870,7 +869,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getProfileId()));
+            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, idProfile), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getProfileId()));
+            Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
             if (document == null) {
                 Document talentPool = new Document();
                 talentPool.append(DbKeyConfig.ID, request.getTalentPoolId());
@@ -878,7 +878,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 Bson updates = Updates.combine(
                         Updates.push(DbKeyConfig.TALENT_POOL, talentPool)
                 );
-                db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+                db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
             }
 
             //Insert history to DB
