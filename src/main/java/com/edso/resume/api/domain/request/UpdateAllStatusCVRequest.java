@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class UpdateAllStatusCVRequest extends BaseAuthRequest{
-    private final List<StatusCV> statusCVS;
+    private List<StatusCV> statusCVS;
 
     public BaseResponse validate(){
         if(statusCVS == null || statusCVS.isEmpty()){

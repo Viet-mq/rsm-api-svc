@@ -336,6 +336,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         }
                     }
 
+                    String color = randomColor();
+
                     String idProfile = UUID.randomUUID().toString();
                     Document pro = new Document();
                     pro.append(DbKeyConfig.ID, idProfile);
@@ -361,6 +363,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.HR_REF, profile.getHrRef());
                     pro.append(DbKeyConfig.DEPARTMENT_ID, departmentId);
                     pro.append(DbKeyConfig.DEPARTMENT_NAME, profile.getDepartmentName());
+                    pro.append(DbKeyConfig.AVATAR_COLOR, color);
 
                     db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
 
@@ -385,7 +388,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     profileEntity.setHrRef(profile.getHrRef());
                     profileEntity.setDepartmentId(departmentId);
                     profileEntity.setDepartmentName(profile.getDepartmentName());
-
+                    profileEntity.setAvatarColor(color);
                     publishActionToRabbitMQ(profileEntity);
                 } finally {
                     synchronized (queue) {
