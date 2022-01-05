@@ -118,8 +118,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .dateOfApply(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY)))
                         .statusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
                         .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
-                        .talentPoolId(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_ID)))
-                        .talentPoolName(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_NAME)))
+                        .talentPool((List<String>) doc.get(DbKeyConfig.TALENT_POOL))
                         .image(AppUtils.parseString(doc.get(DbKeyConfig.URL_IMAGE)))
                         .cv(AppUtils.parseString(doc.get(DbKeyConfig.CV)))
                         .urlCV(AppUtils.parseString(doc.get(DbKeyConfig.URL_CV)))
@@ -808,7 +807,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.REASON_ID, request.getReason()),
                     Updates.set(DbKeyConfig.REASON, dictionaryNames.getReason())
             );
-            db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, request.getIdProfile()), reject,true);
+            db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, request.getIdProfile()), reject, true);
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Loại ứng viên", request.getInfo());
@@ -840,8 +839,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL_PROFILE , idProfile, db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPoolId(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL_PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getNewTalentPoolId(), db, this));
+            if (!Strings.isNullOrEmpty(request.getOldTalentPoolId())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getOldTalentPoolId(), db, this));
+            }
             int total = rs.size();
 
             for (DictionaryValidateProcessor r : rs) {
@@ -881,15 +883,15 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.TALENT_POOL_ID, db),
-                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
+                    Updates.pull(DbKeyConfig.TALENT_POOL_ID, request.getOldTalentPoolId()),
+                    Updates.push(DbKeyConfig.TALENT_POOL_ID, request.getNewTalentPoolId()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Thêm ứng viên vào talent pool", request.getInfo());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
 
             response.setSuccess();
             return response;
