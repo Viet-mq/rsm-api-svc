@@ -12,14 +12,13 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public class UpdateTalentPoolProfileRequest extends BaseAuthRequest {
     private String profileId;
-    private String oldTalentPoolId;
-    private String newTalentPoolId;
+    private String talentPoolId;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(profileId) || profileId.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
         }
-        if (Strings.isNullOrEmpty(newTalentPoolId) || newTalentPoolId.length() > 255) {
+        if (Strings.isNullOrEmpty(talentPoolId) || talentPoolId.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập talent pool id mới");
         }
         return null;
