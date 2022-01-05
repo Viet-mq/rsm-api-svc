@@ -870,16 +870,16 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            List<Bson> c = new ArrayList<>();
-            c.add(cond);
-            c.add(Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
-
-            // update roles
-            Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.TALENTPOOL_TIME, System.currentTimeMillis())
-            );
-
-            db.update(CollectionNameDefs.COLL_PROFILE, buildCondition(c), updates, true);
+            Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getProfileId()));
+            if (document == null) {
+                Document talentPool = new Document();
+                talentPool.append(DbKeyConfig.ID, request.getTalentPoolId());
+                talentPool.append(DbKeyConfig.TIME, System.currentTimeMillis());
+                Bson updates = Updates.combine(
+                        Updates.push(DbKeyConfig.TALENT_POOL, talentPool)
+                );
+                db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+            }
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());

@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class TalentPool {
     private String id;
-    private String time;
+    private Long time;
 }
