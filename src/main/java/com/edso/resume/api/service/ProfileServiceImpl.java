@@ -881,7 +881,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.TALENT_POOL_ID, db),
+                    Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPoolId()),
                     Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
@@ -890,8 +890,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Thêm ứng viên vào talent pool", request.getInfo());
-
-
 
             response.setSuccess();
             return response;
@@ -908,7 +906,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
         }
     }
-
 
     @Override
     public void isOld(String id) {
