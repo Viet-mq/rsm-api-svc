@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("talent-pool/")
+@RequestMapping("/talent-pool")
 public class TalentPoolController extends BaseController {
 
     private final TalentPoolService talentPoolService;

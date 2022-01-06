@@ -19,7 +19,7 @@ public class UpdateTalentPoolProfileRequest extends BaseAuthRequest {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
         }
         if (Strings.isNullOrEmpty(talentPoolId) || talentPoolId.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên kỹ năng công việc");
+            return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập talent pool id mới");
         }
         return null;
     }
