@@ -144,6 +144,24 @@ public class ProfileController extends BaseController {
         return response;
     }
 
+    @PostMapping("/delete-talentpool")
+    public BaseResponse deleteTalentPoolProfile(@RequestHeader Map<String, String> headers, @RequestBody DeleteTalentPoolProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>deleteTalentPoolProfile u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.deleteTalentPoolProfile(request);
+            }
+        }
+        logger.info("<=deleteTalentPoolProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
     @PostMapping("/isold")
     public void isOld(@RequestParam String id) {
         logger.info("=>isOld id: {}", id);

@@ -28,6 +28,8 @@ public interface ProfileService {
 
     BaseResponse updateTalentPoolProfile(UpdateTalentPoolProfileRequest request);
 
+    BaseResponse deleteTalentPoolProfile(DeleteTalentPoolProfileRequest request);
+
     void isOld(String id);
 
 }

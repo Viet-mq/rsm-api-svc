@@ -66,7 +66,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(fullName))));
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
-            c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));
+            c.add(Filters.eq(DbKeyConfig.TALENTPOOL_ID, talentPool));
         }
         if (!Strings.isNullOrEmpty(job)) {
             c.add(Filters.eq(DbKeyConfig.JOB_ID, job));
@@ -869,7 +869,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, idProfile), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
+            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, request.getProfileId()), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
             Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
             if (document == null) {
                 Document talentPool = new Document();
@@ -880,6 +880,76 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 );
                 db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
             }
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
+
+            response.setSuccess();
+            return response;
+
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
+        }
+    }
+
+    @Override
+    public BaseResponse deleteTalentPoolProfile(DeleteTalentPoolProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
+
+        try {
+            //Validate
+            String idProfile = request.getProfileId();
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL_PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPoolId(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed((String) validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            Bson updates = Updates.combine(
+                    Updates.pull(DbKeyConfig.TALENT_POOL, Filters.eq(DbKeyConfig.ID, request.getTalentPoolId()))
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
