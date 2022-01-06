@@ -28,8 +28,7 @@ public class ProfileEntity {
     private String levelJobName;
     private String recruitmentId;
     private String recruitmentName;
-    private String talentPoolId;
-    private String talentPoolName;
+    private List<TalentPool> talentPool;
     private String hrRef;
     private String mailRef;
     private String departmentId;
