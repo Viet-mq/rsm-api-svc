@@ -884,8 +884,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
 
-
-
             response.setSuccess();
             return response;
 
@@ -901,7 +899,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
         }
     }
-
 
     @Override
     public void isOld(String id) {

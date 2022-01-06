@@ -11,6 +11,7 @@ import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 public abstract class BaseService {
@@ -49,7 +50,7 @@ public abstract class BaseService {
         return format.format(dateTime);
     }
 
-    public static String parseVietnameseToEnglish(String str) {
+    public String parseVietnameseToEnglish(String str) {
         try {
             String temp = Normalizer.normalize(str, Normalizer.Form.NFD);
             Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
@@ -58,6 +59,11 @@ public abstract class BaseService {
             ex.printStackTrace();
         }
         return "";
+    }
+
+    public String randomColor(){
+        Random random = new Random();
+        return String.format("#%06x", random.nextInt(256*256*256));
     }
 
 }

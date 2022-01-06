@@ -55,6 +55,7 @@ public class DictionaryValidateProcessor implements Runnable {
                         Document document = new Document();
                         document.append(DbKeyConfig.USERNAME, username);
                         document.append(DbKeyConfig.FULL_NAME, doc.get(DbKeyConfig.FULL_NAME));
+                        document.append(DbKeyConfig.EMAIL, doc.get(DbKeyConfig.EMAIL));
                         list.add(document);
                     }
                     result.setResult(true);

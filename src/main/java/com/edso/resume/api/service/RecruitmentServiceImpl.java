@@ -77,6 +77,35 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         List<RecruitmentEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
+
+                List<Document> list = (List<Document>) doc.get(DbKeyConfig.INTERVIEW_PROCESS);
+                List<RoundEntity> roundEntityList = null;
+                if (list != null) {
+                    roundEntityList = new ArrayList<>();
+                    for (Document document : list) {
+                        RoundEntity roundEntity = RoundEntity.builder()
+                                .id(AppUtils.parseString(document.get(DbKeyConfig.ID)))
+                                .name(AppUtils.parseString(document.get(DbKeyConfig.NAME)))
+                                .total(AppUtils.parseLong(document.get(DbKeyConfig.TOTAL)))
+                                .isDragDisabled((Boolean) document.get(DbKeyConfig.DELETE))
+                                .build();
+                        roundEntityList.add(roundEntity);
+                    }
+                }
+
+                List<Document> documents = (List<Document>) doc.get(DbKeyConfig.INTERVIEWERS);
+                List<UserEntity> userEntityList = null;
+                if (documents != null) {
+                    userEntityList = new ArrayList<>();
+                    for (Document document : documents) {
+                        UserEntity userEntity = UserEntity.builder()
+                                .username(AppUtils.parseString(document.get(DbKeyConfig.USERNAME)))
+                                .fullName(AppUtils.parseString(document.get(DbKeyConfig.FULL_NAME)))
+                                .email(AppUtils.parseString(document.get(DbKeyConfig.EMAIL)))
+                                .build();
+                        userEntityList.add(userEntity);
+                    }
+                }
                 RecruitmentEntity recruitment = RecruitmentEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .title(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)))
@@ -98,12 +127,13 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
                         .createAt(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
                         .createBy(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)))
-                        .interviewer((List<UserEntity>) doc.get(DbKeyConfig.INTERVIEWERS))
-                        .interviewProcess((List<RoundEntity>) doc.get(DbKeyConfig.INTERVIEW_PROCESS))
+                        .interviewer(userEntityList)
+                        .interviewProcess(roundEntityList)
                         .build();
                 rows.add(recruitment);
             }
         }
+
         GetArrayResponse<RecruitmentEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
         resp.setTotal(db.countAll(CollectionNameDefs.COLL_RECRUITMENT, null));
@@ -157,7 +187,9 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         try {
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, request.getTitle(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
@@ -206,6 +238,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 Document round = new Document();
                 round.append(DbKeyConfig.ID, roundEntity.getId());
                 round.append(DbKeyConfig.NAME, roundEntity.getName());
+                round.append(DbKeyConfig.DELETE, roundEntity.getIsDragDisabled());
                 interviewProcess.add(round);
             }
 
@@ -265,9 +298,13 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, request.getTitle(), db, this));
+            DictionaryValidateProcessor dictionaryValidateProcessor = new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, request.getTitle(), db, this);
+            dictionaryValidateProcessor.setRecruitmentId(request.getId());
+            rs.add(dictionaryValidateProcessor);
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             if (request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
@@ -315,6 +352,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 Document round = new Document();
                 round.append(DbKeyConfig.ID, roundEntity.getId());
                 round.append(DbKeyConfig.NAME, roundEntity.getName());
+                round.append(DbKeyConfig.DELETE, roundEntity.getIsDragDisabled());
                 interviewProcess.add(round);
             }
 

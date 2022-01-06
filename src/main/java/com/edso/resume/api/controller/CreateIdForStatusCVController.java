@@ -14,7 +14,7 @@ public class CreateIdForStatusCVController {
         this.createIdForStatusCVService = createIdForStatusCVService;
     }
 
-    @GetMapping("/create")
+    @PostMapping("/create")
     StatusCVResponse createIdForStatusCV(@RequestBody CreateIdForStatusCVRequest request) {
         return createIdForStatusCVService.createIdForStatusCV(request);
     }
