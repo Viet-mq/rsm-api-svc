@@ -9,7 +9,7 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 
 public interface TalentPoolService {
-    GetArrayResponse<TalentPoolEntity> findAll(HeaderInfo headerInfo, String name, Integer page, Integer size);
+    GetArrayResponse<TalentPoolEntity> findAll(HeaderInfo headerInfo, String id, String name, Integer page, Integer size);
 
     BaseResponse createTalentPool(CreateTalentPoolRequest request);
 

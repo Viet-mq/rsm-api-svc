@@ -66,7 +66,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(fullName))));
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
-            c.add(Filters.eq(DbKeyConfig.TALENTPOOL_ID, talentPool));
+            c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));
         }
         if (!Strings.isNullOrEmpty(job)) {
             c.add(Filters.eq(DbKeyConfig.JOB_ID, job));
@@ -118,7 +118,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .dateOfApply(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY)))
                         .statusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
                         .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
-                        .talentPool((List<TalentPool>) doc.get(DbKeyConfig.TALENT_POOL))
+//                      .talentPool((List<TalentPool>) one.get(DbKeyConfig.TALENT_POOL))
+                        .talentPoolId(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_ID)))
+                        .talentPoolName(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_NAME)))
                         .image(AppUtils.parseString(doc.get(DbKeyConfig.URL_IMAGE)))
                         .cv(AppUtils.parseString(doc.get(DbKeyConfig.CV)))
                         .urlCV(AppUtils.parseString(doc.get(DbKeyConfig.URL_CV)))
@@ -180,7 +182,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .dateOfCreate(AppUtils.parseLong(one.get(DbKeyConfig.CREATE_AT)))
                 .dateOfUpdate(AppUtils.parseLong(one.get(DbKeyConfig.UPDATE_AT)))
                 .evaluation(AppUtils.parseString(one.get(DbKeyConfig.EVALUATION)))
-                .talentPool((List<TalentPool>) one.get(DbKeyConfig.TALENT_POOL))
+//                .talentPool((List<TalentPool>) one.get(DbKeyConfig.TALENT_POOL))
+                .talentPoolId(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_ID)))
+                .talentPoolName(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_NAME)))
                 .image(AppUtils.parseString(one.get(DbKeyConfig.URL_IMAGE)))
                 .urlCV(AppUtils.parseString(one.get(DbKeyConfig.URL_CV)))
                 .departmentId(AppUtils.parseString(one.get(DbKeyConfig.DEPARTMENT_ID)))
@@ -869,17 +873,25 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, request.getProfileId()), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
-            Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-            if (document == null) {
-                Document talentPool = new Document();
-                talentPool.append(DbKeyConfig.ID, request.getTalentPoolId());
-                talentPool.append(DbKeyConfig.TIME, System.currentTimeMillis());
-                Bson updates = Updates.combine(
-                        Updates.push(DbKeyConfig.TALENT_POOL, talentPool)
-                );
-                db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
-            }
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
+
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPoolId()),
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
+
+//            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, request.getProfileId()), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
+//            Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+//            if (document == null) {
+//                Document talentPool = new Document();
+//                talentPool.append(DbKeyConfig.ID, request.getTalentPoolId());
+//                talentPool.append(DbKeyConfig.TIME, System.currentTimeMillis());
+//                Bson updates = Updates.combine(
+//                        Updates.push(DbKeyConfig.TALENT_POOL, talentPool)
+//                );
+//                db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
+//            }
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
