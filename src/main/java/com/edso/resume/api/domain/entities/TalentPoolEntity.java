@@ -7,10 +7,18 @@ import java.util.List;
 
 @Data
 @Builder
-public class TalentPoolEntity {
+public class TalentPoolEntity implements Comparable<TalentPoolEntity> {
     private String id;
     private String name;
     private String description;
     private int numberOfProfile;
+    private long createAt;
+    private String createBy;
+    private long total;
     private List<String> managers;
+
+    @Override
+    public int compareTo(TalentPoolEntity o) {
+        return -this.getName().compareTo(o.getName());
+    }
 }

@@ -26,13 +26,14 @@ public class TalentPoolController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAllTalentPool(
             @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "id", required = false) String id,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllTalentPool u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
-        GetArrayResponse<TalentPoolEntity> resp = talentPoolService.findAll(headerInfo, name, page, size);
-        logger.info("<=findAllTalentPool u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
+        logger.info("=>findAllTalentPool u: {}, id: {}, name: {}, page: {}, size: {}", headerInfo, id, name, page, size);
+        GetArrayResponse<TalentPoolEntity> resp = talentPoolService.findAll(headerInfo, id, name, page, size);
+        logger.info("<=findAllTalentPool u: {}, id: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, id, name, page, size, resp.info());
         return resp;
     }
 

@@ -118,7 +118,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .dateOfApply(AppUtils.parseLong(doc.get(DbKeyConfig.DATE_OF_APPLY)))
                         .statusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
                         .statusCVName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
-                        .talentPool((List<TalentPool>) doc.get(DbKeyConfig.TALENT_POOL))
+//                      .talentPool((List<TalentPool>) one.get(DbKeyConfig.TALENT_POOL))
+                        .talentPoolId(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_ID)))
+                        .talentPoolName(AppUtils.parseString(doc.get(DbKeyConfig.TALENT_POOL_NAME)))
                         .image(AppUtils.parseString(doc.get(DbKeyConfig.URL_IMAGE)))
                         .cv(AppUtils.parseString(doc.get(DbKeyConfig.CV)))
                         .urlCV(AppUtils.parseString(doc.get(DbKeyConfig.URL_CV)))
@@ -180,7 +182,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .dateOfCreate(AppUtils.parseLong(one.get(DbKeyConfig.CREATE_AT)))
                 .dateOfUpdate(AppUtils.parseLong(one.get(DbKeyConfig.UPDATE_AT)))
                 .evaluation(AppUtils.parseString(one.get(DbKeyConfig.EVALUATION)))
-                .talentPool((List<TalentPool>) one.get(DbKeyConfig.TALENT_POOL))
+//                .talentPool((List<TalentPool>) one.get(DbKeyConfig.TALENT_POOL))
+                .talentPoolId(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_ID)))
+                .talentPoolName(AppUtils.parseString(one.get(DbKeyConfig.TALENT_POOL_NAME)))
                 .image(AppUtils.parseString(one.get(DbKeyConfig.URL_IMAGE)))
                 .urlCV(AppUtils.parseString(one.get(DbKeyConfig.URL_CV)))
                 .departmentId(AppUtils.parseString(one.get(DbKeyConfig.DEPARTMENT_ID)))
@@ -869,17 +873,96 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
             }
 
-            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, idProfile), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
-            Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-            if (document == null) {
-                Document talentPool = new Document();
-                talentPool.append(DbKeyConfig.ID, request.getTalentPoolId());
-                talentPool.append(DbKeyConfig.TIME, System.currentTimeMillis());
-                Bson updates = Updates.combine(
-                        Updates.push(DbKeyConfig.TALENT_POOL, talentPool)
-                );
-                db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
+            DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
+
+            Bson updates = Updates.combine(
+                    Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPoolId()),
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
+                    Updates.set(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis())
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
+
+//            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, request.getProfileId()), Filters.eq(DbKeyConfig.TALENTPOOL_ID, request.getTalentPoolId()));
+//            Document document = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+//            if (document == null) {
+//                Document talentPool = new Document();
+//                talentPool.append(DbKeyConfig.ID, request.getTalentPoolId());
+//                talentPool.append(DbKeyConfig.TIME, System.currentTimeMillis());
+//                Bson updates = Updates.combine(
+//                        Updates.push(DbKeyConfig.TALENT_POOL, talentPool)
+//                );
+//                db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
+//            }
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
+
+            response.setSuccess();
+            return response;
+
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
             }
+        }
+    }
+
+    @Override
+    public BaseResponse deleteTalentPoolProfile(DeleteTalentPoolProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
+
+        try {
+            //Validate
+            String idProfile = request.getProfileId();
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL_PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPoolId(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed((String) validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            Bson updates = Updates.combine(
+                    Updates.pull(DbKeyConfig.TALENT_POOL, Filters.eq(DbKeyConfig.ID, request.getTalentPoolId()))
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
