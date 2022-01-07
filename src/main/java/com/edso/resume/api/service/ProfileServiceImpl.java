@@ -877,7 +877,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPoolId()),
-                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName())
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
+                    Updates.set(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
 

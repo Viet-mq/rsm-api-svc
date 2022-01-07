@@ -5,14 +5,12 @@ import com.edso.resume.api.domain.entities.TalentPoolEntity;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
-import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.model.Filters;
 import lombok.Data;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -36,33 +34,33 @@ public class GetTalentPoolProcessor implements Runnable {
     @Override
     public void run() {
         try {
-            List<Bson> c = new ArrayList<>();
-
-            Document query = new Document();
-            query.append("$unwind", "$talent_pool");
-
-            Document query1 = new Document();
-            Document match = new Document();
-            match.append("talent_pool.id", AppUtils.parseString(document.get("id")));
-            match.append("talent_pool.time", new Document().append("$gte", System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000));
-            query1.append("$match", match);
-
-            Document query2 = new Document();
-            query2.append("$group", new Document()
-                    .append("_id", null)
-                    .append("count", new Document().append("$sum", 1)
-                    )
-            );
-
-            c.add(query);
-            c.add(query1);
-            c.add(query2);
-
-            AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
-            long count = 0L;
-            if (lst.first() != null) {
-                count = AppUtils.parseLong(lst.first().get("count"));
-            }
+//            List<Bson> c = new ArrayList<>();
+//
+//            Document query = new Document();
+//            query.append("$unwind", "$talent_pool");
+//
+//            Document query1 = new Document();
+//            Document match = new Document();
+//            match.append("talent_pool.id", AppUtils.parseString(document.get("id")));
+//            match.append("talent_pool.time", new Document().append("$gte", System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000));
+//            query1.append("$match", match);
+//
+//            Document query2 = new Document();
+//            query2.append("$group", new Document()
+//                    .append("_id", null)
+//                    .append("count", new Document().append("$sum", 1)
+//                    )
+//            );
+//
+//            c.add(query);
+//            c.add(query1);
+//            c.add(query2);
+//
+//            AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
+//            long count = 0L;
+//            if (lst.first() != null) {
+//                count = AppUtils.parseLong(lst.first().get("count"));
+//            }
 
             TalentPoolEntity talentPool = TalentPoolEntity.builder()
                     .id(AppUtils.parseString(document.get("id")))
@@ -72,7 +70,7 @@ public class GetTalentPoolProcessor implements Runnable {
                     .numberOfProfile(AppUtils.parseInt(document.get("numberOfProfile")))
                     .createAt(AppUtils.parseLong(document.get(DbKeyConfig.CREATE_AT)))
                     .createBy(AppUtils.parseString(document.get(DbKeyConfig.CREATE_BY)))
-                    .total(count)
+                    .total(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get("id"))), Filters.gte(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000))))
                     .build();
             result.setResult(true);
             result.setTalentPool(talentPool);
