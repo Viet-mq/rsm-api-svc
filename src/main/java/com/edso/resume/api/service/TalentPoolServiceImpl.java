@@ -247,7 +247,6 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
                     Updates.set("name_search", name.toLowerCase()),
                     Updates.set("managers", request.getManagers()),
                     Updates.set("description", request.getDescription()),
-                    Updates.set("numberOfProfile", request.getNumberOfProfile()),
                     Updates.set("update_at", System.currentTimeMillis()),
                     Updates.set("update_by", request.getInfo().getUsername())
             );
