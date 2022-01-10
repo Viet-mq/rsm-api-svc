@@ -25,7 +25,7 @@ public class CreateTalentPoolRequest extends BaseAuthRequest {
         if (managers == null || managers.isEmpty()) {
             return new BaseResponse(ErrorCodeDefs.MANAGERS, "Vui lòng nhập người quản lý Talent Pool");
         }
-        if(!Strings.isNullOrEmpty(description) && description.length() > 255){
+        if (!Strings.isNullOrEmpty(description) && description.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.DESCRIPTION, "Vui lòng nhập mô tả ít hơn 255 ký tự");
         }
         return null;

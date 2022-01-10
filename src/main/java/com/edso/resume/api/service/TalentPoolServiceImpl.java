@@ -6,8 +6,6 @@ import com.edso.resume.api.domain.request.CreateTalentPoolRequest;
 import com.edso.resume.api.domain.request.DeleteTalentPoolRequest;
 import com.edso.resume.api.domain.request.UpdateTalentPoolRequest;
 import com.edso.resume.api.domain.validator.GetTalentPoolProcessor;
-import com.edso.resume.api.domain.validator.IGetTalentPool;
-import com.edso.resume.api.domain.validator.TalentPoolResult;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -25,11 +23,11 @@ import org.bson.conversions.Bson;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.regex.Pattern;
 
 @Service
-public class TalentPoolServiceImpl extends BaseService implements TalentPoolService, IGetTalentPool {
+public class TalentPoolServiceImpl extends BaseService implements TalentPoolService {
 
     private static final char[] SOURCE_CHARACTERS = {'À', 'Á', 'Â', 'Ã', 'È', 'É',
             'Ê', 'Ì', 'Í', 'Ò', 'Ó', 'Ô', 'Õ', 'Ù', 'Ú', 'Ý', 'à', 'á', 'â',
@@ -54,7 +52,6 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
             'o', 'O', 'o', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u', 'U', 'u',
             'U', 'u', 'U', 'u',};
 
-    private final Queue<TalentPoolResult> queue = new LinkedBlockingQueue<>();
 
     public TalentPoolServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
@@ -79,7 +76,6 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
     @Override
     public GetArrayResponse<TalentPoolEntity> findAll(HeaderInfo headerInfo, String id, String name, Integer page, Integer size) {
         GetArrayResponse<TalentPoolEntity> resp = new GetArrayResponse<>();
-        String key = UUID.randomUUID().toString();
         try {
             List<Bson> c = new ArrayList<>();
             if (!Strings.isNullOrEmpty(name)) {
@@ -94,58 +90,29 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
             FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_TALENT_POOL, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
             List<TalentPoolEntity> rows = new ArrayList<>();
             if (lst != null) {
-                List<GetTalentPoolProcessor> rs = new ArrayList<>();
-                for (Document doc : lst) {
-                    rs.add(new GetTalentPoolProcessor(key, doc, db, this));
+                int count = 0;
+                for (Document ignored : lst){
+                    count++;
                 }
-                int total = rs.size();
 
-                for (GetTalentPoolProcessor r : rs) {
-                    Thread t = new Thread(r);
+                CountDownLatch countDownLatch = new CountDownLatch(count);
+
+                for (Document doc : lst) {
+                    Thread t = new Thread(new GetTalentPoolProcessor(countDownLatch, doc, db, rows));
                     t.start();
                 }
 
-                long time = System.currentTimeMillis();
-                int count = 0;
-                while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
-                    TalentPoolResult result = queue.poll();
-                    if (result != null) {
-                        if (result.getKey().equals(key)) {
-                            if (!result.isResult()) {
-                                resp.setFailed("Hệ thống bận!");
-                                return resp;
-                            } else {
-                                count++;
-                                rows.add(result.getTalentPool());
-                            }
-                            total--;
-                        } else {
-                            queue.offer(result);
-                        }
-                    }
-                }
+                countDownLatch.await();
 
-                if (count != rs.size()) {
-                    for (GetTalentPoolProcessor r : rs) {
-                        if (!r.getResult().isResult()) {
-                            resp.setFailed("Hệ thống bận!");
-                            return resp;
-                        }
-                    }
-                }
                 Collections.sort(rows);
             }
             resp.setSuccess();
             resp.setTotal(db.countAll(CollectionNameDefs.COLL_TALENT_POOL, cond));
             resp.setRows(rows);
             return resp;
-        }catch (Throwable ex){
+        } catch (Throwable ex) {
             resp.setFailed("Hệ thống bận!");
             return resp;
-        } finally {
-            synchronized (queue) {
-                queue.removeIf(s -> s.getKey().equals(key));
-            }
         }
     }
 
@@ -299,8 +266,4 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
         return new BaseResponse(0, "OK");
     }
 
-    @Override
-    public void onTalentPoolResult(TalentPoolResult result) {
-        queue.offer(result);
-    }
 }

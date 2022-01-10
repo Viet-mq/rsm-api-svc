@@ -94,7 +94,7 @@ public class StatusCVController extends BaseController {
 
     @PostMapping("/update-all")
     public BaseResponse updateAllStatusCV(@RequestHeader Map<String, String> headers,
-                                       @RequestBody UpdateAllStatusCVRequest request) {
+                                          @RequestBody UpdateAllStatusCVRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>updateAllStatusCV u: {}, req: {}", headerInfo, request);

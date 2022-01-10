@@ -1,7 +1,6 @@
 package com.edso.resume.api.domain.request;
 
 import com.edso.resume.lib.common.ErrorCodeDefs;
-import com.edso.resume.lib.common.NameConfig;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;

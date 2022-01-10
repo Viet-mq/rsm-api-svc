@@ -36,12 +36,12 @@ public class DictionaryNameValidateProcessor implements Runnable {
             Bson cond = getCondition();
             Document doc = db.findOne(getCollectionName(), cond);
             if (doc == null) {
-                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL )|| type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
+                if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER)) {
                     result.setResult(true);
                     return;
                 }
                 result.setResult(false);
-                logger.info("Không tồn tại "+getDictionaryName()+" này! name: {}", this.name);
+                logger.info("Không tồn tại " + getDictionaryName() + " này! name: {}", this.name);
                 return;
             }
 
@@ -60,19 +60,19 @@ public class DictionaryNameValidateProcessor implements Runnable {
         return result;
     }
 
-    private void setResult(Document doc){
-        switch (type){
-            case ThreadConfig.BLACKLIST_EMAIL:{
+    private void setResult(Document doc) {
+        switch (type) {
+            case ThreadConfig.BLACKLIST_EMAIL: {
                 logger.info("Ứng viên có email này đang trong blacklist! email: {}", this.name);
                 result.setResult(false);
                 break;
             }
-            case ThreadConfig.BLACKLIST_PHONE_NUMBER:{
+            case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
                 logger.info("Ứng viên có số điện thoại này đang trong blacklist! phoneNumber: {}", this.name);
                 result.setResult(false);
                 break;
             }
-            case ThreadConfig.PROFILE_EMAIL:{
+            case ThreadConfig.PROFILE_EMAIL: {
                 result.setResult(false);
                 logger.info("Đã có ứng viên dùng email này! email: {}", this.name);
                 break;
@@ -82,14 +82,14 @@ public class DictionaryNameValidateProcessor implements Runnable {
                 logger.info("Đã có ứng viên dùng số điện thoại này! phoneNumber: {}", this.name);
                 break;
             }
-            default:{
+            default: {
                 result.setResult(true);
                 result.setId(AppUtils.parseString(doc.get(DbKeyConfig.ID)));
             }
         }
     }
 
-    private Bson getCondition(){
+    private Bson getCondition() {
         switch (type) {
             case ThreadConfig.PROFILE_EMAIL:
             case ThreadConfig.BLACKLIST_EMAIL: {

@@ -74,16 +74,8 @@ import com.edso.resume.lib.http.HttpSender;
 import com.edso.resume.lib.http.HttpSenderImpl;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.springframework.util.Assert;
-import springfox.documentation.spring.web.json.Json;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -117,11 +109,10 @@ public class Test {
 //        System.out.println(System.currentTimeMillis() - a);
 
 
-
         HttpSender sender = new HttpSenderImpl();
         String url = "https://graph.microsoft.com/v1.0/me/events";
         Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type","application/json");
+        headers.put("Content-Type", "application/json");
         headers.put("Authorization", "Bearer EwB4A8l6BAAUwihrrCrmQ4wuIJX5mbj7rQla6TUAAef7Ef4smX44iofB3/uZIVTVNd/vZ3FF8dOaF4JGsw22ZKTSdRMNB9JAI6NmfDb0kZdlfrBC1HgguAjHcNbKcKc0OkOMxuHkN1ffIvoY5dPQKRa9LdozVs9J6acX4UY9O7mKzbMNu2WdjRf2NiitxYv/ODWhDBppkYe/FI3QCaKnllPE0F3zZl74gWIjCNMefFhG0QLbDvIbme0bIytjU/Y63oynEUh80VutIUEcc1V1j2PLTUQKZ0jPV3WmTWHLGLy8+RXr/k5CX71V6nXMe7mb1HteV2ZTdNswWrKbKVQIMtLrtP3U5hb+P0GVqhJVVbRXsbsRS3ZLNgmCIORChQEDZgAACFPclydLuFpLSAIbTvBgkT9v7X4s1hHYhPbBce3kUwGTsFVBRTyiBdyUoyFtsiRpPx3ReM4fLDe6aN6mejXUQGIIOBiXb0ADghmzqWgXTk3wzo02go2RWlyiByKiri/u4QpKiCPQ38JjJCsEzgwAgdZ/UNE6fkbMutxcBz/5mapBnVvF51qhDTtnCbgyG1N407prUpkeG+YgnZztjoT3eUmV1jwE36Eks1FP/cZYvPcyoO4mWLrhEh1Z7QUzHUhQ71OIH+xTNgC8yHVJ3xfzD8biOF2GQBmSyWcMRou5RUbhM/6Uy6vMQFE+oTUdGLuJywIsOyzjd5H/dNAE/dTUpHovXHebNrImBwBUMj8lmjsLnt+k9rcrpnO03AcKSWUDWJmNSR6ZvC2xyDymUqPDKMnNZH91RQdyz8GN0+eOmXZ0ZijOAyToff6qkhovnyrc1JmJ1I0eFsGQaSH6MO7vqk0muYscRL8lzHIykYPq/PwtHTP19b7o4bSc3nUNM4VLtJ3ndYSOO4b3glEKVZIHXiAq19rrrdksp6xQs6X0ZkdTbkJa7Gy2QzJGpOTwXs3ZrQ2JzBEU7IifPG9l6DEb0XVHvQfyTV6bYIy660AELU6nZByzkwIfirVYVb+ZhyoPn4abvzIK7VxTm9rB4qLvGtkdxA80S9IBLHItsTFL/rQF662S5RwhzMRIfRK0eqLRUnLPLa/zYT+zOGQUgPOaxSz6pyhp71BuLqag58baZZ/mo555hhP8moZhkKwc3E7JSDUEuAfUeamHW3sdkP8tkI8UZ4MC");
         JsonObject object = sender.postJson(url, headers, jsonObject);
         System.out.println(object);

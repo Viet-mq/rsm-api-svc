@@ -12,7 +12,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateSkillRequest extends BaseAuthRequest{
+public class CreateSkillRequest extends BaseAuthRequest {
     private String name;
     private List<String> jobs;
 

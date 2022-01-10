@@ -921,7 +921,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         try {
             Bson cond = Filters.eq(DbKeyConfig.ID, request.getProfileId());
             Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-            if(profile == null){
+            if (profile == null) {
                 response.setFailed("Không tồn tại id profile này!");
                 return response;
             }

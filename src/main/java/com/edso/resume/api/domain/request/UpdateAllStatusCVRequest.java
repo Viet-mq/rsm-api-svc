@@ -12,11 +12,11 @@ import java.util.List;
 @ToString(callSuper = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UpdateAllStatusCVRequest extends BaseAuthRequest{
+public class UpdateAllStatusCVRequest extends BaseAuthRequest {
     private List<StatusCV> statusCVS;
 
-    public BaseResponse validate(){
-        if(statusCVS == null || statusCVS.isEmpty()){
+    public BaseResponse validate() {
+        if (statusCVS == null || statusCVS.isEmpty()) {
             return new BaseResponse(ErrorCodeDefs.STATUS_CV, "Vui lòng nhập tất cả vòng tuyển dụng");
         }
         return null;

@@ -13,12 +13,12 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class CreateIdForStatusCVRequest extends BaseAuthRequest{
+public class CreateIdForStatusCVRequest extends BaseAuthRequest {
     private List<StatusCV> statusCVS;
     private String name;
 
-    public BaseResponse validate(){
-        if(Strings.isNullOrEmpty(name)){
+    public BaseResponse validate() {
+        if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên vòng tuyển dụng");
         }
         if (statusCVS == null || statusCVS.isEmpty()) {

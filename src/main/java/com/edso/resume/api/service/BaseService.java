@@ -61,9 +61,9 @@ public abstract class BaseService {
         return "";
     }
 
-    public String randomColor(){
+    public String randomColor() {
         Random random = new Random();
-        return String.format("#%06x", random.nextInt(256*256*256));
+        return String.format("#%06x", random.nextInt(256 * 256 * 256));
     }
 
 }

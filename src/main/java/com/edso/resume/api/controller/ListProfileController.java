@@ -29,11 +29,11 @@ public class ListProfileController extends BaseController {
             @RequestParam("file") MultipartFile file) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>uploadProfiles u: {}", headerInfo);
-        if(file == null || file.isEmpty()){
-            return new BaseResponse(-1,"Vui lòng nhập vào file");
+        if (file == null || file.isEmpty()) {
+            return new BaseResponse(-1, "Vui lòng nhập vào file");
         }
-        if(file.getSize() > fileSize){
-            return new BaseResponse(-1,"File dung lượng quá lớn");
+        if (file.getSize() > fileSize) {
+            return new BaseResponse(-1, "File dung lượng quá lớn");
         }
         BaseResponse response = uploadProfilesService.uploadProfiles(file, headerInfo);
         logger.info("<=uploadProfiles u: {}, rep: {}", headerInfo, response);

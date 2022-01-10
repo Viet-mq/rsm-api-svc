@@ -73,10 +73,10 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(job) || job.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.JOB, "Vui lòng nhập vị trí công việc");
         }
-        if (!Strings.isNullOrEmpty(levelJob) && levelJob.length() > 255 ) {
+        if (!Strings.isNullOrEmpty(levelJob) && levelJob.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.LEVEL_JOB, "Vui lòng nhập cấp bậc công việc ít hơn 255 ký tự");
         }
-        if (Strings.isNullOrEmpty(sourceCV)|| sourceCV.length() > 255) {
+        if (Strings.isNullOrEmpty(sourceCV) || sourceCV.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.SOURCE_CV, "Vui lòng nhập nguồn ứng viên");
         }
         if (!Strings.isNullOrEmpty(hrRef) && hrRef.length() > 255) {

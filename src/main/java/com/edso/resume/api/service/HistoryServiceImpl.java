@@ -82,7 +82,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);
             logger.info("createHistoryProfile history: {}", history);
-        }catch (Throwable e){
+        } catch (Throwable e) {
             logger.error("Exception: ", e);
         }
     }

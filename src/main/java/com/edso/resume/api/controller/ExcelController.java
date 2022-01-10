@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,7 +38,7 @@ public class ExcelController extends BaseController {
         ByteArrayResource resource = null;
         try {
             resource = new ByteArrayResource(Files.readAllBytes(path));
-        }catch (Throwable e){
+        } catch (Throwable e) {
             logger.error("Exception: ", e);
         }
         HttpHeaders httpHeaders = new HttpHeaders();
