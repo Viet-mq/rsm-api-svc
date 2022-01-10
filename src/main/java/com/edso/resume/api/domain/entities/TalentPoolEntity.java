@@ -11,7 +11,7 @@ public class TalentPoolEntity implements Comparable<TalentPoolEntity> {
     private String id;
     private String name;
     private String description;
-    private int numberOfProfile;
+    private Long numberOfProfile;
     private long createAt;
     private String createBy;
     private long total;

@@ -13,6 +13,7 @@ public class DictionaryNamesEntity {
     private String levelJobName;
     private String sourceCVName;
     private String talentPoolName;
+    private String talentPoolId;
     private String departmentName;
     private String statusCVName;
     private String statusCVId;

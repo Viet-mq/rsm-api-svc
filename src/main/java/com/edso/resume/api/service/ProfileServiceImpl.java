@@ -919,53 +919,21 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         String key = UUID.randomUUID().toString();
 
         try {
-            //Validate
-            String idProfile = request.getProfileId();
-            List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL_PROFILE, idProfile, db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPoolId(), db, this));
-            int total = rs.size();
-
-            for (DictionaryValidateProcessor r : rs) {
-                Thread t = new Thread(r);
-                t.start();
-            }
-
-            long time = System.currentTimeMillis();
-            int count = 0;
-            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
-                DictionaryValidatorResult validatorResult = queue.poll();
-                if (validatorResult != null) {
-                    if (validatorResult.getKey().equals(key)) {
-                        if (!validatorResult.isResult()) {
-                            response.setFailed((String) validatorResult.getName());
-                            return response;
-                        } else {
-                            count++;
-                        }
-                        total--;
-                    } else {
-                        queue.offer(validatorResult);
-                    }
-                }
-            }
-
-            if (count != rs.size()) {
-                for (DictionaryValidateProcessor r : rs) {
-                    if (!r.getResult().isResult()) {
-                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
-                        return response;
-                    }
-                }
+            Bson cond = Filters.eq(DbKeyConfig.ID, request.getProfileId());
+            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+            if(profile == null){
+                response.setFailed("Không tồn tại id profile này!");
+                return response;
             }
 
             Bson updates = Updates.combine(
-                    Updates.pull(DbKeyConfig.TALENT_POOL, Filters.eq(DbKeyConfig.ID, request.getTalentPoolId()))
+                    Updates.set(DbKeyConfig.TALENT_POOL_ID, ""),
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, "")
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
+            historyService.createHistory(request.getProfileId(), TypeConfig.UPDATE, "Xóa ứng viên khỏi talent pool", request.getInfo());
 
             response.setSuccess();
             return response;

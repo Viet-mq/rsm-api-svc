@@ -67,7 +67,7 @@ public class GetTalentPoolProcessor implements Runnable {
                     .name(AppUtils.parseString(document.get("name")))
                     .managers((List<String>) document.get("managers"))
                     .description(AppUtils.parseString(document.get("description")))
-                    .numberOfProfile(AppUtils.parseInt(document.get("numberOfProfile")))
+                    .numberOfProfile(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get("id")))))
                     .createAt(AppUtils.parseLong(document.get(DbKeyConfig.CREATE_AT)))
                     .createBy(AppUtils.parseString(document.get(DbKeyConfig.CREATE_BY)))
                     .total(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get("id"))), Filters.gte(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000))))

@@ -78,66 +78,75 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
 
     @Override
     public GetArrayResponse<TalentPoolEntity> findAll(HeaderInfo headerInfo, String id, String name, Integer page, Integer size) {
-        List<Bson> c = new ArrayList<>();
         GetArrayResponse<TalentPoolEntity> resp = new GetArrayResponse<>();
-        if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
-        }
-        if (!Strings.isNullOrEmpty(id)) {
-            c.add(Filters.eq("id", id));
-        }
-        Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
-        Bson cond = buildCondition(c);
-        PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_TALENT_POOL, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
-        List<TalentPoolEntity> rows = new ArrayList<>();
-        if (lst != null) {
-            List<GetTalentPoolProcessor> rs = new ArrayList<>();
-            String key = UUID.randomUUID().toString();
-            for (Document doc : lst) {
-                rs.add(new GetTalentPoolProcessor(key, doc, db, this));
+        String key = UUID.randomUUID().toString();
+        try {
+            List<Bson> c = new ArrayList<>();
+            if (!Strings.isNullOrEmpty(name)) {
+                c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
             }
-            int total = rs.size();
-
-            for (GetTalentPoolProcessor r : rs) {
-                Thread t = new Thread(r);
-                t.start();
+            if (!Strings.isNullOrEmpty(id)) {
+                c.add(Filters.eq("id", id));
             }
+            Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
+            Bson cond = buildCondition(c);
+            PagingInfo pagingInfo = PagingInfo.parse(page, size);
+            FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_TALENT_POOL, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
+            List<TalentPoolEntity> rows = new ArrayList<>();
+            if (lst != null) {
+                List<GetTalentPoolProcessor> rs = new ArrayList<>();
+                for (Document doc : lst) {
+                    rs.add(new GetTalentPoolProcessor(key, doc, db, this));
+                }
+                int total = rs.size();
 
-            long time = System.currentTimeMillis();
-            int count = 0;
-            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
-                TalentPoolResult result = queue.poll();
-                if (result != null) {
-                    if (result.getKey().equals(key)) {
-                        if (!result.isResult()) {
+                for (GetTalentPoolProcessor r : rs) {
+                    Thread t = new Thread(r);
+                    t.start();
+                }
+
+                long time = System.currentTimeMillis();
+                int count = 0;
+                while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                    TalentPoolResult result = queue.poll();
+                    if (result != null) {
+                        if (result.getKey().equals(key)) {
+                            if (!result.isResult()) {
+                                resp.setFailed("Hệ thống bận!");
+                                return resp;
+                            } else {
+                                count++;
+                                rows.add(result.getTalentPool());
+                            }
+                            total--;
+                        } else {
+                            queue.offer(result);
+                        }
+                    }
+                }
+
+                if (count != rs.size()) {
+                    for (GetTalentPoolProcessor r : rs) {
+                        if (!r.getResult().isResult()) {
                             resp.setFailed("Hệ thống bận!");
                             return resp;
-                        } else {
-                            count++;
-                            rows.add(result.getTalentPool());
                         }
-                        total--;
-                    } else {
-                        queue.offer(result);
                     }
                 }
+                Collections.sort(rows);
             }
-
-            if (count != rs.size()) {
-                for (GetTalentPoolProcessor r : rs) {
-                    if (!r.getResult().isResult()) {
-                        resp.setFailed("Hệ thống bận!");
-                        return resp;
-                    }
-                }
+            resp.setSuccess();
+            resp.setTotal(db.countAll(CollectionNameDefs.COLL_TALENT_POOL, cond));
+            resp.setRows(rows);
+            return resp;
+        }catch (Throwable ex){
+            resp.setFailed("Hệ thống bận!");
+            return resp;
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
             }
-            Collections.sort(rows);
         }
-        resp.setSuccess();
-        resp.setTotal(db.countAll(CollectionNameDefs.COLL_TALENT_POOL, cond));
-        resp.setRows(rows);
-        return resp;
     }
 
     @Override
