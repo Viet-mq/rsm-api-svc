@@ -238,6 +238,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 Document round = new Document();
                 round.append(DbKeyConfig.ID, roundEntity.getId());
                 round.append(DbKeyConfig.NAME, roundEntity.getName());
+                round.append(DbKeyConfig.TOTAL, 0);
                 round.append(DbKeyConfig.DELETE, roundEntity.getIsDragDisabled());
                 interviewProcess.add(round);
             }
@@ -352,6 +353,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 Document round = new Document();
                 round.append(DbKeyConfig.ID, roundEntity.getId());
                 round.append(DbKeyConfig.NAME, roundEntity.getName());
+                round.append(DbKeyConfig.TOTAL, roundEntity.getTotal());
                 round.append(DbKeyConfig.DELETE, roundEntity.getIsDragDisabled());
                 interviewProcess.add(round);
             }
