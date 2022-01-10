@@ -63,7 +63,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(fullName))));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(fullName))));
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
             c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));
@@ -296,7 +296,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName());
             profile.append(DbKeyConfig.HR_REF, request.getHrRef());
             profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
-            profile.append(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName()));
+            profile.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName()));
             profile.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             profile.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             profile.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
@@ -425,7 +425,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                     Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName())),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
@@ -563,7 +563,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                     Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName())),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),

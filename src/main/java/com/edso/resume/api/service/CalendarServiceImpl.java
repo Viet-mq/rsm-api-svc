@@ -70,7 +70,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                         .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
                         .address(AppUtils.parseString(doc.get(DbKeyConfig.ADDRESS)))
                         .form(AppUtils.parseString(doc.get(DbKeyConfig.FORM)))
-                        .interviewer(parseList(doc.get(DbKeyConfig.INTERVIEWER)))
+                        .interviewer((List<String>) doc.get(DbKeyConfig.INTERVIEWER))
                         .interviewee(AppUtils.parseString(doc.get(DbKeyConfig.INTERVIEWEE)))
                         .content(AppUtils.parseString(doc.get(DbKeyConfig.CONTENT)))
                         .question(AppUtils.parseString(doc.get(DbKeyConfig.QUESTION)))

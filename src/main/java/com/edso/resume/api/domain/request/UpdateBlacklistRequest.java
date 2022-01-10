@@ -1,5 +1,6 @@
 package com.edso.resume.api.domain.request;
 
+import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
@@ -25,13 +26,13 @@ public class UpdateBlacklistRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(email)) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập blacklist email");
         }
-        if (email.length() > 255 || !validateEmail(email)) {
+        if (email.length() > 255 || !AppUtils.validateEmail(email)) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập họ và tên");
         }
-        if (!Strings.isNullOrEmpty(phoneNumber) && !validatePhoneNumber(phoneNumber)) {
+        if (!Strings.isNullOrEmpty(phoneNumber) && !AppUtils.validatePhone(phoneNumber)) {
             return new BaseResponse(ErrorCodeDefs.PHONE_NUMBER, "Vui lòng nhập đúng định dạng số điện thoại");
         }
         if (!Strings.isNullOrEmpty(ssn) && !validateSSN(ssn)) {

@@ -51,7 +51,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             c.add(Filters.eq(DbKeyConfig.ID, id));
         }
         if (!Strings.isNullOrEmpty(keySearch)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(keySearch))));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(keySearch))));
         }
         if (from != null && from > 0) {
             c.add(Filters.gte(DbKeyConfig.DEAD_LINE, from));
@@ -265,7 +265,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer());
             recruitment.append(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess);
             recruitment.append(DbKeyConfig.STATUS, "Đang tuyển dụng");
-            recruitment.append(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getTitle()));
+            recruitment.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getTitle()));
             recruitment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             recruitment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -380,7 +380,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer()),
                     Updates.set(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess),
                     Updates.set(DbKeyConfig.STATUS, request.getStatus()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getTitle())),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getTitle())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
