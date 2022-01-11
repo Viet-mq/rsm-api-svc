@@ -10,7 +10,7 @@ import lombok.ToString;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class UpdateAddressRequest extends BaseAuthRequest{
+public class UpdateAddressRequest extends BaseAuthRequest {
     private String id;
     private String name;
     private String officeName;
@@ -25,7 +25,7 @@ public class UpdateAddressRequest extends BaseAuthRequest{
         if (officeName.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.OFFICE_NAME, "Vui lòng nhập tên văn phòng ít hơn 255 ký tự");
         }
-        if (Strings.isNullOrEmpty(name) ) {
+        if (Strings.isNullOrEmpty(name)) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập địa chỉ");
         }
         if (name.length() > 255) {

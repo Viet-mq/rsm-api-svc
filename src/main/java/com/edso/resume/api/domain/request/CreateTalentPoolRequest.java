@@ -17,7 +17,6 @@ public class CreateTalentPoolRequest extends BaseAuthRequest {
     private String name;
     private List<String> managers;
     private String description;
-    private Integer numberOfProfile;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
@@ -26,13 +25,9 @@ public class CreateTalentPoolRequest extends BaseAuthRequest {
         if (managers == null || managers.isEmpty()) {
             return new BaseResponse(ErrorCodeDefs.MANAGERS, "Vui lòng nhập người quản lý Talent Pool");
         }
-        if(!Strings.isNullOrEmpty(description) && description.length() > 255){
+        if (!Strings.isNullOrEmpty(description) && description.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.DESCRIPTION, "Vui lòng nhập mô tả ít hơn 255 ký tự");
         }
-        if(numberOfProfile != null && numberOfProfile < 0){
-            return new BaseResponse(ErrorCodeDefs.NUMBER_OF_PROFILE, "Vui lòng nhập số profile");
-        }
-
         return null;
     }
 }

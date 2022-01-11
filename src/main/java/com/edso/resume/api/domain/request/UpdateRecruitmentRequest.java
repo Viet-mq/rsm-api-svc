@@ -80,7 +80,7 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
         if (!Strings.isNullOrEmpty(status) && status.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.STATUS, "Vui lòng nhập trạng thái tin tuyển dụng");
         }
-        if(interviewProcess == null || interviewProcess.isEmpty()){
+        if (interviewProcess == null || interviewProcess.isEmpty()) {
             return new BaseResponse(ErrorCodeDefs.INTERVIEW_PROCESS, "Vui lòng nhập quy trình tuyển dụng");
         }
         return null;

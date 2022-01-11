@@ -1,7 +1,6 @@
 package com.edso.resume.api.domain.request;
 
 import com.edso.resume.lib.common.ErrorCodeDefs;
-import com.edso.resume.lib.common.NameConfig;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import lombok.Data;
@@ -13,7 +12,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class UpdateSkillRequest extends BaseAuthRequest{
+public class UpdateSkillRequest extends BaseAuthRequest {
     private String id;
     private String name;
     private List<String> jobs;

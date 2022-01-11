@@ -263,7 +263,7 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
                 db.delete(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
                 response.setSuccess();
                 return response;
-            }else{
+            } else {
                 response.setFailed("Không thể xóa phòng ban này!");
                 return response;
             }

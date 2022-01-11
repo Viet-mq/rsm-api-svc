@@ -1,5 +1,6 @@
 package com.edso.resume.api.domain.request;
 
+import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.common.NameConfig;
 import com.edso.resume.lib.response.BaseResponse;
@@ -40,7 +41,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập họ và tên");
         }
-        if (fullName.length() > 255 || !validateFullName(fullName)) {
+        if (fullName.length() > 255 || !AppUtils.validateFullName(fullName)) {
             return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập đúng định dạng họ và tên");
         }
         if (dateOfBirth != null && dateOfBirth < 0) {
@@ -58,7 +59,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (!Strings.isNullOrEmpty(school) && school.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.SCHOOL, "Vui lòng nhập nơi đào tạo học ít hơn 255 ký tự");
         }
-        if (!Strings.isNullOrEmpty(phoneNumber) && !validatePhoneNumber(phoneNumber)) {
+        if (!Strings.isNullOrEmpty(phoneNumber) && !AppUtils.validatePhone(phoneNumber)) {
             return new BaseResponse(ErrorCodeDefs.PHONE_NUMBER, "Vui lòng nhập số điện thoại đúng định dạng");
         }
         if (!Strings.isNullOrEmpty(levelSchool) && levelSchool.length() > 255) {
@@ -67,23 +68,23 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(email)) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập email");
         }
-        if (email.length() > 255 || !validateEmail(email)) {
+        if (email.length() > 255 || !AppUtils.validateEmail(email)) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(job) || job.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.JOB, "Vui lòng nhập vị trí công việc");
         }
-        if (!Strings.isNullOrEmpty(levelJob) && levelJob.length() > 255 ) {
+        if (!Strings.isNullOrEmpty(levelJob) && levelJob.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.LEVEL_JOB, "Vui lòng nhập cấp bậc công việc ít hơn 255 ký tự");
         }
-        if (Strings.isNullOrEmpty(sourceCV)|| sourceCV.length() > 255) {
+        if (Strings.isNullOrEmpty(sourceCV) || sourceCV.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.SOURCE_CV, "Vui lòng nhập nguồn ứng viên");
         }
         if (!Strings.isNullOrEmpty(hrRef) && hrRef.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.HR_REF, "Vui lòng nhập tên người giới thiệu ít hơn 255 ký tự");
         }
         if (!Strings.isNullOrEmpty(mailRef)) {
-            if (mailRef.length() > 255 || !validateEmail(mailRef)) {
+            if (mailRef.length() > 255 || !AppUtils.validateEmail(mailRef)) {
                 return new BaseResponse(ErrorCodeDefs.MAIL_REF, "Vui lòng nhập đúng định dạng email");
             }
         }

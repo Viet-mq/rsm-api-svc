@@ -35,7 +35,7 @@ public class UrlConsumerServiceImpl extends BaseService implements UrlConsumerSe
 
             db.update(CollectionNameDefs.COLL_PROFILE, cond, update, true);
             logger.info("<=updateUrlToProfile url: {}", url);
-        }catch (Throwable ex){
+        } catch (Throwable ex) {
             logger.error("Exception: ", ex);
         }
     }
