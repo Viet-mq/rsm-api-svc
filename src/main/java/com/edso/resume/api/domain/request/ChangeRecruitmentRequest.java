@@ -10,7 +10,7 @@ import lombok.ToString;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ChangeRecruitmentRequest extends BaseAuthRequest{
+public class ChangeRecruitmentRequest extends BaseAuthRequest {
 
     private String idProfile;
     private String recruitmentId;

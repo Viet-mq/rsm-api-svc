@@ -72,7 +72,7 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
         if (!Strings.isNullOrEmpty(talentPool) && talentPool.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.TALENT_POOL, "Vui lòng nhập talent pool");
         }
-        if(interviewProcess == null || interviewProcess.isEmpty()){
+        if (interviewProcess == null || interviewProcess.isEmpty()) {
             return new BaseResponse(ErrorCodeDefs.INTERVIEW_PROCESS, "Vui lòng nhập quy trình tuyển dụng");
         }
         return null;

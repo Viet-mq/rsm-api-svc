@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class CreateCalendarProfileRequest2 extends BaseAuthRequest{
+public class CreateCalendarProfileRequest2 extends BaseAuthRequest {
 
     private String idProfile;
     private String recruitmentId;

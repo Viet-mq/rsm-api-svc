@@ -1,8 +1,8 @@
 package com.edso.resume.api.domain.entities;
 
 import lombok.Data;
-
 import org.bson.Document;
+
 import java.util.List;
 
 @Data
@@ -13,6 +13,7 @@ public class DictionaryNamesEntity {
     private String levelJobName;
     private String sourceCVName;
     private String talentPoolName;
+    private String talentPoolId;
     private String departmentName;
     private String statusCVName;
     private String statusCVId;

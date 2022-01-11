@@ -24,7 +24,7 @@ public class ParseEnglishServiceImpl extends BaseService implements ParseEnglish
             for (Document document : list) {
                 Bson cond = Filters.eq(DbKeyConfig.ID, AppUtils.parseString(document.get(DbKeyConfig.ID)));
                 Bson update = Updates.combine(
-                        Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(AppUtils.parseString(document.get(DbKeyConfig.TITLE))))
+                        Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(AppUtils.parseString(document.get(DbKeyConfig.TITLE))))
                 );
                 db.update(CollectionNameDefs.COLL_RECRUITMENT, cond, update, true);
             }

@@ -10,7 +10,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateReasonRejectRequest extends BaseAuthRequest{
+public class CreateReasonRejectRequest extends BaseAuthRequest {
     private String reason;
 
     public BaseResponse validate() {

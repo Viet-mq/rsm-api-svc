@@ -63,7 +63,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(parseVietnameseToEnglish(fullName))));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(fullName))));
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
             c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));
@@ -296,7 +296,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName());
             profile.append(DbKeyConfig.HR_REF, request.getHrRef());
             profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
-            profile.append(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName()));
+            profile.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName()));
             profile.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             profile.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             profile.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
@@ -425,7 +425,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                     Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName())),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
@@ -563,7 +563,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                     Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, parseVietnameseToEnglish(request.getFullName())),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
@@ -919,53 +919,21 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         String key = UUID.randomUUID().toString();
 
         try {
-            //Validate
-            String idProfile = request.getProfileId();
-            List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL_PROFILE, idProfile, db, this));
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPoolId(), db, this));
-            int total = rs.size();
-
-            for (DictionaryValidateProcessor r : rs) {
-                Thread t = new Thread(r);
-                t.start();
-            }
-
-            long time = System.currentTimeMillis();
-            int count = 0;
-            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
-                DictionaryValidatorResult validatorResult = queue.poll();
-                if (validatorResult != null) {
-                    if (validatorResult.getKey().equals(key)) {
-                        if (!validatorResult.isResult()) {
-                            response.setFailed((String) validatorResult.getName());
-                            return response;
-                        } else {
-                            count++;
-                        }
-                        total--;
-                    } else {
-                        queue.offer(validatorResult);
-                    }
-                }
-            }
-
-            if (count != rs.size()) {
-                for (DictionaryValidateProcessor r : rs) {
-                    if (!r.getResult().isResult()) {
-                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
-                        return response;
-                    }
-                }
+            Bson cond = Filters.eq(DbKeyConfig.ID, request.getProfileId());
+            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+            if (profile == null) {
+                response.setFailed("Không tồn tại id profile này!");
+                return response;
             }
 
             Bson updates = Updates.combine(
-                    Updates.pull(DbKeyConfig.TALENT_POOL, Filters.eq(DbKeyConfig.ID, request.getTalentPoolId()))
+                    Updates.set(DbKeyConfig.TALENT_POOL_ID, ""),
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, "")
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
+            historyService.createHistory(request.getProfileId(), TypeConfig.UPDATE, "Xóa ứng viên khỏi talent pool", request.getInfo());
 
             response.setSuccess();
             return response;

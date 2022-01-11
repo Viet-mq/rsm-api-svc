@@ -20,7 +20,7 @@ public class CreateIdForStatusCVServiceImpl extends BaseService implements Creat
         StatusCVResponse response = new StatusCVResponse();
         try {
             for (StatusCV statusCV : request.getStatusCVS()) {
-                if(statusCV == null){
+                if (statusCV == null) {
                     response.setFailed("Vui lòng nhập vòng tuyển dụng!");
                     return response;
                 }

@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/calendar")
-public class SendOutlookCalendarController extends BaseController{
+public class SendOutlookCalendarController extends BaseController {
     private final SendOutlookCalendarService sendOutlookCalendarService;
 
     public SendOutlookCalendarController(SendOutlookCalendarService sendOutlookCalendarService) {

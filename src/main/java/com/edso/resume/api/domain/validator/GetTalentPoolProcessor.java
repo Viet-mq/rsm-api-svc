@@ -12,23 +12,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 @Data
 public class GetTalentPoolProcessor implements Runnable {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final IGetTalentPool target;
-    private final String key;
+    private final CountDownLatch countDownLatch;
     private final Document document;
     private final MongoDbOnlineSyncActions db;
-    private TalentPoolResult result;
+    private final List<TalentPoolEntity> rows;
 
-    public GetTalentPoolProcessor(String key, Document document, MongoDbOnlineSyncActions db, IGetTalentPool target) {
-        this.target = target;
-        this.key = key;
+    public GetTalentPoolProcessor(CountDownLatch countDownLatch, Document document, MongoDbOnlineSyncActions db, List<TalentPoolEntity> rows) {
+        this.countDownLatch = countDownLatch;
         this.document = document;
         this.db = db;
-        this.result = new TalentPoolResult(key);
-
+        this.rows = rows;
     }
 
     @Override
@@ -67,18 +65,16 @@ public class GetTalentPoolProcessor implements Runnable {
                     .name(AppUtils.parseString(document.get("name")))
                     .managers((List<String>) document.get("managers"))
                     .description(AppUtils.parseString(document.get("description")))
-                    .numberOfProfile(AppUtils.parseInt(document.get("numberOfProfile")))
+                    .numberOfProfile(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get("id")))))
                     .createAt(AppUtils.parseLong(document.get(DbKeyConfig.CREATE_AT)))
                     .createBy(AppUtils.parseString(document.get(DbKeyConfig.CREATE_BY)))
                     .total(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get("id"))), Filters.gte(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000))))
                     .build();
-            result.setResult(true);
-            result.setTalentPool(talentPool);
+            rows.add(talentPool);
         } catch (Throwable ex) {
             logger.error("Ex: ", ex);
-            result.setResult(false);
         } finally {
-            target.onTalentPoolResult(result);
+            countDownLatch.countDown();
         }
     }
 }

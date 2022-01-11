@@ -70,7 +70,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
                         .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
                         .address(AppUtils.parseString(doc.get(DbKeyConfig.ADDRESS)))
                         .form(AppUtils.parseString(doc.get(DbKeyConfig.FORM)))
-                        .interviewer(parseList(doc.get(DbKeyConfig.INTERVIEWER)))
+                        .interviewer((List<String>) doc.get(DbKeyConfig.INTERVIEWER))
                         .interviewee(AppUtils.parseString(doc.get(DbKeyConfig.INTERVIEWEE)))
                         .content(AppUtils.parseString(doc.get(DbKeyConfig.CONTENT)))
                         .question(AppUtils.parseString(doc.get(DbKeyConfig.QUESTION)))
@@ -177,7 +177,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn",request.getInfo());
+            historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo());
 
             return response;
         } catch (Throwable ex) {
@@ -274,7 +274,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             response.setSuccess();
 
             //Insert history to DB
-            historyService.createHistory(dictionaryNames.getIdProfile(), TypeConfig.UPDATE, "Sửa lịch phỏng vấn",request.getInfo());
+            historyService.createHistory(dictionaryNames.getIdProfile(), TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo());
 
             return response;
         } catch (Throwable ex) {
@@ -305,7 +305,7 @@ public class CalendarServiceImpl extends BaseService implements CalendarService,
             db.delete(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond);
 
             //Insert history to DB
-            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn",request.getInfo());
+            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa lịch phỏng vấn", request.getInfo());
             response.setSuccess();
         } catch (Throwable e) {
             logger.error("Exception: ", e);

@@ -2,6 +2,8 @@ package com.edso.resume.api;
 
 import com.rabbitmq.client.*;
 
+import java.nio.charset.StandardCharsets;
+
 public class Consumer {
 
     private final static String QUEUE_NAME = "image.queue";
@@ -25,7 +27,7 @@ public class Consumer {
 
         System.out.println("Start receiving messages ... ");
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), "UTF-8");
+            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             System.out.println(" [x] Received: '" + message + "'");
         };
         CancelCallback cancelCallback = consumerTag -> {

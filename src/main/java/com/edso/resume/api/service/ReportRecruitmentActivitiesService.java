@@ -1,7 +1,6 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.entities.ReportRecruitmentActivitiesEntity;
-import com.edso.resume.api.domain.entities.ReportRecruitmentEfficiencyEntity;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 

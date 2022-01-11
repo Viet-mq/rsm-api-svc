@@ -1,7 +1,6 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.request.AddCalendarsRequest;
-import com.edso.resume.api.domain.request.CreateCalendarProfileRequest2;
 import com.edso.resume.api.service.AddCalendarsService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;

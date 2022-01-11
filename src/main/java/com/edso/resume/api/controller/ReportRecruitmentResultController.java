@@ -1,6 +1,5 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.entities.ReportRecruitmentEfficiencyEntity;
 import com.edso.resume.api.domain.entities.ReportRecruitmentResultEntity;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.api.service.ReportRecruitmentResultService;
@@ -22,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/reportrecruitmentresult")
-public class ReportRecruitmentResultController extends BaseController{
+public class ReportRecruitmentResultController extends BaseController {
 
     private final ReportRecruitmentResultService reportRecruitmentResultService;
 
@@ -44,8 +43,8 @@ public class ReportRecruitmentResultController extends BaseController{
 
     @GetMapping("/export")
     public ResponseEntity<Resource> exportReportRecruitmentResult(@RequestHeader Map<String, String> headers,
-                                                                      @RequestParam(value = "from", required = false) Long from,
-                                                                      @RequestParam(value = "to", required = false) Long to) {
+                                                                  @RequestParam(value = "from", required = false) Long from,
+                                                                  @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>exportReportRecruitmentResult u: {}", headerInfo);
         ExportResponse response = reportRecruitmentResultService.exportReportRecruitmentResult(from, to);

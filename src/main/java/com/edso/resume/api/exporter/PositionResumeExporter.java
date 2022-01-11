@@ -8,7 +8,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -52,7 +51,7 @@ public class PositionResumeExporter extends BaseExporter {
 
             response.setPath(excelFilePath);
             return response;
-        }catch (Throwable ex){
+        } catch (Throwable ex) {
             logger.error("Exception: ", ex);
             return null;
         }
@@ -65,7 +64,7 @@ public class PositionResumeExporter extends BaseExporter {
             workbook = new XSSFWorkbook();
         } else if (excelFilePath.endsWith("xls")) {
             workbook = new HSSFWorkbook();
-        } 
+        }
         return workbook;
     }
 

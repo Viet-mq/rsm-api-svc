@@ -1,6 +1,5 @@
 package com.edso.resume.api.domain.entities;
 
-import io.swagger.models.auth.In;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

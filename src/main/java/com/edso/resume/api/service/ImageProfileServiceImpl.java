@@ -57,7 +57,7 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
         BaseResponse response = new BaseResponse();
         try {
             MultipartFile image = request.getImage();
-            if(image.getSize() > fileSizeAvatar){
+            if (image.getSize() > fileSizeAvatar) {
                 return new BaseResponse(ErrorCodeDefs.IMAGE, "File vượt quá dung lượng cho phép");
             }
             Bson cond = Filters.eq(DbKeyConfig.ID, request.getIdProfile());
