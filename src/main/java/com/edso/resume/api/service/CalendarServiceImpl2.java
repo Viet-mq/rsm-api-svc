@@ -52,11 +52,6 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     @Override
     public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile, String key, String keySearch, String recruitment) {
         GetArrayCalendarResponse<CalendarEntity2> resp = new GetArrayCalendarResponse<>();
-//        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
-//        if (idProfileDocument == null) {
-//            resp.setResult(ErrorCodeDefs.ID, "Id profile không tồn tại");
-//            return resp;
-//        }
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(keySearch)) {
             c.add(Filters.or(Filters.regex(DbKeyConfig.FULL_NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(keySearch))), Filters.regex(DbKeyConfig.RECRUITMENT_NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(keySearch)))));
@@ -184,6 +179,8 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             calendar.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+
+
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);

@@ -60,6 +60,7 @@ public class RabbitMQOnlineActions extends BaseAction {
 
     }
 
+
 //    public void publishImageToRabbit(ImageEntity image) {
 //        try{
 //            Channel channel = rabbitMQAccess.getChannel();
