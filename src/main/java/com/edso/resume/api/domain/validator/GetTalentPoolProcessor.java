@@ -61,14 +61,14 @@ public class GetTalentPoolProcessor implements Runnable {
 //            }
 
             TalentPoolEntity talentPool = TalentPoolEntity.builder()
-                    .id(AppUtils.parseString(document.get("id")))
-                    .name(AppUtils.parseString(document.get("name")))
-                    .managers((List<String>) document.get("managers"))
-                    .description(AppUtils.parseString(document.get("description")))
-                    .numberOfProfile(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get("id")))))
+                    .id(AppUtils.parseString(document.get(DbKeyConfig.ID)))
+                    .name(AppUtils.parseString(document.get(DbKeyConfig.NAME)))
+                    .managers((List<String>) document.get(DbKeyConfig.MANAGERS))
+                    .description(AppUtils.parseString(document.get(DbKeyConfig.DESCRIPTION)))
+                    .numberOfProfile(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get(DbKeyConfig.ID)))))
                     .createAt(AppUtils.parseLong(document.get(DbKeyConfig.CREATE_AT)))
                     .createBy(AppUtils.parseString(document.get(DbKeyConfig.CREATE_BY)))
-                    .total(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get("id"))), Filters.gte(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000))))
+                    .total(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.TALENT_POOL_ID, AppUtils.parseString(document.get(DbKeyConfig.ID))), Filters.gte(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000))))
                     .build();
             rows.add(talentPool);
         } catch (Throwable ex) {
