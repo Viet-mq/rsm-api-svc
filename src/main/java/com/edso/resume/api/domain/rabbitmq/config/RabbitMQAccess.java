@@ -1,4 +1,4 @@
-package com.edso.resume.api.domain.rabbitmq.publish;
+package com.edso.resume.api.domain.rabbitmq.config;
 
 
 import com.rabbitmq.client.Channel;

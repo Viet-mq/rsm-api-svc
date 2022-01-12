@@ -52,7 +52,7 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
             for (CreateTimeCalendarRequest request2 : list) {
                 String idProfile = request2.getIdProfile();
                 //Validate
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR_PROFILE, idProfile, db, this));
                 int total = rs.size();
 
                 for (DictionaryValidateProcessor r : rs) {
@@ -153,7 +153,7 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                     dictionaryNames.setAddressName((String) r.getResult().getName());
                     break;
                 }
-                case ThreadConfig.PROFILE: {
+                case ThreadConfig.CALENDAR_PROFILE: {
                     dictionaryNames.setFullName(r.getResult().getFullName());
                     break;
                 }

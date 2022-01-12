@@ -200,7 +200,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 continue;
             }
             if (!AppUtils.validateEmail(profiles.getEmail())) {
-                logger.info("Email không đúng định dạng! email: {}", profiles.getEmail());
+                logger.info("Email không đúng định dạng! EMAIL: {}", profiles.getEmail());
                 continue;
             }
             if (!Strings.isNullOrEmpty(profiles.getGender())) {

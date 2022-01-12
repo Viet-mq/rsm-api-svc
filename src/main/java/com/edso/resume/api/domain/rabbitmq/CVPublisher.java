@@ -1,6 +1,6 @@
 package com.edso.resume.api.domain.rabbitmq;
 
-import com.edso.resume.api.domain.rabbitmq.publish.RabbitMQAccess;
+import com.edso.resume.api.domain.rabbitmq.config.RabbitMQAccess;
 import com.google.gson.Gson;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;

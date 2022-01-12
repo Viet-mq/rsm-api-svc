@@ -1,11 +1,9 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.CalendarEntity2;
-import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
-import com.edso.resume.api.domain.entities.TimeEntity;
-import com.edso.resume.api.domain.entities.UserEntity;
-import com.edso.resume.api.domain.rabbitmq.publish.RabbitMQOnlineActions;
+import com.edso.resume.api.domain.entities.*;
+import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
+import com.edso.resume.api.domain.rabbitmq.publish.PublishCandidate;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest2;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest2;
@@ -34,6 +32,7 @@ import java.util.regex.Pattern;
 public class CalendarServiceImpl2 extends BaseService implements CalendarService2, IDictionaryValidator {
 
     private final HistoryService historyService;
+    private final HistoryEmailService historyEmailService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
     private final RabbitMQOnlineActions rabbitMQOnlineActions;
 
@@ -43,20 +42,16 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     @Value("${calendar.nLoop}")
     private int nLoop;
 
-    public CalendarServiceImpl2(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitMQOnlineActions rabbitMQOnlineActions) {
+    public CalendarServiceImpl2(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
         this.historyService = historyService;
+        this.historyEmailService = historyEmailService;
         this.rabbitMQOnlineActions = rabbitMQOnlineActions;
     }
 
     @Override
     public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile, String key, String keySearch, String recruitment) {
         GetArrayCalendarResponse<CalendarEntity2> resp = new GetArrayCalendarResponse<>();
-//        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile));
-//        if (idProfileDocument == null) {
-//            resp.setResult(ErrorCodeDefs.ID, "Id profile không tồn tại");
-//            return resp;
-//        }
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(keySearch)) {
             c.add(Filters.or(Filters.regex(DbKeyConfig.FULL_NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(keySearch))), Filters.regex(DbKeyConfig.RECRUITMENT_NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(keySearch)))));
@@ -119,7 +114,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
 
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR_PROFILE, idProfile, db, this));
             if (request.getInterviewers() != null && !request.getInterviewers().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_USER, request.getInterviewers(), db, this));
             }
@@ -184,6 +179,10 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             calendar.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+
+            Candidate candidate = request.getCandidate();
+            candidate.setEmail(dictionaryNames.getEmail());
+            new Thread(new PublishCandidate(rabbitMQOnlineActions, historyEmailService, request.getInfo(), candidate)).start();
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
@@ -402,8 +401,10 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                     dictionaryNames.setAddressName((String) r.getResult().getName());
                     break;
                 }
-                case ThreadConfig.PROFILE: {
+                case ThreadConfig.CALENDAR_PROFILE: {
                     dictionaryNames.setFullName(r.getResult().getFullName());
+                    dictionaryNames.setEmailUser(r.getResult().getMailRef());
+                    dictionaryNames.setEmail((String) r.getResult().getName());
                     break;
                 }
                 default: {

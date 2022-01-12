@@ -11,6 +11,7 @@ public class DictionaryValidatorResult {
     private String idProfile;
     private String fullName;
     private String statusCVId;
+    private String mailRef;
     private String key;
 
     public DictionaryValidatorResult(String type) {
@@ -20,6 +21,7 @@ public class DictionaryValidatorResult {
         this.idProfile = "";
         this.fullName = "";
         this.statusCVId = "";
+        this.mailRef = "";
     }
 
 }

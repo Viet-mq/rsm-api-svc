@@ -28,11 +28,15 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
     private String interest;
     private Long deadLine;
     private String talentPool;
+    private String salaryDescription;
     private String status;
     private List<String> interviewer;
     private List<RoundEntity> interviewProcess;
 
     public BaseResponse validate() {
+        if (!Strings.isNullOrEmpty(salaryDescription) && salaryDescription.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.SALARY_DESCRIPTION, "Vui lòng nhập mức lương hiển thị ít hơn 255 ký tự");
+        }
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
         }

@@ -1,5 +1,8 @@
 package com.edso.resume.api.domain.request;
 
+import com.edso.resume.api.domain.entities.Candidate;
+import com.edso.resume.api.domain.entities.Presenter;
+import com.edso.resume.api.domain.entities.RecruitmentCouncil;
 import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.common.NameConfig;
 import com.edso.resume.lib.response.BaseResponse;
@@ -25,6 +28,9 @@ public class CreateCalendarProfileRequest2 extends BaseAuthRequest {
     private List<String> interviewers;
     private String note;
     private String avatarColor;
+    private Candidate candidate;
+    private RecruitmentCouncil recruitmentCouncil;
+    private Presenter presenter;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {

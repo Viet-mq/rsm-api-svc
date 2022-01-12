@@ -1,4 +1,4 @@
-package com.edso.resume.api.domain.rabbitmq.consume;
+package com.edso.resume.api.domain.rabbitmq.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;

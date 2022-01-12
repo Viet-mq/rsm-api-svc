@@ -138,8 +138,14 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)));
-                result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
                 result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
+                break;
+            }
+            case ThreadConfig.CALENDAR_PROFILE: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
+                result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
+                result.setMailRef(AppUtils.parseString(doc.get(DbKeyConfig.MAIL_REF)));
                 break;
             }
             case ThreadConfig.CHANGE_RECRUITMENT_PROFILE: {
@@ -162,7 +168,8 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.USER: {
                 result.setResult(true);
-                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
+                result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                 break;
             }
             case ThreadConfig.NOTE: {
@@ -201,7 +208,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.PROFILE_EMAIL: {
                 if (!AppUtils.parseString(doc.get(DbKeyConfig.ID)).equals(idProfile)) {
                     result.setResult(false);
-                    result.setName("Đã tồn tại ứng viên có email này");
+                    result.setName("Đã tồn tại ứng viên có EMAIL này");
                     break;
                 } else {
                     result.setResult(true);
@@ -273,6 +280,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.SOURCE_CV: {
                 return "nguồn cv";
             }
+            case ThreadConfig.CALENDAR_PROFILE:
             case ThreadConfig.TALENT_POOL_PROFILE:
             case ThreadConfig.REJECT_PROFILE:
             case ThreadConfig.CHANGE_RECRUITMENT_PROFILE:
@@ -330,6 +338,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.SOURCE_CV: {
                 return CollectionNameDefs.COLL_SOURCE_CV;
             }
+            case ThreadConfig.CALENDAR_PROFILE:
             case ThreadConfig.TALENT_POOL_PROFILE:
             case ThreadConfig.CHANGE_RECRUITMENT_PROFILE:
             case ThreadConfig.PROFILE_EMAIL:

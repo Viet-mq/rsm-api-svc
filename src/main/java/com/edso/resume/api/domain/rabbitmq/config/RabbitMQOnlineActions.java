@@ -1,6 +1,9 @@
-package com.edso.resume.api.domain.rabbitmq.publish;
+package com.edso.resume.api.domain.rabbitmq.config;
 
+import com.edso.resume.api.domain.entities.Email;
 import com.edso.resume.api.domain.entities.EmailMessageEntity;
+import com.edso.resume.api.domain.rabbitmq.config.BaseAction;
+import com.edso.resume.api.domain.rabbitmq.config.RabbitMQAccess;
 import com.google.gson.Gson;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -11,13 +14,13 @@ import org.springframework.stereotype.Component;
 public class RabbitMQOnlineActions extends BaseAction {
 
     private final RabbitMQAccess rabbitMQAccess;
-    @Value("${spring.rabbitmq.email.queue}")
+    @Value("${spring.rabbitmq.EMAIL.queue}")
     private String queueEmail;
 
-    @Value("${spring.rabbitmq.email.exchange}")
+    @Value("${spring.rabbitmq.EMAIL.exchange}")
     private String exchangeEmail;
 
-    @Value("${spring.rabbitmq.email.routingkey}")
+    @Value("${spring.rabbitmq.EMAIL.routingkey}")
     private String routingKeyEmail;
 
     @Value("${spring.rabbitmq.profile.queue}")
@@ -54,6 +57,32 @@ public class RabbitMQOnlineActions extends BaseAction {
             channel.close();
 
             logger.info("=>publishEmailToRabbit toEmail: {}, time: {}", email, time);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+
+    }
+
+    public void publishEmail(String type, Object object) {
+        try {
+            Channel channel = rabbitMQAccess.getChannel();
+
+            //Neu khong co thi tao
+            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.queueDeclare(queueEmail, true, false, false, null);
+            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+            Email email = Email.builder()
+                    .type(type)
+                    .object(object)
+                    .build();
+            BasicProperties messageProperties = new BasicProperties.Builder()
+                    .contentType("application/json")
+                    .build();
+            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+            channel.close();
+
+            logger.info("=>publishEmail type: {}, object: {}", type, object);
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);
         }

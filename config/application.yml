@@ -23,9 +23,9 @@ spring:
       queue: event.queue
       routingkey: event.routingkey
     email:
-      exchange: email.exchange
-      queue: email.queue
-      routingkey: email.routingkey
+      exchange: EMAIL.exchange
+      queue: EMAIL.queue
+      routingkey: EMAIL.routingkey
     cv:
       exchange: cv.exchange
       queue: cv.queue

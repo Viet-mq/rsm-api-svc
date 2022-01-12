@@ -24,10 +24,10 @@ public class UpdateBlacklistRequest extends BaseAuthRequest {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
         }
         if (Strings.isNullOrEmpty(email)) {
-            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập blacklist email");
+            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập blacklist EMAIL");
         }
         if (email.length() > 255 || !AppUtils.validateEmail(email)) {
-            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
+            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng EMAIL");
         }
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập họ và tên");
