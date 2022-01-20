@@ -2,16 +2,19 @@ package com.edso.resume.api.domain.entities;
 
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @Data
 @Builder
-public class RecruitmentCouncil {
+public class HistoryEmailEntity {
+    private String id;
     private String idProfile;
     private String subject;
+    private List<FileEntity> files;
+    private Long time;
     private String content;
-    private List<String> emails;
-    private List<MultipartFile> files;
+    private String status;
+    private String username;
+    private String fullName;
 }

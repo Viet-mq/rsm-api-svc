@@ -2,6 +2,9 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.*;
+import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
+import com.edso.resume.api.domain.rabbitmq.publish.PublishCandidateEmail;
+import com.edso.resume.api.domain.rabbitmq.publish.PublishPresenter;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
@@ -39,19 +42,21 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private final RabbitTemplate rabbitTemplate;
     private final CalendarService calendarService;
     private final NoteService noteService;
+    private final RabbitMQOnlineActions rabbitMQOnlineActions;
 
     @Value("${spring.rabbitmq.profile.exchange}")
     private String exchange;
     @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
 
-    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService) {
+    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
         this.historyService = historyService;
         this.historyEmailService = historyEmailService;
         this.rabbitTemplate = rabbitTemplate;
         this.calendarService = calendarService;
         this.noteService = noteService;
+        this.rabbitMQOnlineActions = rabbitMQOnlineActions;
     }
 
     private void publishActionToRabbitMQ(String type, Object profile) {
@@ -132,6 +137,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .recruitmentId(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)))
                         .recruitmentName(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_NAME)))
                         .mailRef(AppUtils.parseString(doc.get(DbKeyConfig.MAIL_REF)))
+                        .username(AppUtils.parseString(doc.get(DbKeyConfig.USERNAME)))
                         .skill((List<SkillEntity>) doc.get(DbKeyConfig.SKILL))
                         .avatarColor(AppUtils.parseString(doc.get(DbKeyConfig.AVATAR_COLOR)))
                         .isNew(AppUtils.parseString(doc.get(DbKeyConfig.IS_NEW)))
@@ -195,6 +201,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .recruitmentId(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_ID)))
                 .recruitmentName(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_NAME)))
                 .mailRef(AppUtils.parseString(one.get(DbKeyConfig.MAIL_REF)))
+                .username(AppUtils.parseString(one.get(DbKeyConfig.USERNAME)))
                 .skill((List<SkillEntity>) one.get(DbKeyConfig.SKILL))
                 .avatarColor(AppUtils.parseString(one.get(DbKeyConfig.AVATAR_COLOR)))
                 .build();
@@ -306,6 +313,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
             profile.append(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName());
             profile.append(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool());
+            profile.append(DbKeyConfig.USERNAME, request.getHrRef());
             profile.append(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser());
             profile.append(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser());
             profile.append(DbKeyConfig.SKILL, dictionaryNames.getSkill());
@@ -431,6 +439,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
                     Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
+                    Updates.set(DbKeyConfig.USERNAME, request.getHrRef()),
                     Updates.set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
                     Updates.set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
@@ -574,6 +583,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
                     Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
+                    Updates.set(DbKeyConfig.USERNAME, request.getHrRef()),
                     Updates.set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
                     Updates.set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
@@ -624,7 +634,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 return response;
             }
 
-            deleteFile(AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV)));
+            String path = AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV));
+            if (!Strings.isNullOrEmpty(path)) {
+                deleteFile(path);
+            }
 
             // insert to rabbitmq
             publishActionToRabbitMQ(RabbitMQConfig.DELETE, request);
@@ -738,8 +751,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request) {
-
+    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, PresenterRequest presenter) {
 
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
@@ -825,6 +837,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Loại ứng viên", request.getInfo());
+
+            //publish rabbit
+            if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
+                new Thread(new PublishCandidateEmail(rabbitMQOnlineActions, historyEmailService, request.getInfo(), candidate, idProfile, TypeConfig.REJECT_CANDIDATE)).start();
+            }
+            if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
+                new Thread(new PublishPresenter(rabbitMQOnlineActions, historyEmailService, request.getInfo(), presenter, idProfile, TypeConfig.REJECT_PRESENTER)).start();
+            }
 
             response.setSuccess();
             return response;

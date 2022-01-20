@@ -31,6 +31,7 @@ public class ProfileEntity {
     //    private List<TalentPool> talentPool;
     private String talentPoolId;
     private String talentPoolName;
+    private String username;
     private String hrRef;
     private String mailRef;
     private String departmentId;

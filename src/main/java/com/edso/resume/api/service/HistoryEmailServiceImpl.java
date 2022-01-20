@@ -1,7 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.HistoryEmail;
+import com.edso.resume.api.domain.entities.*;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -12,7 +12,9 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +25,28 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
         super(db);
     }
 
+    @Value("${mail.serverPath}")
+    private String serverPath;
+
     @Override
-    public void createHistoryEmail(HistoryEmail historyEmail, HeaderInfo info) {
+    public List<String> createHistoryEmail(HistoryEmail historyEmail, HeaderInfo info) {
+        List<String> listPath = new ArrayList<>();
+        List<Document> listDocument = new ArrayList<>();
         try {
             Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
+
+            if (historyEmail.getFiles() != null && !historyEmail.getFiles().isEmpty()) {
+                for (MultipartFile file : historyEmail.getFiles()) {
+                    if (file != null) {
+                        String path = saveFile(serverPath, file);
+                        listPath.add(path);
+                        Document pathDocument = new Document();
+                        pathDocument.append(DbKeyConfig.FILE_NAME, file.getOriginalFilename());
+                        pathDocument.append(DbKeyConfig.PATH_FILE, path);
+                        listDocument.add(pathDocument);
+                    }
+                }
+            }
 
             Document history = new Document();
             history.append(DbKeyConfig.ID, historyEmail.getId());
@@ -35,13 +55,62 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             history.append(DbKeyConfig.CONTENT, historyEmail.getContent());
             history.append(DbKeyConfig.TIME, System.currentTimeMillis());
             history.append(DbKeyConfig.USERNAME, info.getUsername());
-            history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+            history.append(DbKeyConfig.STATUS, "Đang đợi gửi");
+//            history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+            history.append(DbKeyConfig.FILE, listDocument);
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_HISTORY_EMAIL, history);
             logger.info("createHistoryEmail history: {}", history);
+            return listPath;
         } catch (Throwable e) {
             logger.error("Exception: ", e);
+            return null;
+        }
+    }
+
+    @Override
+    public List<String> createHistoryEmails(HistoryEmails historyEmails, HeaderInfo info) {
+        List<String> listPath = new ArrayList<>();
+        List<Document> listDocument = new ArrayList<>();
+        try {
+            Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
+
+            if (historyEmails.getFiles() != null && !historyEmails.getFiles().isEmpty()) {
+                for (MultipartFile file : historyEmails.getFiles()) {
+                    if (file != null && !file.isEmpty()) {
+                        String path = saveFile(serverPath, file);
+                        listPath.add(path);
+                        Document pathDocument = new Document();
+                        pathDocument.append(DbKeyConfig.FILE_NAME, file.getOriginalFilename());
+                        pathDocument.append(DbKeyConfig.PATH_FILE, path);
+                        listDocument.add(pathDocument);
+                    }
+                }
+            }
+
+            List<Document> historyList = new ArrayList<>();
+            for (IdEntity id : historyEmails.getIds()) {
+                Document history = new Document();
+                history.append(DbKeyConfig.ID, id.getHistoryId());
+                history.append(DbKeyConfig.ID_PROFILE, id.getProfileId());
+                history.append(DbKeyConfig.SUBJECT, historyEmails.getSubject());
+                history.append(DbKeyConfig.CONTENT, historyEmails.getContent());
+                history.append(DbKeyConfig.TIME, System.currentTimeMillis());
+                history.append(DbKeyConfig.USERNAME, info.getUsername());
+                history.append(DbKeyConfig.STATUS, "Đang đợi gửi");
+//                history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+                history.append(DbKeyConfig.FILE, listDocument);
+                historyList.add(history);
+            }
+
+            // insert to database
+            db.insertMany(CollectionNameDefs.COLL_HISTORY_EMAIL, historyList);
+            logger.info("createHistoryEmails historyList: {}", historyList);
+            return listPath;
+        } catch (Throwable e) {
+            logger.error("Exception: ", e);
+            return null;
         }
     }
 
@@ -52,8 +121,8 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
     }
 
     @Override
-    public GetArrayResponse<HistoryEmail> findAllHistoryEmail(HeaderInfo info, String idProfile, Integer page, Integer size) {
-        GetArrayResponse<HistoryEmail> resp = new GetArrayResponse<>();
+    public GetArrayResponse<HistoryEmailEntity> findAllHistoryEmail(HeaderInfo info, String idProfile, Integer page, Integer size) {
+        GetArrayResponse<HistoryEmailEntity> resp = new GetArrayResponse<>();
 
         Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
         Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
@@ -68,15 +137,31 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
 
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_HISTORY_PROFILE, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
-        List<HistoryEmail> rows = new ArrayList<>();
+        List<HistoryEmailEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
-                HistoryEmail history = HistoryEmail.builder()
+                List<FileEntity> list = new ArrayList<>();
+                List<Document> documentList = (List<Document>) doc.get(DbKeyConfig.FILE);
+                if (documentList != null && !documentList.isEmpty()) {
+                    for (Document document : documentList) {
+                        FileEntity file = FileEntity.builder()
+                                .fileName(AppUtils.parseString(document.get(DbKeyConfig.FILE_NAME)))
+                                .filePath(AppUtils.parseString(document.get(DbKeyConfig.PATH_FILE)))
+                                .build();
+                        list.add(file);
+                    }
+                }
+
+                HistoryEmailEntity history = HistoryEmailEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .idProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)))
+                        .subject(AppUtils.parseString(doc.get(DbKeyConfig.SUBJECT)))
+                        .content(AppUtils.parseString(doc.get(DbKeyConfig.CONTENT)))
+                        .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
                         .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
                         .username(AppUtils.parseString(doc.get(DbKeyConfig.USERNAME)))
                         .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
+                        .files(list)
                         .build();
                 rows.add(history);
             }

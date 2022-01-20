@@ -1,9 +1,7 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.entities.CalendarEntity2;
-import com.edso.resume.api.domain.request.CreateCalendarProfileRequest2;
-import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
-import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest2;
+import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.service.CalendarService;
 import com.edso.resume.api.service.CalendarService2;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -43,38 +41,46 @@ public class CalendarController extends BaseController {
     }
 
     @PostMapping("/create")
-    public BaseResponse createCalendarProfile(@RequestHeader Map<String, String> headers, @RequestBody CreateCalendarProfileRequest2 request) {
+    public BaseResponse createCalendarProfile(@RequestHeader Map<String, String> headers,
+                                              @ModelAttribute CreateCalendarProfileRequest2 request,
+                                              @ModelAttribute PresenterRequest presenter,
+                                              @ModelAttribute RecruitmentCouncilRequest recruitmentCouncil,
+                                              @ModelAttribute CandidateRequest candidate) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>createCalendarProfile u: {}, req: {}", headerInfo, request);
+        logger.info("=>createCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, presenter, recruitmentCouncil, candidate);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = calendarService2.createCalendarProfile(request);
+                response = calendarService2.createCalendarProfile(request, presenter, recruitmentCouncil, candidate);
             }
         }
-        logger.info("<=createCalendarProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=createCalendarProfile u: {}, req: {}, rep: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate);
         return response;
     }
 
     @PostMapping("/update")
-    public BaseResponse updateCalendarProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateCalendarProfileRequest2 request) {
+    public BaseResponse updateCalendarProfile(@RequestHeader Map<String, String> headers,
+                                              @ModelAttribute UpdateCalendarProfileRequest2 request,
+                                              @ModelAttribute PresenterRequest presenter,
+                                              @ModelAttribute RecruitmentCouncilRequest recruitmentCouncil,
+                                              @ModelAttribute CandidateRequest candidate) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateCalendarProfile u: {}, req: {}", headerInfo, request);
+        logger.info("=>updateCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, presenter, recruitmentCouncil, candidate);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = calendarService2.updateCalendarProfile(request);
+                response = calendarService2.updateCalendarProfile(request, presenter, recruitmentCouncil, candidate);
             }
         }
-        logger.info("<=updateCalendarProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=updateCalendarProfile u: {}, req: {}, resp: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate);
         return response;
     }
 

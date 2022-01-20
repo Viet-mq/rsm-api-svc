@@ -10,6 +10,7 @@ import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.common.ErrorCodeDefs;
 import com.edso.resume.lib.response.BaseResponse;
+import com.google.common.base.Strings;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
@@ -28,7 +29,7 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
 
     private final RabbitTemplate rabbitTemplate;
 
-    @Value("${avatar.serverpath}")
+    @Value("${avatar.serverPath}")
     private String serverPath;
     @Value("${avatar.domain}")
     private String domain;
@@ -58,7 +59,7 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
         try {
             MultipartFile image = request.getImage();
             if (image.getSize() > fileSizeAvatar) {
-                return new BaseResponse(ErrorCodeDefs.IMAGE, "File vượt quá dung lượng cho phép");
+                return new BaseResponse(ErrorCodeDefs.IMAGE, "FileEntity vượt quá dung lượng cho phép");
             }
             Bson cond = Filters.eq(DbKeyConfig.ID, request.getIdProfile());
             Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
@@ -68,7 +69,10 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
                 return response;
             }
 
-            deleteFile(AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE)));
+            String path = AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE));
+            if (!Strings.isNullOrEmpty(path)) {
+                deleteFile(path);
+            }
             String fileName = saveFile(image);
 
             Bson update = Updates.combine(
@@ -105,7 +109,10 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
                 return response;
             }
 
-            deleteFile(AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE)));
+            String path = AppUtils.parseString(profile.get(DbKeyConfig.PATH_IMAGE));
+            if (!Strings.isNullOrEmpty(path)) {
+                deleteFile(path);
+            }
 
             Bson update = Updates.combine(
                     Updates.set(DbKeyConfig.URL_IMAGE, null),

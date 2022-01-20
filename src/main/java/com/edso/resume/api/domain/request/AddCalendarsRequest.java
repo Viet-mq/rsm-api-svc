@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @ToString(callSuper = true)
 public class AddCalendarsRequest extends BaseAuthRequest {
-    private List<CreateTimeCalendarRequest> times;
+    private String times;
     private String recruitmentId;
     private String interviewAddress;
     private String floor;
@@ -23,8 +23,8 @@ public class AddCalendarsRequest extends BaseAuthRequest {
     private String note;
 
     public BaseResponse validate() {
-        if (times == null || times.isEmpty()) {
-            return new BaseResponse(1, "Vui lòng thêm ứng viên tham gia phỏng vấn");
+        if (Strings.isNullOrEmpty(times)) {
+            return new BaseResponse(ErrorCodeDefs.TIME, "Vui lòng thêm ứng viên tham gia phỏng vấn");
         }
         if (Strings.isNullOrEmpty(recruitmentId) || recruitmentId.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.RECRUITMENT, "Vui lòng nhập tin tuyển dụng");

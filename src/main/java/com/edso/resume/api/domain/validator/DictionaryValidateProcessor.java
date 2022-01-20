@@ -208,7 +208,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.PROFILE_EMAIL: {
                 if (!AppUtils.parseString(doc.get(DbKeyConfig.ID)).equals(idProfile)) {
                     result.setResult(false);
-                    result.setName("Đã tồn tại ứng viên có EMAIL này");
+                    result.setName("Đã tồn tại ứng viên có email này");
                     break;
                 } else {
                     result.setResult(true);

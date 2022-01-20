@@ -6,13 +6,13 @@ import java.nio.charset.StandardCharsets;
 
 public class Consumer {
 
-    private final static String QUEUE_NAME = "image.queue";
+    private final static String QUEUE_NAME = "EMAIL.queue";
 
     public static void main(String[] argv) throws Exception {
         System.out.println("Create a ConnectionFactory");
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("192.168.50.33");
-        factory.setPort(5673);
+        factory.setHost("18.139.222.137");
+        factory.setPort(5672);
         factory.setUsername("admin");
         factory.setPassword("adminlgsp@123");
 

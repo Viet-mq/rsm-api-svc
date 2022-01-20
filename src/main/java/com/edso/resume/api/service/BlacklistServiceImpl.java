@@ -191,7 +191,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         Document ssDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, ssnCond);
 
         if (emailDocument != null) {
-            response.setFailed("EMAIL đã tồn tại");
+            response.setFailed("email đã tồn tại");
             return response;
         }
         if (phoneDocument != null) {

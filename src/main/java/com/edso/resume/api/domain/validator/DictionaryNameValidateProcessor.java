@@ -63,7 +63,7 @@ public class DictionaryNameValidateProcessor implements Runnable {
     private void setResult(Document doc) {
         switch (type) {
             case ThreadConfig.BLACKLIST_EMAIL: {
-                logger.info("Ứng viên có EMAIL này đang trong blacklist! EMAIL: {}", this.name);
+                logger.info("Ứng viên có email này đang trong blacklist! email: {}", this.name);
                 result.setResult(false);
                 break;
             }
@@ -74,7 +74,7 @@ public class DictionaryNameValidateProcessor implements Runnable {
             }
             case ThreadConfig.PROFILE_EMAIL: {
                 result.setResult(false);
-                logger.info("Đã có ứng viên dùng EMAIL này! EMAIL: {}", this.name);
+                logger.info("Đã có ứng viên dùng email này! email: {}", this.name);
                 break;
             }
             case ThreadConfig.PROFILE_PHONE_NUMBER: {

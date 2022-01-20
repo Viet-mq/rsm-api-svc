@@ -89,15 +89,25 @@ excel:
 
 note:
   domain: http://192.168.50.33:8182/attachment/
-#  serverpath: /usr/share/nginx/file-rs/attachment/
+#  serverPath: /usr/share/nginx/file-rs/attachment/
   serverPath: D:\
   fileSize: 15728640 #Byte 15MB
 
 avatar:
   domain: http://192.168.50.33:8182/avatar/
-#  serverpath: /usr/share/nginx/file-rs/avatar/
+#  serverPath: /usr/share/nginx/file-rs/avatar/
   serverPath: D:\
   fileSize: 15728640 #Byte 15MB
+
+mail:
+  domain: http://192.168.50.33:8182/mail/
+  #  serverPath: /usr/share/nginx/file-rs/mail/
+  serverPath: D:\
+  fileSize: 15728640 #Byte 15MB
+
+fileProfiles:
+  fileSize: 15728640 #Byte 15MB
+
 id:
   pass: 'cc281050-00d8-486c-af68-b10cd83f937c'
   reject: 'd0d08b54-4ac7-4947-9018-e8c4f991b7be'

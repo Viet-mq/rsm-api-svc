@@ -50,6 +50,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     private String exchange;
     @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
+    @Value("${fileProfiles.fileSize}")
+    private Long fileSize;
 
     private final Queue<DictionaryNameValidatorResult> queue = new LinkedBlockingQueue<>();
 
@@ -200,7 +202,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 continue;
             }
             if (!AppUtils.validateEmail(profiles.getEmail())) {
-                logger.info("Email không đúng định dạng! EMAIL: {}", profiles.getEmail());
+                logger.info("Email không đúng định dạng! email: {}", profiles.getEmail());
                 continue;
             }
             if (!Strings.isNullOrEmpty(profiles.getGender())) {
@@ -228,6 +230,9 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 
     @Override
     public BaseResponse uploadProfiles(MultipartFile request, HeaderInfo info) {
+        if (request != null && request.getSize() > fileSize) {
+            return new BaseResponse(ErrorCodeDefs.FILE, "FileEntity vượt quá dung lượng cho phép");
+        }
         BaseResponse response = new BaseResponse();
         try {
             List<ProfileUploadEntity> profiles = null;

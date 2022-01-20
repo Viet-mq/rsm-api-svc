@@ -24,7 +24,7 @@ public interface ProfileService {
 
     BaseResponse updateStatusProfile(UpdateStatusProfileRequest request);
 
-    BaseResponse updateRejectProfile(UpdateRejectProfileRequest request);
+    BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, PresenterRequest presenter);
 
     BaseResponse updateTalentPoolProfile(UpdateTalentPoolProfileRequest request);
 

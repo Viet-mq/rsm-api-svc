@@ -4,12 +4,18 @@ import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
 import com.edso.resume.api.domain.entities.EventEntity;
 import com.edso.resume.api.domain.entities.ProfileRabbitMQEntity;
+import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
+import com.edso.resume.api.domain.rabbitmq.publish.PublishCandidateEmail;
+import com.edso.resume.api.domain.rabbitmq.publish.PublishPresenter;
+import com.edso.resume.api.domain.request.CandidateRequest;
 import com.edso.resume.api.domain.request.ChangeRecruitmentRequest;
+import com.edso.resume.api.domain.request.PresenterRequest;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryValidator;
 import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.response.BaseResponse;
+import com.google.common.base.Strings;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
@@ -30,16 +36,20 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
     private final RabbitTemplate rabbitTemplate;
     private final HistoryService historyService;
+    private final HistoryEmailService historyEmailService;
+    private final RabbitMQOnlineActions rabbitMQOnlineActions;
 
     @Value("${spring.rabbitmq.profile.exchange}")
     private String exchange;
     @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
 
-    protected ChangeRecruitmentServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate, HistoryService historyService) {
+    protected ChangeRecruitmentServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate, HistoryService historyService, HistoryEmailService historyEmailService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
         this.rabbitTemplate = rabbitTemplate;
         this.historyService = historyService;
+        this.historyEmailService = historyEmailService;
+        this.rabbitMQOnlineActions = rabbitMQOnlineActions;
     }
 
     private void publishActionToRabbitMQ(Object profile) {
@@ -49,7 +59,7 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
     }
 
     @Override
-    public BaseResponse changeRecruitment(ChangeRecruitmentRequest request) {
+    public BaseResponse changeRecruitment(ChangeRecruitmentRequest request, CandidateRequest candidate, PresenterRequest presenter) {
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
         try {
@@ -153,6 +163,14 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
             profileRabbitMQ.setStatusCVName(dictionaryNames.getStatusCVName());
 
             publishActionToRabbitMQ(profileRabbitMQ);
+
+            //publish rabbit
+            if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
+                new Thread(new PublishCandidateEmail(rabbitMQOnlineActions, historyEmailService, request.getInfo(), candidate, request.getIdProfile(), TypeConfig.ROUND_CANDIDATE)).start();
+            }
+            if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
+                new Thread(new PublishPresenter(rabbitMQOnlineActions, historyEmailService, request.getInfo(), presenter, request.getIdProfile(), TypeConfig.ROUND_PRESENTER)).start();
+            }
 
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);

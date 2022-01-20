@@ -1,26 +1,29 @@
 package com.edso.resume.api.domain.rabbitmq.config;
 
-import com.edso.resume.api.domain.entities.Email;
-import com.edso.resume.api.domain.entities.EmailMessageEntity;
-import com.edso.resume.api.domain.rabbitmq.config.BaseAction;
-import com.edso.resume.api.domain.rabbitmq.config.RabbitMQAccess;
+import com.edso.resume.api.domain.entities.*;
+import com.edso.resume.api.domain.request.CandidateRequest;
+import com.edso.resume.api.domain.request.PresenterRequest;
+import com.edso.resume.api.domain.request.RecruitmentCouncilRequest;
 import com.google.gson.Gson;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class RabbitMQOnlineActions extends BaseAction {
 
     private final RabbitMQAccess rabbitMQAccess;
-    @Value("${spring.rabbitmq.EMAIL.queue}")
+    @Value("${spring.rabbitmq.email.queue}")
     private String queueEmail;
 
-    @Value("${spring.rabbitmq.EMAIL.exchange}")
+    @Value("${spring.rabbitmq.email.exchange}")
     private String exchangeEmail;
 
-    @Value("${spring.rabbitmq.EMAIL.routingkey}")
+    @Value("${spring.rabbitmq.email.routingkey}")
     private String routingKeyEmail;
 
     @Value("${spring.rabbitmq.profile.queue}")
@@ -38,10 +41,11 @@ public class RabbitMQOnlineActions extends BaseAction {
 
     public void publishEmailToRabbit(String email, String time) {
         try {
-            Channel channel = rabbitMQAccess.getChannel();
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
 
             //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.exchangeDeclare(exchangeEmail, "fanout", true);
             channel.queueDeclare(queueEmail, true, false, false, null);
             channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
@@ -63,9 +67,10 @@ public class RabbitMQOnlineActions extends BaseAction {
 
     }
 
-    public void publishEmail(String type, Object object) {
+    public void publishCandidateEmail(String type, CandidateRequest candidate, List<String> listPath, String historyId, String profileId) {
         try {
-            Channel channel = rabbitMQAccess.getChannel();
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
 
             //Neu khong co thi tao
             channel.exchangeDeclare(exchangeEmail, "direct", true);
@@ -74,7 +79,11 @@ public class RabbitMQOnlineActions extends BaseAction {
 
             Email email = Email.builder()
                     .type(type)
-                    .object(object)
+                    .profileId(profileId)
+                    .historyId(historyId)
+                    .subject(candidate.getSubjectCandidate())
+                    .content(candidate.getContentCandidate())
+                    .files(listPath)
                     .build();
             BasicProperties messageProperties = new BasicProperties.Builder()
                     .contentType("application/json")
@@ -82,16 +91,163 @@ public class RabbitMQOnlineActions extends BaseAction {
             channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
             channel.close();
 
-            logger.info("=>publishEmail type: {}, object: {}", type, object);
+            logger.info("=>publishCandidateEmail email: {}", email);
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);
         }
-
     }
+
+    public void publishCandidateEmails(String type, CandidateRequest candidate, List<String> listPath, List<IdEntity> ids) {
+        try {
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
+
+            //Neu khong co thi tao
+            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.queueDeclare(queueEmail, true, false, false, null);
+            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+            Emails emails = Emails.builder()
+                    .type(type)
+                    .ids(ids)
+                    .subject(candidate.getSubjectCandidate())
+                    .content(candidate.getContentCandidate())
+                    .files(listPath)
+                    .build();
+            BasicProperties messageProperties = new BasicProperties.Builder()
+                    .contentType("application/json")
+                    .build();
+            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
+            channel.close();
+
+            logger.info("=>publishCandidateEmail emails: {}", emails);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+    }
+
+    public void publishRecruitmentCouncilEmail(String type, RecruitmentCouncilRequest recruitmentCouncil, List<String> listPath, String historyId, String calendarId) {
+        try {
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
+
+            //Neu khong co thi tao
+            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.queueDeclare(queueEmail, true, false, false, null);
+            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+            EmailRecruitmentCouncil email = EmailRecruitmentCouncil.builder()
+                    .type(type)
+                    .calendarId(calendarId)
+                    .historyId(historyId)
+                    .subject(recruitmentCouncil.getSubjectRecruitmentCouncil())
+                    .content(recruitmentCouncil.getContentRecruitmentCouncil())
+                    .files(listPath)
+                    .build();
+            BasicProperties messageProperties = new BasicProperties.Builder()
+                    .contentType("application/json")
+                    .build();
+            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+            channel.close();
+
+            logger.info("=>publishRecruitmentCouncilEmail email: {}", email);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+    }
+
+    public void publishRecruitmentCouncilEmails(String type, RecruitmentCouncilRequest recruitmentCouncil, List<String> listPath, List<IdEntity> ids) {
+        try {
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
+
+            //Neu khong co thi tao
+            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.queueDeclare(queueEmail, true, false, false, null);
+            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+            Emails emails = Emails.builder()
+                    .type(type)
+                    .ids(ids)
+                    .subject(recruitmentCouncil.getSubjectRecruitmentCouncil())
+                    .content(recruitmentCouncil.getContentRecruitmentCouncil())
+                    .files(listPath)
+                    .build();
+            BasicProperties messageProperties = new BasicProperties.Builder()
+                    .contentType("application/json")
+                    .build();
+            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
+            channel.close();
+
+            logger.info("=>publishRecruitmentCouncilEmail emails: {}", emails);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+    }
+
+    public void publishPresenterEmail(String type, PresenterRequest presenter, List<String> listPath, String historyId, String profileId) {
+        try {
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
+
+            //Neu khong co thi tao
+            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.queueDeclare(queueEmail, true, false, false, null);
+            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+            Email email = Email.builder()
+                    .type(type)
+                    .profileId(profileId)
+                    .historyId(historyId)
+                    .subject(presenter.getSubjectPresenter())
+                    .content(presenter.getContentPresenter())
+                    .files(listPath)
+                    .build();
+            BasicProperties messageProperties = new BasicProperties.Builder()
+                    .contentType("application/json")
+                    .build();
+            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+            channel.close();
+
+            logger.info("=>publishPresenterEmail email: {}", email);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+    }
+
+    public void publishPresenterEmails(String type, PresenterRequest presenter, List<String> listPath, List<IdEntity> ids) {
+        try {
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
+
+            //Neu khong co thi tao
+            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.queueDeclare(queueEmail, true, false, false, null);
+            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+            Emails emails = Emails.builder()
+                    .type(type)
+                    .ids(ids)
+                    .subject(presenter.getSubjectPresenter())
+                    .content(presenter.getContentPresenter())
+                    .files(listPath)
+                    .build();
+            BasicProperties messageProperties = new BasicProperties.Builder()
+                    .contentType("application/json")
+                    .build();
+            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
+            channel.close();
+
+            logger.info("=>publishPresenterEmail emails: {}", emails);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+    }
+
 
 //    public void publishImageToRabbit(ImageEntity image) {
 //        try{
-//            Channel channel = rabbitMQAccess.getChannel();
+//            Channel channel = rabbitMQAccess.getConnection();
 //
 //            //Neu khong co thi tao
 //            channel.exchangeDeclare(exchangeImage, "direct", true);
@@ -112,7 +268,7 @@ public class RabbitMQOnlineActions extends BaseAction {
 
 //    public void sendActionProfileToRabbit(String type, Object obj) {
 //        try{
-//            Channel channel = rabbitMQAccess.getChannel();
+//            Channel channel = rabbitMQAccess.getConnection();
 //
 //            //Neu khong co thi tao
 //            channel.exchangeDeclare(exchangeProfile, "direct", true);

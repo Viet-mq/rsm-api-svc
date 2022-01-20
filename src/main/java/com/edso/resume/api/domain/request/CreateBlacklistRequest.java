@@ -20,10 +20,10 @@ public class CreateBlacklistRequest extends BaseAuthRequest {
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(email)) {
-            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập blacklist EMAIL");
+            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập blacklist email");
         }
         if (email.length() > 255 || !AppUtils.validateEmail(email)) {
-            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng EMAIL");
+            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập họ và tên");

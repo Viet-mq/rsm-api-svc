@@ -26,7 +26,7 @@ public class UpdateSourceCVRequest extends BaseAuthRequest {
         }
         if (!Strings.isNullOrEmpty(email)) {
             if (email.length() > 255 || !AppUtils.validateEmail(email)) {
-                return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng EMAIL");
+                return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
             }
         }
         if (!Strings.isNullOrEmpty(status) && status.length() > 255) {

@@ -8,11 +8,9 @@ import java.util.List;
 
 @Data
 @Builder
-public class Candidate {
-    private String id;
-    private String idProfile;
+public class HistoryEmails {
+    private List<IdEntity> ids;
     private String subject;
-    private String content;
-    private String email;
     private List<MultipartFile> files;
+    private String content;
 }

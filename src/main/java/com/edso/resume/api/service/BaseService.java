@@ -6,10 +6,14 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 public abstract class BaseService {
@@ -48,4 +52,39 @@ public abstract class BaseService {
         return String.format("#%06x", random.nextInt(256 * 256 * 256));
     }
 
+    public String saveFile(String serverPath, MultipartFile file) {
+        FileOutputStream fos = null;
+        try {
+            String fileName = file.getOriginalFilename();
+            File file1 = new File(serverPath + fileName);
+            int i = 0;
+            while (file1.exists()) {
+                i++;
+                String[] arr = Objects.requireNonNull(file.getOriginalFilename()).split("\\.");
+                fileName = arr[0] + " (" + i + ")." + arr[1];
+                file1 = new File(serverPath + fileName);
+            }
+            fos = new FileOutputStream(file1);
+            fos.write(file.getBytes());
+            return fileName;
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (Throwable ex) {
+                    logger.error("Exception: ", ex);
+                }
+            }
+        }
+        return null;
+    }
+
+    public void deleteFile(String path) {
+        File file = new File(path);
+        if (file.delete()) {
+            logger.info("deleteFile filePath:{}", path);
+        }
+    }
 }
