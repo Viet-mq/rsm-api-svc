@@ -40,7 +40,7 @@ public class SendOutlookCalendarServiceImpl extends BaseService implements SendO
                     "  \"subject\": \"" + request.getSubject() + "\",\n" +
                     "  \"body\": {\n" +
                     "    \"contentType\": \"HTML\",\n" +
-                    "    \"content\": \"" + request.getContent() + "\"\n" +
+                    "    \"CONTENT\": \"" + request.getContent() + "\"\n" +
                     "  },\n" +
                     "  \"start\": {\n" +
                     "      \"dateTime\": \"" + AppUtils.formatDateToString(new Date(request.getStartTime()), "yyyy-MM-dd'T'HH:mm:ss") + "\",\n" +

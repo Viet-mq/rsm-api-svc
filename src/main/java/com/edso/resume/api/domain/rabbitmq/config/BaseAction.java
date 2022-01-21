@@ -1,4 +1,4 @@
-package com.edso.resume.api.domain.rabbitmq.publish;
+package com.edso.resume.api.domain.rabbitmq.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

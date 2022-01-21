@@ -2,13 +2,16 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
-import com.edso.resume.api.domain.request.AddCalendarsRequest;
-import com.edso.resume.api.domain.request.CreateTimeCalendarRequest;
+import com.edso.resume.api.domain.entities.IdEntity;
+import com.edso.resume.api.domain.json.JsonHelper;
+import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
+import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryValidator;
 import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.response.BaseResponse;
+import com.google.common.base.Strings;
 import org.bson.Document;
 import org.springframework.stereotype.Service;
 
@@ -23,18 +26,25 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
 
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
     private final HistoryService historyService;
+    private final RabbitMQOnlineActions rabbitMQOnlineActions;
+    private final HistoryEmailService historyEmailService;
 
-    protected AddCalendarsServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+    protected AddCalendarsServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitMQOnlineActions rabbitMQOnlineActions, HistoryEmailService historyEmailService) {
         super(db);
         this.historyService = historyService;
+        this.rabbitMQOnlineActions = rabbitMQOnlineActions;
+        this.historyEmailService = historyEmailService;
     }
 
     @Override
-    public BaseResponse addCalendars(AddCalendarsRequest request) {
+    public BaseResponse addCalendars(AddCalendarsRequest request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate) {
         String key = UUID.randomUUID().toString();
-        BaseResponse response = new BaseResponse();
+        BaseResponse response = null;
         try {
-            List<CreateTimeCalendarRequest> list = request.getTimes();
+            List<CreateTimeCalendarRequest> list = JsonHelper.convertJsonToList(request.getTimes(), CreateTimeCalendarRequest[].class);
+            if (list == null || list.isEmpty()) {
+                return new BaseResponse(-1, "Vui lòng nhập 1 list ứng viên");
+            }
             for (CreateTimeCalendarRequest calendarRequest : list) {
                 response = calendarRequest.validate();
                 if (response != null) {
@@ -49,10 +59,11 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitmentId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getInterviewAddress(), db, this));
 
+            List<IdEntity> ids = new ArrayList<>();
             for (CreateTimeCalendarRequest request2 : list) {
                 String idProfile = request2.getIdProfile();
                 //Validate
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR_PROFILE, idProfile, db, this));
                 int total = rs.size();
 
                 for (DictionaryValidateProcessor r : rs) {
@@ -118,7 +129,30 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
 
                 //Insert history to DB
                 historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo());
+
+                if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter()) || !Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil()) || !Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
+                    IdEntity idEntity = IdEntity.builder()
+                            .calendarId(id)
+                            .profileId(idProfile)
+                            .build();
+                    ids.add(idEntity);
+                }
             }
+
+            //publish rabbit
+            if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
+                List<String> paths = historyEmailService.createHistoryEmails(ids, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                rabbitMQOnlineActions.publishCandidateEmails(TypeConfig.CALENDARS_CANDIDATE, candidate, paths, ids);
+            }
+            if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
+                List<String> paths = historyEmailService.createHistoryEmails(ids, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                rabbitMQOnlineActions.publishPresenterEmails(TypeConfig.CALENDARS_PRESENTER, presenter, paths, ids);
+            }
+            if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
+                List<String> paths = historyEmailService.createHistoryEmails(ids, recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+                rabbitMQOnlineActions.publishRecruitmentCouncilEmails(TypeConfig.CALENDARS_INTERVIEWER, recruitmentCouncil, paths, ids);
+            }
+
             response.setSuccess();
             return response;
         } catch (Throwable ex) {
@@ -153,7 +187,7 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                     dictionaryNames.setAddressName((String) r.getResult().getName());
                     break;
                 }
-                case ThreadConfig.PROFILE: {
+                case ThreadConfig.CALENDAR_PROFILE: {
                     dictionaryNames.setFullName(r.getResult().getFullName());
                     break;
                 }

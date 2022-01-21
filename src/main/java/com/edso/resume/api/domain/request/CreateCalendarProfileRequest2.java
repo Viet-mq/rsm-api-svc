@@ -7,6 +7,7 @@ import com.google.common.base.Strings;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -25,6 +26,15 @@ public class CreateCalendarProfileRequest2 extends BaseAuthRequest {
     private List<String> interviewers;
     private String note;
     private String avatarColor;
+    private String subjectPresenter;
+    private String contentPresenter;
+    private List<MultipartFile> filePresenters;
+    private String subjectCandidate;
+    private String contentCandidate;
+    private List<MultipartFile> fileCandidates;
+    private String subjectRecruitmentCouncil;
+    private String contentRecruitmentCouncil;
+    private List<MultipartFile> fileRecruitmentCouncils;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {

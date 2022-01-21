@@ -1,6 +1,8 @@
 package com.edso.resume.api.controller;
 
+import com.edso.resume.api.domain.request.CandidateRequest;
 import com.edso.resume.api.domain.request.ChangeRecruitmentRequest;
+import com.edso.resume.api.domain.request.PresenterRequest;
 import com.edso.resume.api.service.ChangeRecruitmentService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -20,20 +22,23 @@ public class ChangeRecuitmentController extends BaseController {
     }
 
     @PostMapping("/change")
-    public BaseResponse changeRecruitment(@RequestHeader Map<String, String> headers, @RequestBody ChangeRecruitmentRequest request) {
+    public BaseResponse changeRecruitment(@RequestHeader Map<String, String> headers,
+                                          @ModelAttribute ChangeRecruitmentRequest request,
+                                          @ModelAttribute CandidateRequest candidate,
+                                          @ModelAttribute PresenterRequest presenter) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>changeRecruitment u: {}, req: {}", headerInfo, request);
+        logger.info("=>changeRecruitment u: {}, req: {}, candidate: {}, presenter: {}", headerInfo, request, candidate, presenter);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = changeRecruitmentService.changeRecruitment(request);
+                response = changeRecruitmentService.changeRecruitment(request, candidate, presenter);
             }
         }
-        logger.info("<=changeRecruitment u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=changeRecruitment u: {}, req: {}, resp: {}, candidate: {}, presenter: {}", headerInfo, request, response, candidate, presenter);
         return response;
     }
 }

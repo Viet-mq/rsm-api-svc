@@ -30,7 +30,6 @@ public class UpdateProfileRequest extends BaseAuthRequest {
     private List<String> skill;
     private String levelJob;
     private String hrRef;
-    private String mailRef;
     private String department;
 
     public BaseResponse validate() {
@@ -81,11 +80,6 @@ public class UpdateProfileRequest extends BaseAuthRequest {
         }
         if (!Strings.isNullOrEmpty(hrRef) && hrRef.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.HR_REF, "Vui lòng nhập tên người giới thiệu ít hơn 255 ký tự");
-        }
-        if (!Strings.isNullOrEmpty(mailRef)) {
-            if (mailRef.length() > 255 || !AppUtils.validateEmail(mailRef)) {
-                return new BaseResponse(ErrorCodeDefs.MAIL_REF, "Vui lòng nhập đúng định dạng email");
-            }
         }
         if (dateOfApply == null || dateOfApply < 0) {
             return new BaseResponse(ErrorCodeDefs.DATE_OF_APPLY, "Vui lòng nhập ngày ứng tuyển");

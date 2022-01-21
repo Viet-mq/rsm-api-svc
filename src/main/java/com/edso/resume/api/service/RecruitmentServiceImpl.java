@@ -127,6 +127,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
                         .createAt(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
                         .createBy(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)))
+                        .salaryDescription(AppUtils.parseString(doc.get(DbKeyConfig.SALARY_DESCRIPTION)))
                         .interviewer(userEntityList)
                         .interviewProcess(roundEntityList)
                         .build();
@@ -254,6 +255,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.TYPE_OF_JOB, request.getTypeOfJob());
             recruitment.append(DbKeyConfig.QUANTITY, request.getQuantity());
             recruitment.append(DbKeyConfig.DETAIL_OF_SALARY, request.getDetailOfSalary());
+            recruitment.append(DbKeyConfig.SALARY_DESCRIPTION, request.getSalaryDescription());
             recruitment.append(DbKeyConfig.FROM, request.getFrom());
             recruitment.append(DbKeyConfig.TO, request.getTo());
             recruitment.append(DbKeyConfig.JOB_DESCRIPTION, request.getJobDescription());
@@ -369,6 +371,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.TYPE_OF_JOB, request.getTypeOfJob()),
                     Updates.set(DbKeyConfig.QUANTITY, request.getQuantity()),
                     Updates.set(DbKeyConfig.DETAIL_OF_SALARY, request.getDetailOfSalary()),
+                    Updates.set(DbKeyConfig.SALARY_DESCRIPTION, request.getSalaryDescription()),
                     Updates.set(DbKeyConfig.FROM, request.getFrom()),
                     Updates.set(DbKeyConfig.TO, request.getTo()),
                     Updates.set(DbKeyConfig.JOB_DESCRIPTION, request.getJobDescription()),

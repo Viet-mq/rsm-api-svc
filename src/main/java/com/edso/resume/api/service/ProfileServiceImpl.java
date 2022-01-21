@@ -2,6 +2,7 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.*;
+import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
@@ -34,22 +35,26 @@ import java.util.regex.Pattern;
 public class ProfileServiceImpl extends BaseService implements ProfileService, IDictionaryValidator {
 
     private final HistoryService historyService;
+    private final HistoryEmailService historyEmailService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
     private final RabbitTemplate rabbitTemplate;
     private final CalendarService calendarService;
     private final NoteService noteService;
+    private final RabbitMQOnlineActions rabbitMQOnlineActions;
 
     @Value("${spring.rabbitmq.profile.exchange}")
     private String exchange;
     @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
 
-    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService) {
+    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
         this.historyService = historyService;
+        this.historyEmailService = historyEmailService;
         this.rabbitTemplate = rabbitTemplate;
         this.calendarService = calendarService;
         this.noteService = noteService;
+        this.rabbitMQOnlineActions = rabbitMQOnlineActions;
     }
 
     private void publishActionToRabbitMQ(String type, Object profile) {
@@ -130,6 +135,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .recruitmentId(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)))
                         .recruitmentName(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_NAME)))
                         .mailRef(AppUtils.parseString(doc.get(DbKeyConfig.MAIL_REF)))
+                        .username(AppUtils.parseString(doc.get(DbKeyConfig.USERNAME)))
                         .skill((List<SkillEntity>) doc.get(DbKeyConfig.SKILL))
                         .avatarColor(AppUtils.parseString(doc.get(DbKeyConfig.AVATAR_COLOR)))
                         .isNew(AppUtils.parseString(doc.get(DbKeyConfig.IS_NEW)))
@@ -193,6 +199,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .recruitmentId(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_ID)))
                 .recruitmentName(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_NAME)))
                 .mailRef(AppUtils.parseString(one.get(DbKeyConfig.MAIL_REF)))
+                .username(AppUtils.parseString(one.get(DbKeyConfig.USERNAME)))
                 .skill((List<SkillEntity>) one.get(DbKeyConfig.SKILL))
                 .avatarColor(AppUtils.parseString(one.get(DbKeyConfig.AVATAR_COLOR)))
                 .build();
@@ -225,6 +232,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             if (!Strings.isNullOrEmpty(request.getLevelJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getHrRef())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getHrRef(), db, this));
             }
             if (request.getSkill() != null && !request.getSkill().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
@@ -294,7 +304,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName());
             profile.append(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV());
             profile.append(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName());
-            profile.append(DbKeyConfig.HR_REF, request.getHrRef());
             profile.append(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply());
             profile.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName()));
             profile.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
@@ -302,7 +311,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
             profile.append(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName());
             profile.append(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool());
-            profile.append(DbKeyConfig.MAIL_REF, request.getMailRef());
+            profile.append(DbKeyConfig.USERNAME, request.getHrRef());
+            profile.append(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser());
+            profile.append(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser());
             profile.append(DbKeyConfig.SKILL, dictionaryNames.getSkill());
             profile.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
             profile.append(DbKeyConfig.IS_NEW, true);
@@ -354,6 +365,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             if (!Strings.isNullOrEmpty(request.getLevelJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getHrRef())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getHrRef(), db, this));
             }
             if (request.getSkill() != null && !request.getSkill().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
@@ -423,14 +437,17 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
                     Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
-                    Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
+                    Updates.set(DbKeyConfig.USERNAME, request.getHrRef()),
+                    Updates.set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
+                    Updates.set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                     Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool())
+                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                    Updates.set(DbKeyConfig.SKILL, dictionaryNames.getSkill())
 
             );
             // insert to rabbitmq
@@ -478,6 +495,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             if (!Strings.isNullOrEmpty(request.getDepartment())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getHrRef())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getHrRef(), db, this));
             }
             if (!Strings.isNullOrEmpty(request.getLevelJob())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB_LEVEL, request.getLevelJob(), db, this));
@@ -561,14 +581,17 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
                     Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
-                    Updates.set(DbKeyConfig.HR_REF, request.getHrRef()),
+                    Updates.set(DbKeyConfig.USERNAME, request.getHrRef()),
+                    Updates.set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
+                    Updates.set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
                     Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                     Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                     Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool())
+                    Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                    Updates.set(DbKeyConfig.SKILL, dictionaryNames.getSkill())
             );
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(request, dictionaryNames);
@@ -609,7 +632,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 return response;
             }
 
-            deleteFile(AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV)));
+            String path = AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV));
+            if (!Strings.isNullOrEmpty(path)) {
+                deleteFile(path);
+            }
 
             // insert to rabbitmq
             publishActionToRabbitMQ(RabbitMQConfig.DELETE, request);
@@ -625,6 +651,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //Xóa lịch sử
             historyService.deleteHistory(id);
+            historyEmailService.deleteHistoryEmail(id);
 
             response.setSuccess();
 
@@ -722,8 +749,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request) {
-
+    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, PresenterRequest presenter) {
 
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
@@ -809,6 +835,18 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Loại ứng viên", request.getInfo());
+
+            //publish rabbit
+            if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.REJECT_CANDIDATE, candidate, paths, historyId, request.getIdProfile());
+            }
+            if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.REJECT_PRESENTER, presenter, paths, historyId, request.getIdProfile());
+            }
 
             response.setSuccess();
             return response;
@@ -982,6 +1020,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     dictionaryNames.setReason((String) r.getResult().getName());
                     break;
                 }
+                case ThreadConfig.USER: {
+                    dictionaryNames.setEmailUser((String) r.getResult().getName());
+                    dictionaryNames.setFullNameUser(r.getResult().getFullName());
+                    break;
+                }
                 case ThreadConfig.JOB_LEVEL: {
                     dictionaryNames.setLevelJobName((String) r.getResult().getName());
                     break;
@@ -1055,14 +1098,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setLevelJobName(dictionaryNames.getLevelJobName());
         profileEntity.setSourceCVId(request.getSourceCV());
         profileEntity.setSourceCVName(dictionaryNames.getSourceCVName());
-        profileEntity.setHrRef(request.getHrRef());
+        profileEntity.setHrRef(dictionaryNames.getFullNameUser());
         profileEntity.setDateOfApply(request.getDateOfApply());
         profileEntity.setTalentPoolId(request.getTalentPool());
         profileEntity.setTalentPoolName(dictionaryNames.getTalentPoolName());
         profileEntity.setDepartmentId(request.getDepartment());
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
         profileEntity.setLevelSchool(request.getLevelSchool());
-        profileEntity.setMailRef(request.getMailRef());
+        profileEntity.setMailRef(dictionaryNames.getEmailUser());
         profileEntity.setSkill(request.getSkill());
         profileEntity.setAvatarColor(request.getAvatarColor());
         profileEntity.setIsNew(true);
@@ -1086,12 +1129,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setLevelJobName(dictionaryNames.getLevelJobName());
         profileEntity.setSourceCVId(request.getSourceCV());
         profileEntity.setSourceCVName(dictionaryNames.getSourceCVName());
-        profileEntity.setHrRef(request.getHrRef());
+        profileEntity.setHrRef(dictionaryNames.getFullNameUser());
         profileEntity.setDateOfApply(request.getDateOfApply());
         profileEntity.setDepartmentId(request.getDepartment());
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
         profileEntity.setLevelSchool(request.getLevelSchool());
-        profileEntity.setMailRef(request.getMailRef());
+        profileEntity.setMailRef(dictionaryNames.getEmailUser());
         profileEntity.setSkill(request.getSkill());
         return profileEntity;
     }
@@ -1113,14 +1156,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setLevelJobName(dictionaryNames.getLevelJobName());
         profileEntity.setSourceCVId(request.getSourceCV());
         profileEntity.setSourceCVName(dictionaryNames.getSourceCVName());
-        profileEntity.setHrRef(request.getHrRef());
+        profileEntity.setHrRef(dictionaryNames.getFullNameUser());
         profileEntity.setDateOfApply(request.getDateOfApply());
         profileEntity.setDepartmentId(request.getDepartment());
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
         profileEntity.setLevelSchool(request.getLevelSchool());
         profileEntity.setEvaluation(request.getEvaluation());
         profileEntity.setLastApply(request.getLastApply());
-        profileEntity.setMailRef(request.getMailRef());
+        profileEntity.setMailRef(dictionaryNames.getEmailUser());
         profileEntity.setSkill(request.getSkill());
         return profileEntity;
     }

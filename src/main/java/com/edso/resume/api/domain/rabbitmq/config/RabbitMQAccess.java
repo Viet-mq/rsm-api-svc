@@ -1,7 +1,6 @@
-package com.edso.resume.api.domain.rabbitmq.publish;
+package com.edso.resume.api.domain.rabbitmq.config;
 
 
-import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import lombok.Getter;
@@ -34,7 +33,7 @@ public class RabbitMQAccess {
     private int port;
 
     @Bean("myRabbitMQ")
-    public Channel getChannel() throws IOException, TimeoutException {
+    public Connection getConnection() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(host);
         factory.setPort(port);
@@ -49,6 +48,6 @@ public class RabbitMQAccess {
         logger.info("RabbitMQ info: {}", uri);
         logger.info("Connect to RabbitMQ information: {}", uri);
 
-        return connection.createChannel();
+        return connection;
     }
 }

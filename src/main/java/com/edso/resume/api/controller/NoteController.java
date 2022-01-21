@@ -62,7 +62,7 @@ public class NoteController extends BaseController {
             logger.info("<=createNoteProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);
-            response.setFailed("File sai");
+            response.setFailed("FileEntity sai");
             return response;
         }
         return response;

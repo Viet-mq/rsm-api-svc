@@ -10,6 +10,7 @@ public class DictionaryNamesEntity {
     private String schoolName;
     private String jobName;
     private String fullName;
+    private String fullNameUser;
     private String levelJobName;
     private String sourceCVName;
     private String talentPoolName;
@@ -26,6 +27,7 @@ public class DictionaryNamesEntity {
     private String createRecruitmentBy;
     private String fullNameCreator;
     private String email;
+    private String emailUser;
     private List<Document> interviewer;
     private List<Document> skill;
 }
