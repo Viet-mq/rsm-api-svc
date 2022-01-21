@@ -3,8 +3,6 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.*;
 import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishCandidateEmail;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishPresenter;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
@@ -840,10 +838,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                new Thread(new PublishCandidateEmail(rabbitMQOnlineActions, historyEmailService, request.getInfo(), candidate, idProfile, TypeConfig.REJECT_CANDIDATE)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.REJECT_CANDIDATE, candidate, paths, historyId, request.getIdProfile());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                new Thread(new PublishPresenter(rabbitMQOnlineActions, historyEmailService, request.getInfo(), presenter, idProfile, TypeConfig.REJECT_PRESENTER)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.REJECT_PRESENTER, presenter, paths, historyId, request.getIdProfile());
             }
 
             response.setSuccess();

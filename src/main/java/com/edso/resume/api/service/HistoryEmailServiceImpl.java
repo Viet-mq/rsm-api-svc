@@ -1,7 +1,9 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.*;
+import com.edso.resume.api.domain.entities.FileEntity;
+import com.edso.resume.api.domain.entities.HistoryEmailEntity;
+import com.edso.resume.api.domain.entities.IdEntity;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class HistoryEmailServiceImpl extends BaseService implements HistoryEmailService {
@@ -29,16 +32,16 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
     private String serverPath;
 
     @Override
-    public List<String> createHistoryEmail(HistoryEmail historyEmail, HeaderInfo info) {
+    public List<String> createHistoryEmail(String historyId, String profileId, String subject, String content, List<MultipartFile> files, HeaderInfo info) {
         List<String> listPath = new ArrayList<>();
         List<Document> listDocument = new ArrayList<>();
         try {
             Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
 
-            if (historyEmail.getFiles() != null && !historyEmail.getFiles().isEmpty()) {
-                for (MultipartFile file : historyEmail.getFiles()) {
-                    if (file != null) {
-                        String path = saveFile(serverPath, file);
+            if (files != null && !files.isEmpty()) {
+                for (MultipartFile file : files) {
+                    if (file != null && !file.isEmpty()) {
+                        String path = AppUtils.saveFile(serverPath, file);
                         listPath.add(path);
                         Document pathDocument = new Document();
                         pathDocument.append(DbKeyConfig.FILE_NAME, file.getOriginalFilename());
@@ -49,10 +52,10 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             }
 
             Document history = new Document();
-            history.append(DbKeyConfig.ID, historyEmail.getId());
-            history.append(DbKeyConfig.ID_PROFILE, historyEmail.getIdProfile());
-            history.append(DbKeyConfig.SUBJECT, historyEmail.getSubject());
-            history.append(DbKeyConfig.CONTENT, historyEmail.getContent());
+            history.append(DbKeyConfig.ID, history);
+            history.append(DbKeyConfig.ID_PROFILE, profileId);
+            history.append(DbKeyConfig.SUBJECT, subject);
+            history.append(DbKeyConfig.CONTENT, content);
             history.append(DbKeyConfig.TIME, System.currentTimeMillis());
             history.append(DbKeyConfig.USERNAME, info.getUsername());
             history.append(DbKeyConfig.STATUS, "Đang đợi gửi");
@@ -70,16 +73,16 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
     }
 
     @Override
-    public List<String> createHistoryEmails(HistoryEmails historyEmails, HeaderInfo info) {
+    public List<String> createHistoryEmails(List<IdEntity> ids, String subject, String content, List<MultipartFile> files, HeaderInfo info) {
         List<String> listPath = new ArrayList<>();
         List<Document> listDocument = new ArrayList<>();
         try {
             Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
 
-            if (historyEmails.getFiles() != null && !historyEmails.getFiles().isEmpty()) {
-                for (MultipartFile file : historyEmails.getFiles()) {
+            if (files != null && !files.isEmpty()) {
+                for (MultipartFile file : files) {
                     if (file != null && !file.isEmpty()) {
-                        String path = saveFile(serverPath, file);
+                        String path = AppUtils.saveFile(serverPath, file);
                         listPath.add(path);
                         Document pathDocument = new Document();
                         pathDocument.append(DbKeyConfig.FILE_NAME, file.getOriginalFilename());
@@ -90,12 +93,14 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             }
 
             List<Document> historyList = new ArrayList<>();
-            for (IdEntity id : historyEmails.getIds()) {
+            for (IdEntity id : ids) {
+                String historyId = UUID.randomUUID().toString();
+                id.setHistoryId(historyId);
                 Document history = new Document();
-                history.append(DbKeyConfig.ID, id.getHistoryId());
+                history.append(DbKeyConfig.ID, history);
                 history.append(DbKeyConfig.ID_PROFILE, id.getProfileId());
-                history.append(DbKeyConfig.SUBJECT, historyEmails.getSubject());
-                history.append(DbKeyConfig.CONTENT, historyEmails.getContent());
+                history.append(DbKeyConfig.SUBJECT, subject);
+                history.append(DbKeyConfig.CONTENT, content);
                 history.append(DbKeyConfig.TIME, System.currentTimeMillis());
                 history.append(DbKeyConfig.USERNAME, info.getUsername());
                 history.append(DbKeyConfig.STATUS, "Đang đợi gửi");

@@ -1,17 +1,17 @@
 package com.edso.resume.api.service;
 
-import com.edso.resume.api.domain.entities.HistoryEmail;
 import com.edso.resume.api.domain.entities.HistoryEmailEntity;
-import com.edso.resume.api.domain.entities.HistoryEmails;
+import com.edso.resume.api.domain.entities.IdEntity;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.GetArrayResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface HistoryEmailService {
-    List<String> createHistoryEmail(HistoryEmail historyEmail, HeaderInfo info);
+    List<String> createHistoryEmail(String historyId, String profileId, String subject, String content, List<MultipartFile> files, HeaderInfo info);
 
-    List<String> createHistoryEmails(HistoryEmails historyEmails, HeaderInfo info);
+    List<String> createHistoryEmails(List<IdEntity> ids, String subject, String content, List<MultipartFile> files, HeaderInfo info);
 
     void deleteHistoryEmail(String idProfile);
 

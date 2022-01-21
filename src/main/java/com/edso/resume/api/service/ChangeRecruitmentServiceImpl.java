@@ -5,8 +5,6 @@ import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
 import com.edso.resume.api.domain.entities.EventEntity;
 import com.edso.resume.api.domain.entities.ProfileRabbitMQEntity;
 import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishCandidateEmail;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishPresenter;
 import com.edso.resume.api.domain.request.CandidateRequest;
 import com.edso.resume.api.domain.request.ChangeRecruitmentRequest;
 import com.edso.resume.api.domain.request.PresenterRequest;
@@ -166,10 +164,14 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                new Thread(new PublishCandidateEmail(rabbitMQOnlineActions, historyEmailService, request.getInfo(), candidate, request.getIdProfile(), TypeConfig.ROUND_CANDIDATE)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, request.getIdProfile(), candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.ROUND_CANDIDATE, candidate, paths, historyId, request.getIdProfile());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                new Thread(new PublishPresenter(rabbitMQOnlineActions, historyEmailService, request.getInfo(), presenter, request.getIdProfile(), TypeConfig.ROUND_PRESENTER)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, request.getIdProfile(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.ROUND_PRESENTER, presenter, paths, historyId, request.getIdProfile());
             }
 
         } catch (Throwable ex) {

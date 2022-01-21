@@ -5,9 +5,6 @@ import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
 import com.edso.resume.api.domain.entities.IdEntity;
 import com.edso.resume.api.domain.json.JsonHelper;
 import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishCandidateEmails;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishPresenters;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishRecruitmentCouncils;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
@@ -144,13 +141,16 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                new Thread(new PublishCandidateEmails(rabbitMQOnlineActions, historyEmailService, request.getInfo(), candidate, ids)).start();
+                List<String> paths = historyEmailService.createHistoryEmails(ids, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                rabbitMQOnlineActions.publishCandidateEmails(TypeConfig.CALENDARS_CANDIDATE, candidate, paths, ids);
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                new Thread(new PublishPresenters(rabbitMQOnlineActions, historyEmailService, request.getInfo(), presenter, ids)).start();
+                List<String> paths = historyEmailService.createHistoryEmails(ids, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                rabbitMQOnlineActions.publishPresenterEmails(TypeConfig.CALENDARS_PRESENTER, presenter, paths, ids);
             }
             if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
-                new Thread(new PublishRecruitmentCouncils(rabbitMQOnlineActions, historyEmailService, request.getInfo(), recruitmentCouncil, ids)).start();
+                List<String> paths = historyEmailService.createHistoryEmails(ids, recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+                rabbitMQOnlineActions.publishRecruitmentCouncilEmails(TypeConfig.CALENDARS_INTERVIEWER, recruitmentCouncil, paths, ids);
             }
 
             response.setSuccess();

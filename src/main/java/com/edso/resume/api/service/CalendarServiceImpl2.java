@@ -6,9 +6,6 @@ import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
 import com.edso.resume.api.domain.entities.UserEntity;
 import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishCandidateEmail;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishPresenter;
-import com.edso.resume.api.domain.rabbitmq.publish.PublishRecruitmentCouncil;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
@@ -191,13 +188,19 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                new Thread(new PublishCandidateEmail(rabbitMQOnlineActions, historyEmailService, request.getInfo(), candidate, idProfile, TypeConfig.CALENDAR_CANDIDATE)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.CALENDAR_CANDIDATE, candidate, paths, historyId, idProfile);
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                new Thread(new PublishPresenter(rabbitMQOnlineActions, historyEmailService, request.getInfo(), presenter, idProfile, TypeConfig.CALENDAR_PRESENTER)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.CALENDAR_PRESENTER, presenter, paths, historyId, idProfile);
             }
             if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
-                new Thread(new PublishRecruitmentCouncil(rabbitMQOnlineActions, historyEmailService, request.getInfo(), recruitmentCouncil, id, idProfile)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+                rabbitMQOnlineActions.publishRecruitmentCouncilEmail(TypeConfig.CALENDAR_INTERVIEWER, recruitmentCouncil, paths, historyId, idProfile);
             }
 
             response.setSuccess();
@@ -292,13 +295,19 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                new Thread(new PublishCandidateEmail(rabbitMQOnlineActions, historyEmailService, request.getInfo(), candidate, dictionaryNames.getIdProfile(), TypeConfig.CALENDAR_CANDIDATE)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.CALENDAR_CANDIDATE, candidate, paths, historyId, dictionaryNames.getIdProfile());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                new Thread(new PublishPresenter(rabbitMQOnlineActions, historyEmailService, request.getInfo(), presenter, dictionaryNames.getIdProfile(), TypeConfig.CALENDAR_PRESENTER)).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.CALENDAR_PRESENTER, presenter, paths, historyId, dictionaryNames.getIdProfile());
             }
             if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
-                new Thread(new PublishRecruitmentCouncil(rabbitMQOnlineActions, historyEmailService, request.getInfo(), recruitmentCouncil, id, dictionaryNames.getIdProfile())).start();
+                String historyId = UUID.randomUUID().toString();
+                List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+                rabbitMQOnlineActions.publishRecruitmentCouncilEmail(TypeConfig.CALENDAR_INTERVIEWER, recruitmentCouncil, paths, historyId, dictionaryNames.getIdProfile());
             }
 
             response.setSuccess();
