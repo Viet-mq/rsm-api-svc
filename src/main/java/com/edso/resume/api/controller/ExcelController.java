@@ -7,10 +7,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -29,10 +26,19 @@ public class ExcelController extends BaseController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<Resource> exportListProfile(@RequestHeader Map<String, String> headers) {
+    public ResponseEntity<Resource> exportListProfile(
+            @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "talentPool", required = false) String talentPool,
+            @RequestParam(value = "job", required = false) String job,
+            @RequestParam(value = "levelJob", required = false) String levelJob,
+            @RequestParam(value = "department", required = false) String department,
+            @RequestParam(value = "recruitment", required = false) String recruitment,
+            @RequestParam(value = "calendar", required = false) String calendar,
+            @RequestParam(value = "statusCV", required = false) String statusCV) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>exportListProfile u: {}", headerInfo);
-        String pathServer = excelService.exportExcel(headerInfo);
+        String pathServer = excelService.exportExcel(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV);
         File file = new File(pathServer);
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = null;
