@@ -23,6 +23,7 @@ public class ProfileDetailEntity {
     private String levelJobName;
     private String sourceCVId;
     private String sourceCVName;
+    private String username;
     private String hrRef;
     private String mailRef;
     private Long dateOfApply;

@@ -48,4 +48,5 @@ public abstract class BaseService {
         return String.format("#%06x", random.nextInt(256 * 256 * 256));
     }
 
+
 }

@@ -35,7 +35,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
 
-    @Value("${note.serverpath}")
+    @Value("${note.serverPath}")
     private String serverPath;
     @Value("${note.domain}")
     private String domain;
@@ -97,7 +97,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     public BaseResponse createNoteProfile(CreateNoteProfileRequest request) {
         MultipartFile file = request.getFile();
         if (file != null && file.getSize() > fileSize) {
-            return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+            return new BaseResponse(ErrorCodeDefs.FILE, "FileEntity vượt quá dung lượng cho phép");
         }
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
@@ -151,7 +151,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             String fileName = null;
             String pathFile = null;
             String url = null;
-            if (file != null) {
+            if (file != null && !file.isEmpty()) {
                 try {
                     fileName = saveFile(file);
                     pathFile = serverPath + fileName;
@@ -201,7 +201,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     public BaseResponse updateNoteProfile(UpdateNoteProfileRequest request) {
         MultipartFile file = request.getFile();
         if (file != null && file.getSize() > fileSize) {
-            return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+            return new BaseResponse(ErrorCodeDefs.FILE, "FileEntity vượt quá dung lượng cho phép");
         }
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
@@ -262,9 +262,11 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             String fileName = null;
             String url = null;
             String pathFile1 = null;
-            if (file != null) {
+            if (file != null && !file.isEmpty()) {
                 try {
-                    deleteFile(pathFile);
+                    if (!Strings.isNullOrEmpty(pathFile)) {
+                        deleteFile(pathFile);
+                    }
                     fileName = saveFile(file);
                     url = domain + fileName;
                     pathFile1 = serverPath + fileName;
@@ -272,7 +274,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                     logger.error("Exception: ", ex);
                 }
             } else {
-                if (pathFile != null) {
+                if (!Strings.isNullOrEmpty(pathFile)) {
                     deleteFile(pathFile);
                 }
             }
@@ -324,7 +326,9 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
 
             //Xóa file
             String path = AppUtils.parseString(idDocument.get(DbKeyConfig.PATH_FILE));
-            deleteFile(path);
+            if (!Strings.isNullOrEmpty(path)) {
+                deleteFile(path);
+            }
 
             db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
@@ -348,7 +352,9 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
         //Xóa file
         for (Document doc : list) {
             String path = AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE));
-            deleteFile(path);
+            if (!Strings.isNullOrEmpty(path)) {
+                deleteFile(path);
+            }
         }
         //Xóa note
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);

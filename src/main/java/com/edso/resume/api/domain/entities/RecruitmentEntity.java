@@ -25,6 +25,7 @@ public class RecruitmentEntity {
     private Long deadLine;
     private String talentPoolId;
     private String talentPoolName;
+    private String salaryDescription;
     private String status;
     private Long createAt;
     private String createBy;

@@ -4,7 +4,7 @@ import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.CalendarEntity;
 import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
 import com.edso.resume.api.domain.entities.TimeEntity;
-import com.edso.resume.api.domain.rabbitmq.publish.RabbitMQOnlineActions;
+import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.request.CreateCalendarProfileRequest;
 import com.edso.resume.api.domain.request.DeleteCalendarProfileRequest;
 import com.edso.resume.api.domain.request.UpdateCalendarProfileRequest;

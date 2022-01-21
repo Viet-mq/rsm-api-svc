@@ -29,6 +29,7 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
     private String talentPool;
     private List<String> interviewer;
     private List<RoundEntity> interviewProcess;
+    private String salaryDescription;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(title) || title.length() > 255) {
@@ -71,6 +72,9 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
         }
         if (!Strings.isNullOrEmpty(talentPool) && talentPool.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.TALENT_POOL, "Vui lòng nhập talent pool");
+        }
+        if (!Strings.isNullOrEmpty(salaryDescription) && salaryDescription.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.SALARY_DESCRIPTION, "Vui lòng nhập mức lương hiển thị ít hơn 255 ký tự");
         }
         if (interviewProcess == null || interviewProcess.isEmpty()) {
             return new BaseResponse(ErrorCodeDefs.INTERVIEW_PROCESS, "Vui lòng nhập quy trình tuyển dụng");

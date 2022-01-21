@@ -51,7 +51,7 @@ public class BlacklistExcelServiceImpl extends BaseService implements BlacklistE
                 BlacklistEntity blacklist = BlacklistEntity.builder()
                         .id(AppUtils.parseString(doc.get("id")))
                         .name(AppUtils.parseString(doc.get("name")))
-                        .email(AppUtils.parseString(doc.get("email")))
+                        .email(AppUtils.parseString(doc.get("EMAIL")))
                         .phoneNumber(AppUtils.parseString(doc.get("phoneNumber")))
                         .ssn(AppUtils.parseString(doc.get("ssn")))
                         .reason(AppUtils.parseString(doc.get("reason")))
