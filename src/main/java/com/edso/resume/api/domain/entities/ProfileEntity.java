@@ -43,4 +43,5 @@ public class ProfileEntity {
     private String urlCV;
     private String avatarColor;
     private String isNew;
+    private String match;
 }

@@ -28,6 +28,8 @@ public class DictionaryNamesEntity {
     private String fullNameCreator;
     private String email;
     private String emailUser;
+    private String profileEmail;
+    private String profilePhoneNumber;
     private List<Document> interviewer;
     private List<Document> skill;
 }
