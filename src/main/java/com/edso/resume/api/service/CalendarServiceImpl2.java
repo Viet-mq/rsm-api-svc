@@ -181,7 +181,6 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             calendar.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
 
-
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
 

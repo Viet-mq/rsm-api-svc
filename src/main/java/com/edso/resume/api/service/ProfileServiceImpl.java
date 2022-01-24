@@ -490,7 +490,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         Updates.set(DbKeyConfig.MATCH, matchName)
 
                 );
-            }else {
+            } else {
                 updates = Updates.combine(
                         Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
                         Updates.set(DbKeyConfig.GENDER, request.getGender()),
@@ -652,7 +652,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             Bson updates;
 
-            if(check) {
+            if (check) {
                 updates = Updates.combine(
                         Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
                         Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
@@ -683,7 +683,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         Updates.set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
                         Updates.set(DbKeyConfig.MATCH, matchName)
                 );
-            }else {
+            } else {
                 updates = Updates.combine(
                         Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
                         Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
@@ -724,7 +724,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật thông tin chi tiết ứng viên", request.getInfo());
 
-            if(!check) {
+            if (!check) {
                 response.setSuccess();
             }
             return response;
