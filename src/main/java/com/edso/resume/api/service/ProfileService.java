@@ -32,4 +32,6 @@ public interface ProfileService {
 
     void isOld(String id);
 
+    BaseResponse mergeDuplicateProfile();
+
 }

@@ -5,6 +5,7 @@ import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.common.ThreadConfig;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import lombok.Data;
 import org.bson.Document;
@@ -60,7 +61,25 @@ public class DictionaryValidateProcessor implements Runnable {
                     }
                     result.setResult(true);
                     result.setName(list);
-                    break;
+                    return;
+                }
+                case ThreadConfig.PROFILE_PHONE_NUMBER:
+                case ThreadConfig.PROFILE_EMAIL: {
+                    Bson cond = getCondition();
+                    FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
+                    if (list == null) {
+                        result.setResult(true);
+                        return;
+                    }
+                    for (Document document : list) {
+                        if (!AppUtils.parseString(document.get(DbKeyConfig.ID)).equals(idProfile)) {
+                            result.setResult(true);
+                            result.setName("Đã tồn tại ứng viên có email này");
+                            return;
+                        }
+                    }
+                    result.setResult(true);
+                    return;
                 }
                 case ThreadConfig.LIST_SKILL: {
                     List<Document> list = new ArrayList<>();
@@ -80,7 +99,7 @@ public class DictionaryValidateProcessor implements Runnable {
                     }
                     result.setResult(true);
                     result.setName(list);
-                    break;
+                    return;
                 }
                 case ThreadConfig.STATUS_CV: {
                     Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, recruitmentId), Filters.eq("interview_process.id", id));
@@ -96,17 +115,18 @@ public class DictionaryValidateProcessor implements Runnable {
                             if (roundEntity.get(DbKeyConfig.ID).equals(id)) {
                                 result.setResult(true);
                                 result.setName(roundEntity.get(DbKeyConfig.NAME));
-                                break;
+                                return;
                             }
                         }
                     }
-                    break;
+                    result.setResult(true);
+                    return;
                 }
                 default: {
                     Bson cond = getCondition();
                     Document doc = db.findOne(getCollectionName(), cond);
                     if (doc == null) {
-                        if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.PROFILE_EMAIL) || type.equals(ThreadConfig.PROFILE_PHONE_NUMBER) || type.equals(ThreadConfig.RECRUITMENT_NAME)) {
+                        if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.RECRUITMENT_NAME)) {
                             result.setResult(true);
                             return;
                         }
@@ -139,102 +159,84 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)));
                 result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
-                break;
+                return;
             }
             case ThreadConfig.CALENDAR_PROFILE: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
                 result.setMailRef(AppUtils.parseString(doc.get(DbKeyConfig.MAIL_REF)));
-                break;
+                return;
             }
             case ThreadConfig.CHANGE_RECRUITMENT_PROFILE: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)));
                 result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
-                break;
+                return;
             }
             case ThreadConfig.REJECT_PROFILE: {
                 if (AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)).equals("")) {
                     result.setResult(false);
                     result.setName("Không thể loại ứng viên đã bị loại!");
-                    break;
+                    return;
                 }
                 result.setResult(true);
                 result.setName(AppUtils.parseLong(doc.get(DbKeyConfig.RECRUITMENT_TIME)));
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)));
                 result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
-                break;
+                return;
             }
             case ThreadConfig.USER: {
                 result.setResult(true);
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
-                break;
+                return;
             }
             case ThreadConfig.NOTE: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.PATH_FILE)));
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
-                break;
+                return;
             }
             case ThreadConfig.CALENDAR: {
                 if (AppUtils.parseLong(doc.get(DbKeyConfig.DATE)) < System.currentTimeMillis()) {
                     result.setResult(false);
                     result.setName("Không được sửa lịch này!");
-                    break;
+                    return;
                 }
                 result.setResult(true);
                 result.setIdProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)));
-                break;
+                return;
             }
             case ThreadConfig.REASON: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.REASON)));
-                break;
+                return;
             }
             case ThreadConfig.RECRUITMENT: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)));
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)));
-                break;
+                return;
             }
-            case ThreadConfig.BLACKLIST_EMAIL:
+            case ThreadConfig.BLACKLIST_EMAIL: {
+                result.setResult(false);
+                result.setName("Email của ứng viên này đã tồn tại trong blacklist!");
+                return;
+            }
             case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
                 result.setResult(false);
-                result.setName("Ứng viên này đang trong blacklist!");
-                break;
-            }
-            case ThreadConfig.PROFILE_EMAIL: {
-                if (!AppUtils.parseString(doc.get(DbKeyConfig.ID)).equals(idProfile)) {
-                    result.setResult(false);
-                    result.setName("Đã tồn tại ứng viên có email này");
-                    break;
-                } else {
-                    result.setResult(true);
-                    break;
-                }
-
-            }
-            case ThreadConfig.PROFILE_PHONE_NUMBER: {
-                if (!AppUtils.parseString(doc.get(DbKeyConfig.ID)).equals(idProfile)) {
-                    result.setResult(false);
-                    result.setName("Đã tồn tại ứng viên có số điện thoại này");
-                    break;
-                } else {
-                    result.setResult(true);
-                    break;
-                }
+                result.setName("Số điện thoại của ứng viên này đang trong blacklist!");
+                return;
             }
             case ThreadConfig.RECRUITMENT_NAME: {
                 if (!AppUtils.parseString(doc.get(DbKeyConfig.ID)).equals(recruitmentId)) {
                     result.setResult(false);
                     result.setName("Đã tồn tại tên tin tuyển dụng này!");
-                    break;
-                } else {
-                    result.setResult(true);
-                    break;
+                    return;
                 }
+                result.setResult(true);
+                return;
             }
             default: {
                 result.setResult(true);
@@ -272,7 +274,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return "công việc";
             }
             case ThreadConfig.JOB_LEVEL: {
-                return "vị trí tuyển dụng";
+                return "cấp bậc công việc";
             }
             case ThreadConfig.SCHOOL: {
                 return "trường học";
@@ -288,7 +290,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return "id profile";
             }
             case ThreadConfig.STATUS_CV: {
-                return "trạng thái cv";
+                return "vòng tuyền dụng";
             }
             case ThreadConfig.DEPARTMENT: {
                 return "phòng ban";
@@ -341,8 +343,6 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.CALENDAR_PROFILE:
             case ThreadConfig.TALENT_POOL_PROFILE:
             case ThreadConfig.CHANGE_RECRUITMENT_PROFILE:
-            case ThreadConfig.PROFILE_EMAIL:
-            case ThreadConfig.PROFILE_PHONE_NUMBER:
             case ThreadConfig.REJECT_PROFILE:
             case ThreadConfig.PROFILE: {
                 return CollectionNameDefs.COLL_PROFILE;

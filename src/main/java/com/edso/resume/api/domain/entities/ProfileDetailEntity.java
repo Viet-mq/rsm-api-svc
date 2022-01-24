@@ -45,5 +45,6 @@ public class ProfileDetailEntity {
     private String recruitmentId;
     private String recruitmentName;
     private String avatarColor;
+    private String match;
 
 }
