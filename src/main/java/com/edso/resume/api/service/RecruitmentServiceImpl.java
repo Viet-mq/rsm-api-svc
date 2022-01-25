@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.entities.RoundEntity;
 import com.edso.resume.api.domain.entities.UserEntity;
 import com.edso.resume.api.domain.request.CreateRecruitmentRequest;
 import com.edso.resume.api.domain.request.DeleteRecruitmentRequest;
+import com.edso.resume.api.domain.request.DeleteStatusCVRecruitmentRequest;
 import com.edso.resume.api.domain.request.UpdateRecruitmentRequest;
 import com.edso.resume.api.domain.response.GetRecruitmentResponse;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
@@ -34,6 +35,8 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
+
+import static com.mongodb.client.model.Updates.pull;
 
 @Service
 public class RecruitmentServiceImpl extends BaseService implements RecruitmentService, IDictionaryValidator {
@@ -425,6 +428,42 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 response.setFailed("Không thể xóa tin tuyển dụng này!");
                 return response;
             }
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        }
+    }
+
+    @Override
+    public BaseResponse deleteStatusCVRecruitment(DeleteStatusCVRecruitmentRequest request) {
+        BaseResponse response = new BaseResponse();
+        try {
+            String id = request.getRecruitmentId();
+            Bson cond = Filters.and(Filters.eq(DbKeyConfig.ID, id), Filters.eq(DbKeyConfig.RECRUITMENT_STATUS_CV_ID, request.getStatusCVId()));
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, cond);
+
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+
+            List<Document> statusCV = (List<Document>) idDocument.get(DbKeyConfig.INTERVIEW_PROCESS);
+            if (statusCV != null) {
+                for (Document document : statusCV) {
+                    if (AppUtils.parseString(document.get(DbKeyConfig.ID)).equals(request.getStatusCVId()) && AppUtils.parseLong(document.get(DbKeyConfig.TOTAL)) == 0) {
+                        Bson updates = Updates.combine(pull(DbKeyConfig.INTERVIEW_PROCESS, Filters.eq(DbKeyConfig.ID, request.getStatusCVId())));
+                        db.update(CollectionNameDefs.COLL_RECRUITMENT, cond, updates, true);
+                        response.setSuccess();
+                        return response;
+                    }
+                }
+            }
+
+            response.setFailed("Không thể xóa vòng tuyển dụng này");
+            return response;
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);

@@ -3,6 +3,7 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.entities.RecruitmentEntity;
 import com.edso.resume.api.domain.request.CreateRecruitmentRequest;
 import com.edso.resume.api.domain.request.DeleteRecruitmentRequest;
+import com.edso.resume.api.domain.request.DeleteStatusCVRecruitmentRequest;
 import com.edso.resume.api.domain.request.UpdateRecruitmentRequest;
 import com.edso.resume.api.domain.response.GetRecruitmentResponse;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -19,4 +20,7 @@ public interface RecruitmentService {
     BaseResponse updateRecruitment(UpdateRecruitmentRequest request);
 
     BaseResponse deleteRecruitment(DeleteRecruitmentRequest request);
+
+    BaseResponse deleteStatusCVRecruitment(DeleteStatusCVRecruitmentRequest request);
+
 }

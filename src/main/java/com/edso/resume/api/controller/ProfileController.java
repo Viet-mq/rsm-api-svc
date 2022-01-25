@@ -208,4 +208,23 @@ public class ProfileController extends BaseController {
         return response;
     }
 
+
+    @PostMapping("/merge")
+    public BaseResponse mergeProfile(@RequestHeader Map<String, String> headers, @RequestBody MergeProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>updateProfile u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.mergeDuplicateProfile(request);
+            }
+        }
+        logger.info("<=mergeProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
 }
