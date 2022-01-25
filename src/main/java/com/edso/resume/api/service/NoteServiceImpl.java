@@ -144,7 +144,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             String fullName = null;
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.USER)) {
-                    fullName = (String) r.getResult().getName();
+                    fullName = r.getResult().getFullName();
                 }
             }
 
@@ -250,7 +250,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             String idProfile = null;
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.USER)) {
-                    fullName = (String) r.getResult().getName();
+                    fullName = r.getResult().getFullName();
                 }
                 if (r.getResult().getType().equals(ThreadConfig.NOTE)) {
                     pathFile = (String) r.getResult().getName();
