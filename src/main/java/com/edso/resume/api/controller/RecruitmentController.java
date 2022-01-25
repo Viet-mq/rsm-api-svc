@@ -3,6 +3,7 @@ package com.edso.resume.api.controller;
 import com.edso.resume.api.domain.entities.RecruitmentEntity;
 import com.edso.resume.api.domain.request.CreateRecruitmentRequest;
 import com.edso.resume.api.domain.request.DeleteRecruitmentRequest;
+import com.edso.resume.api.domain.request.DeleteStatusCVRecruitmentRequest;
 import com.edso.resume.api.domain.request.UpdateRecruitmentRequest;
 import com.edso.resume.api.domain.response.GetRecruitmentResponse;
 import com.edso.resume.api.service.RecruitmentService;
@@ -103,6 +104,24 @@ public class RecruitmentController extends BaseController {
             }
         }
         logger.info("<=deleteRecruitment req: {}, resp: {}", request, response);
+        return response;
+    }
+
+    @PostMapping("/delete-status")
+    public BaseResponse deleteStatusCVRecruitment(@RequestHeader Map<String, String> headers, @RequestBody DeleteStatusCVRecruitmentRequest request) {
+        logger.info("=>deleteStatusCVRecruitment req: {}", request);
+        BaseResponse response = new BaseResponse();
+        if (request == null) {
+            response.setResult(-1, "Vui lòng nhập đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+                request.setInfo(headerInfo);
+                response = recruitmentService.deleteStatusCVRecruitment(request);
+            }
+        }
+        logger.info("<=deleteStatusCVRecruitment req: {}, resp: {}", request, response);
         return response;
     }
 }
