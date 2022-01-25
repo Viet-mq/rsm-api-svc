@@ -161,6 +161,12 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
                 return;
             }
+            case ThreadConfig.MERGE_PROFILE:
+            case ThreadConfig.MERGE_OTHER_PROFILE: {
+                result.setResult(true);
+                result.setName(doc);
+                return;
+            }
             case ThreadConfig.CALENDAR_PROFILE: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
@@ -286,6 +292,8 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.TALENT_POOL_PROFILE:
             case ThreadConfig.REJECT_PROFILE:
             case ThreadConfig.CHANGE_RECRUITMENT_PROFILE:
+            case ThreadConfig.MERGE_PROFILE:
+            case ThreadConfig.MERGE_OTHER_PROFILE:
             case ThreadConfig.PROFILE: {
                 return "id profile";
             }
@@ -344,6 +352,8 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.TALENT_POOL_PROFILE:
             case ThreadConfig.CHANGE_RECRUITMENT_PROFILE:
             case ThreadConfig.REJECT_PROFILE:
+            case ThreadConfig.MERGE_PROFILE:
+            case ThreadConfig.MERGE_OTHER_PROFILE:
             case ThreadConfig.PROFILE: {
                 return CollectionNameDefs.COLL_PROFILE;
             }

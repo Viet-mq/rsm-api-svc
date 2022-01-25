@@ -31,6 +31,8 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
+import static com.mongodb.client.model.Updates.set;
+
 @Service
 public class ProfileServiceImpl extends BaseService implements ProfileService, IDictionaryValidator {
 
@@ -462,62 +464,62 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             Bson updates;
             if (check) {
                 updates = Updates.combine(
-                        Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
-                        Updates.set(DbKeyConfig.GENDER, request.getGender()),
-                        Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                        Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
-                        Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                        Updates.set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                        Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                        Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
-                        Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                        Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
-                        Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                        Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
-                        Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                        Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
-                        Updates.set(DbKeyConfig.USERNAME, request.getHrRef()),
-                        Updates.set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
-                        Updates.set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
-                        Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                        Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
-                        Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                        Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
-                        Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
-                        Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                        Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
-                        Updates.set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
-                        Updates.set(DbKeyConfig.MATCH, matchName)
+                        set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                        set(DbKeyConfig.GENDER, request.getGender()),
+                        set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
+                        set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                        set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
+                        set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
+                        set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
+                        set(DbKeyConfig.EMAIL, request.getEmail()),
+                        set(DbKeyConfig.JOB_ID, request.getJob()),
+                        set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
+                        set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
+                        set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
+                        set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
+                        set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
+                        set(DbKeyConfig.USERNAME, request.getHrRef()),
+                        set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
+                        set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
+                        set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
+                        set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
+                        set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                        set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
+                        set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
+                        set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
+                        set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                        set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
+                        set(DbKeyConfig.MATCH, matchName)
 
                 );
             } else {
                 updates = Updates.combine(
-                        Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
-                        Updates.set(DbKeyConfig.GENDER, request.getGender()),
-                        Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                        Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
-                        Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                        Updates.set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                        Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                        Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
-                        Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                        Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
-                        Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                        Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
-                        Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                        Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
-                        Updates.set(DbKeyConfig.USERNAME, request.getHrRef()),
-                        Updates.set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
-                        Updates.set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
-                        Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                        Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
-                        Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                        Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
-                        Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
-                        Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                        Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
-                        Updates.set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
-                        Updates.set(DbKeyConfig.MATCH, "")
+                        set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                        set(DbKeyConfig.GENDER, request.getGender()),
+                        set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
+                        set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                        set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
+                        set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
+                        set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
+                        set(DbKeyConfig.EMAIL, request.getEmail()),
+                        set(DbKeyConfig.JOB_ID, request.getJob()),
+                        set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
+                        set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
+                        set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
+                        set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
+                        set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
+                        set(DbKeyConfig.USERNAME, request.getHrRef()),
+                        set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
+                        set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
+                        set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
+                        set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
+                        set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                        set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
+                        set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
+                        set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
+                        set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                        set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
+                        set(DbKeyConfig.MATCH, "")
                 );
             }
 
@@ -631,7 +633,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!dictionaryNames.getEmail().equals(request.getEmail())) {
                 Bson id = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
                 Bson updateProfile = Updates.combine(
-                        Updates.set(DbKeyConfig.EMAIL, request.getEmail())
+                        set(DbKeyConfig.EMAIL, request.getEmail())
                 );
                 db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, id, updateProfile, true);
             }
@@ -654,65 +656,65 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             if (check) {
                 updates = Updates.combine(
-                        Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
-                        Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                        Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
-                        Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                        Updates.set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                        Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                        Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
-                        Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                        Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
-                        Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                        Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
-                        Updates.set(DbKeyConfig.GENDER, request.getGender()),
-                        Updates.set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
-                        Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
-                        Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                        Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
-                        Updates.set(DbKeyConfig.USERNAME, request.getHrRef()),
-                        Updates.set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
-                        Updates.set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
-                        Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                        Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
-                        Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                        Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
-                        Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
-                        Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                        Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
-                        Updates.set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
-                        Updates.set(DbKeyConfig.MATCH, matchName)
+                        set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                        set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
+                        set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                        set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
+                        set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
+                        set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
+                        set(DbKeyConfig.EMAIL, request.getEmail()),
+                        set(DbKeyConfig.JOB_ID, request.getJob()),
+                        set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
+                        set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
+                        set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
+                        set(DbKeyConfig.GENDER, request.getGender()),
+                        set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
+                        set(DbKeyConfig.EVALUATION, request.getEvaluation()),
+                        set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
+                        set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
+                        set(DbKeyConfig.USERNAME, request.getHrRef()),
+                        set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
+                        set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
+                        set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
+                        set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
+                        set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                        set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
+                        set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
+                        set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
+                        set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                        set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
+                        set(DbKeyConfig.MATCH, matchName)
                 );
             } else {
                 updates = Updates.combine(
-                        Updates.set(DbKeyConfig.FULL_NAME, request.getFullName()),
-                        Updates.set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                        Updates.set(DbKeyConfig.HOMETOWN, request.getHometown()),
-                        Updates.set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
-                        Updates.set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                        Updates.set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                        Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
-                        Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
-                        Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
-                        Updates.set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
-                        Updates.set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
-                        Updates.set(DbKeyConfig.GENDER, request.getGender()),
-                        Updates.set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
-                        Updates.set(DbKeyConfig.EVALUATION, request.getEvaluation()),
-                        Updates.set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
-                        Updates.set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
-                        Updates.set(DbKeyConfig.USERNAME, request.getHrRef()),
-                        Updates.set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
-                        Updates.set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
-                        Updates.set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
-                        Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
-                        Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
-                        Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
-                        Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
-                        Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                        Updates.set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
-                        Updates.set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
-                        Updates.set(DbKeyConfig.MATCH, "")
+                        set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                        set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
+                        set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                        set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
+                        set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
+                        set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
+                        set(DbKeyConfig.EMAIL, request.getEmail()),
+                        set(DbKeyConfig.JOB_ID, request.getJob()),
+                        set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
+                        set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
+                        set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
+                        set(DbKeyConfig.GENDER, request.getGender()),
+                        set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
+                        set(DbKeyConfig.EVALUATION, request.getEvaluation()),
+                        set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
+                        set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
+                        set(DbKeyConfig.USERNAME, request.getHrRef()),
+                        set(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser()),
+                        set(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser()),
+                        set(DbKeyConfig.DATE_OF_APPLY, request.getDateOfApply()),
+                        set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName())),
+                        set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                        set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
+                        set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
+                        set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
+                        set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                        set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
+                        set(DbKeyConfig.MATCH, "")
                 );
             }
             // insert to rabbitmq
@@ -842,10 +844,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.STATUS_CV_ID, request.getStatusCV()),
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName()),
-                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
-                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
+                    set(DbKeyConfig.STATUS_CV_ID, request.getStatusCV()),
+                    set(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName()),
+                    set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                    set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
             response.setSuccess();
@@ -926,10 +928,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.STATUS_CV_ID, ""),
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, "Loại"),
-                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
-                    Updates.set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
+                    set(DbKeyConfig.STATUS_CV_ID, ""),
+                    set(DbKeyConfig.STATUS_CV_NAME, "Loại"),
+                    set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
+                    set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
@@ -940,7 +942,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 if (AppUtils.parseString(document1.get(DbKeyConfig.ID)).equals(dictionaryNames.getStatusCVId())) {
                     Bson cond2 = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitmentId()), Filters.eq("interview_process.id", dictionaryNames.getStatusCVId()));
                     Bson updateTotal = Updates.combine(
-                            Updates.set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) - 1)
+                            set("interview_process.$.total", AppUtils.parseLong(document1.get(DbKeyConfig.TOTAL)) - 1)
                     );
                     db.update(CollectionNameDefs.COLL_RECRUITMENT, cond2, updateTotal, true);
                     break;
@@ -948,12 +950,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
 
             Bson reject = Updates.combine(
-                    Updates.set(DbKeyConfig.ID_PROFILE, request.getIdProfile()),
-                    Updates.set(DbKeyConfig.STATUS_CV_ID, dictionaryNames.getStatusCVId()),
-                    Updates.set(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName()),
-                    Updates.set(DbKeyConfig.RECRUITMENT_TIME, dictionaryNames.getRecruitmentTime()),
-                    Updates.set(DbKeyConfig.REASON_ID, request.getReason()),
-                    Updates.set(DbKeyConfig.REASON, dictionaryNames.getReason())
+                    set(DbKeyConfig.ID_PROFILE, request.getIdProfile()),
+                    set(DbKeyConfig.STATUS_CV_ID, dictionaryNames.getStatusCVId()),
+                    set(DbKeyConfig.STATUS_CV_NAME, dictionaryNames.getStatusCVName()),
+                    set(DbKeyConfig.RECRUITMENT_TIME, dictionaryNames.getRecruitmentTime()),
+                    set(DbKeyConfig.REASON_ID, request.getReason()),
+                    set(DbKeyConfig.REASON, dictionaryNames.getReason())
             );
             db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, request.getIdProfile()), reject, true);
 
@@ -1038,9 +1040,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPoolId()),
-                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
-                    Updates.set(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis())
+                    set(DbKeyConfig.TALENT_POOL_ID, request.getTalentPoolId()),
+                    set(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName()),
+                    set(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis())
             );
             db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, idProfile), updates, true);
 
@@ -1089,8 +1091,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
 
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.TALENT_POOL_ID, ""),
-                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, "")
+                    set(DbKeyConfig.TALENT_POOL_ID, ""),
+                    set(DbKeyConfig.TALENT_POOL_NAME, "")
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
@@ -1119,7 +1121,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.IS_NEW, false)
+                    set(DbKeyConfig.IS_NEW, false)
             );
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
@@ -1133,8 +1135,131 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public BaseResponse mergeDuplicateProfile() {
-        return null;
+    public BaseResponse mergeDuplicateProfile(MergeProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
+
+        try {
+            //Validate
+            String idProfile = request.getIdProfile();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.MERGE_PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.MERGE_OTHER_PROFILE, request.getOtherIdProfile(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed((String) validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            Document profile = getDictionayNames(rs).getProfile();
+            Document otherProfile = getDictionayNames(rs).getOtherProfile();
+
+            if (!AppUtils.parseString(profile.get(DbKeyConfig.EMAIL)).equals(AppUtils.parseString(otherProfile.get(DbKeyConfig.EMAIL))) ||
+                    !Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.PHONE_NUMBER))) && !AppUtils.parseString(profile.get(DbKeyConfig.PHONE_NUMBER)).equals(AppUtils.parseString(profile.get(DbKeyConfig.PHONE_NUMBER)))) {
+                response.setFailed("Vui lòng nhập đúng profile");
+                return response;
+            }
+
+            List<Bson> update = new ArrayList<>();
+
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.DATE_OF_BIRTH)))) {
+                update.add(set(DbKeyConfig.DATE_OF_BIRTH, otherProfile.get(DbKeyConfig.DATE_OF_BIRTH)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.HOMETOWN)))) {
+                update.add(set(DbKeyConfig.HOMETOWN, otherProfile.get(DbKeyConfig.HOMETOWN)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.SCHOOL_ID)))) {
+                update.add(set(DbKeyConfig.SCHOOL_ID, otherProfile.get(DbKeyConfig.SCHOOL_ID)));
+                update.add(set(DbKeyConfig.SCHOOL_NAME, otherProfile.get(DbKeyConfig.SCHOOL_NAME)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.PHONE_NUMBER)))) {
+                update.add(set(DbKeyConfig.PHONE_NUMBER, otherProfile.get(DbKeyConfig.PHONE_NUMBER)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.LEVEL_JOB_ID)))) {
+                update.add(set(DbKeyConfig.LEVEL_JOB_ID, otherProfile.get(DbKeyConfig.LEVEL_JOB_ID)));
+                update.add(set(DbKeyConfig.LEVEL_JOB_NAME, otherProfile.get(DbKeyConfig.LEVEL_JOB_NAME)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.GENDER)))) {
+                update.add(set(DbKeyConfig.GENDER, otherProfile.get(DbKeyConfig.GENDER)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.LAST_APPLY)))) {
+                update.add(set(DbKeyConfig.LAST_APPLY, otherProfile.get(DbKeyConfig.LAST_APPLY)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.EVALUATION)))) {
+                update.add(set(DbKeyConfig.EVALUATION, otherProfile.get(DbKeyConfig.EVALUATION)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.USERNAME)))) {
+                update.add(set(DbKeyConfig.USERNAME, otherProfile.get(DbKeyConfig.USERNAME)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.HR_REF)))) {
+                update.add(set(DbKeyConfig.HR_REF, otherProfile.get(DbKeyConfig.HR_REF)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.MAIL_REF)))) {
+                update.add(set(DbKeyConfig.MAIL_REF, otherProfile.get(DbKeyConfig.MAIL_REF)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.DEPARTMENT_ID)))) {
+                update.add(set(DbKeyConfig.DEPARTMENT_ID, otherProfile.get(DbKeyConfig.DEPARTMENT_ID)));
+                update.add(set(DbKeyConfig.DEPARTMENT_NAME, otherProfile.get(DbKeyConfig.DEPARTMENT_NAME)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.LEVEL_SCHOOL)))) {
+                update.add(set(DbKeyConfig.LEVEL_SCHOOL, otherProfile.get(DbKeyConfig.LEVEL_SCHOOL)));
+            }
+            if (Strings.isNullOrEmpty(AppUtils.parseString(profile.get(DbKeyConfig.SKILL)))) {
+                update.add(set(DbKeyConfig.SKILL, otherProfile.get(DbKeyConfig.SKILL)));
+            }
+
+            Bson updates = Updates.combine(update);
+
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+            db.delete(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, request.getOtherIdProfile()));
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Gộp trùng ứng viên", request.getInfo());
+
+            response.setSuccess();
+            return response;
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
+        }
     }
 
     private DictionaryNamesEntity getDictionayNames(List<DictionaryValidateProcessor> rs) {
@@ -1199,6 +1324,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
                 case ThreadConfig.PROFILE_PHONE_NUMBER: {
                     dictionaryNames.setProfilePhoneNumber((String) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.MERGE_OTHER_PROFILE: {
+                    dictionaryNames.setOtherProfile((Document) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.MERGE_PROFILE: {
+                    dictionaryNames.setProfile((Document) r.getResult().getName());
                     break;
                 }
                 default: {
