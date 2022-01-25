@@ -191,17 +191,17 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
                 String historyId = UUID.randomUUID().toString();
                 List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
-                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.CALENDAR_CANDIDATE, candidate, paths, historyId, idProfile);
+                rabbitMQOnlineActions.publishCalendarCandidateEmail(TypeConfig.CALENDAR_CANDIDATE, candidate, paths, id, historyId, idProfile);
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
                 String historyId = UUID.randomUUID().toString();
                 List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
-                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.CALENDAR_PRESENTER, presenter, paths, historyId, idProfile);
+                rabbitMQOnlineActions.publishCalendarPresenterEmail(TypeConfig.CALENDAR_PRESENTER, presenter, paths, id, historyId, idProfile);
             }
             if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
                 String historyId = UUID.randomUUID().toString();
                 List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
-                rabbitMQOnlineActions.publishRecruitmentCouncilEmail(TypeConfig.CALENDAR_INTERVIEWER, recruitmentCouncil, paths, historyId, idProfile);
+                rabbitMQOnlineActions.publishRecruitmentCouncilEmail(TypeConfig.CALENDAR_INTERVIEWER, recruitmentCouncil, paths, historyId, id);
             }
 
             response.setSuccess();
@@ -298,17 +298,17 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
                 String historyId = UUID.randomUUID().toString();
                 List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
-                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.CALENDAR_CANDIDATE, candidate, paths, historyId, dictionaryNames.getIdProfile());
+                rabbitMQOnlineActions.publishCalendarCandidateEmail(TypeConfig.CALENDAR_CANDIDATE, candidate, paths, id, historyId, dictionaryNames.getIdProfile());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
                 String historyId = UUID.randomUUID().toString();
                 List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
-                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.CALENDAR_PRESENTER, presenter, paths, historyId, dictionaryNames.getIdProfile());
+                rabbitMQOnlineActions.publishCalendarPresenterEmail(TypeConfig.CALENDAR_PRESENTER, presenter, paths, id, historyId, dictionaryNames.getIdProfile());
             }
             if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
                 String historyId = UUID.randomUUID().toString();
                 List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
-                rabbitMQOnlineActions.publishRecruitmentCouncilEmail(TypeConfig.CALENDAR_INTERVIEWER, recruitmentCouncil, paths, historyId, dictionaryNames.getIdProfile());
+                rabbitMQOnlineActions.publishRecruitmentCouncilEmail(TypeConfig.CALENDAR_INTERVIEWER, recruitmentCouncil, paths, historyId, id);
             }
 
             response.setSuccess();

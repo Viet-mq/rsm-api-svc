@@ -67,6 +67,37 @@ public class RabbitMQOnlineActions extends BaseAction {
 
     }
 
+    public void publishCalendarCandidateEmail(String type, CandidateRequest candidate, List<String> listPath, String calendarId, String historyId, String profileId) {
+        try {
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
+
+            //Neu khong co thi tao
+            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.queueDeclare(queueEmail, true, false, false, null);
+            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+            Email email = Email.builder()
+                    .type(type)
+                    .calendarId(calendarId)
+                    .profileId(profileId)
+                    .historyId(historyId)
+                    .subject(candidate.getSubjectCandidate())
+                    .content(candidate.getContentCandidate())
+                    .files(listPath)
+                    .build();
+            BasicProperties messageProperties = new BasicProperties.Builder()
+                    .contentType("application/json")
+                    .build();
+            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+            channel.close();
+
+            logger.info("=>publishCandidateEmail email: {}", email);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+    }
+
     public void publishCandidateEmail(String type, CandidateRequest candidate, List<String> listPath, String historyId, String profileId) {
         try {
             Connection connection = rabbitMQAccess.getConnection();
@@ -180,6 +211,37 @@ public class RabbitMQOnlineActions extends BaseAction {
             channel.close();
 
             logger.info("=>publishRecruitmentCouncilEmail emails: {}", emails);
+        } catch (Throwable ex) {
+            logger.error("Exception: ", ex);
+        }
+    }
+
+    public void publishCalendarPresenterEmail(String type, PresenterRequest presenter, List<String> listPath, String calendarId, String historyId, String profileId) {
+        try {
+            Connection connection = rabbitMQAccess.getConnection();
+            Channel channel = connection.createChannel();
+
+            //Neu khong co thi tao
+            channel.exchangeDeclare(exchangeEmail, "direct", true);
+            channel.queueDeclare(queueEmail, true, false, false, null);
+            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+            Email email = Email.builder()
+                    .type(type)
+                    .calendarId(calendarId)
+                    .profileId(profileId)
+                    .historyId(historyId)
+                    .subject(presenter.getSubjectPresenter())
+                    .content(presenter.getContentPresenter())
+                    .files(listPath)
+                    .build();
+            BasicProperties messageProperties = new BasicProperties.Builder()
+                    .contentType("application/json")
+                    .build();
+            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+            channel.close();
+
+            logger.info("=>publishPresenterEmail email: {}", email);
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);
         }
