@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.request.CreateStatusCVRequest;
 import com.edso.resume.api.domain.request.DeleteStatusCVRequest;
 import com.edso.resume.api.domain.request.UpdateAllStatusCVRequest;
 import com.edso.resume.api.domain.request.UpdateStatusCVRequest;
+import com.edso.resume.api.domain.response.GetStatusCVResponse;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -22,9 +23,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
@@ -58,6 +57,28 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         GetArrayResponse<StatusCVEntity> resp = new GetArrayResponse<>();
         resp.setSuccess();
         resp.setTotal(db.countAll(CollectionNameDefs.COLL_STATUS_CV, cond));
+        resp.setRows(rows);
+        return resp;
+    }
+
+    @Override
+    public GetStatusCVResponse<StatusCVEntity> findAllStatusCVProfile(HeaderInfo info) {
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, null, null, 0, 0);
+        Set<StatusCVEntity> rows = new HashSet<>();
+        if (lst != null) {
+            for (Document doc : lst) {
+                if(!Strings.isNullOrEmpty(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))) {
+                    StatusCVEntity statusCV = StatusCVEntity.builder()
+                            .id(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
+                            .name(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
+                            .build();
+                    rows.add(statusCV);
+                }
+            }
+        }
+        GetStatusCVResponse<StatusCVEntity> resp = new GetStatusCVResponse<>();
+        resp.setSuccess();
+        resp.setTotal(rows.size());
         resp.setRows(rows);
         return resp;
     }

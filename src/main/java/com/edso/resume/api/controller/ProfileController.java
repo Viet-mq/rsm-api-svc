@@ -34,12 +34,15 @@ public class ProfileController extends BaseController {
             @RequestParam(value = "recruitment", required = false) String recruitment,
             @RequestParam(value = "calendar", required = false) String calendar,
             @RequestParam(value = "statusCV", required = false) String statusCV,
+            @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "from", required = false) Long from,
+            @RequestParam(value = "to", required = false) Long to,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, page, size);
-        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, from:{}, to:{}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, from, to, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, from, to, page, size);
+        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, from:{}, to:{}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, from, to, page, size, resp.info());
         return resp;
     }
 
@@ -213,7 +216,7 @@ public class ProfileController extends BaseController {
     public BaseResponse mergeProfile(@RequestHeader Map<String, String> headers, @RequestBody MergeProfileRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateProfile u: {}, req: {}", headerInfo, request);
+        logger.info("=>mergeProfile u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
@@ -224,6 +227,42 @@ public class ProfileController extends BaseController {
             }
         }
         logger.info("<=mergeProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
+    @PostMapping("/add-follower")
+    public BaseResponse addFollower(@RequestHeader Map<String, String> headers, @RequestBody AddFollowerRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>addFollower u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.addFollower(request);
+            }
+        }
+        logger.info("<=addFollower u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
+    @PostMapping("/delete-follower")
+    public BaseResponse deleteFollower(@RequestHeader Map<String, String> headers, @RequestBody DeleteFollowerRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>deleteFollower u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.deleteFollower(request);
+            }
+        }
+        logger.info("<=deleteFollower u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 

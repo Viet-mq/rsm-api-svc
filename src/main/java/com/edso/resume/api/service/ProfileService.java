@@ -10,7 +10,7 @@ import com.edso.resume.lib.response.GetResponse;
 
 public interface ProfileService {
 
-    GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, String statusCV, Integer page, Integer size);
+    GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, String statusCV, String key, Long from, Long to, Integer page, Integer size);
 
     GetResponse<ProfileDetailEntity> findOne(HeaderInfo info, String idProfile);
 
@@ -33,5 +33,9 @@ public interface ProfileService {
     void isOld(String id);
 
     BaseResponse mergeDuplicateProfile(MergeProfileRequest request);
+
+    BaseResponse addFollower(AddFollowerRequest request);
+
+    BaseResponse deleteFollower(DeleteFollowerRequest request);
 
 }

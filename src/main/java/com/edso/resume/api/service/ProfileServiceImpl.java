@@ -31,7 +31,7 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
-import static com.mongodb.client.model.Updates.set;
+import static com.mongodb.client.model.Updates.*;
 
 @Service
 public class ProfileServiceImpl extends BaseService implements ProfileService, IDictionaryValidator {
@@ -68,7 +68,20 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, String statusCV, Integer page, Integer size) {
+    public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info,
+                                                   String fullName,
+                                                   String talentPool,
+                                                   String job,
+                                                   String levelJob,
+                                                   String department,
+                                                   String recruitment,
+                                                   String calendar,
+                                                   String statusCV,
+                                                   String key,
+                                                   Long from,
+                                                   Long to,
+                                                   Integer page,
+                                                   Integer size) {
 
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(fullName)) {
@@ -76,6 +89,15 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         }
         if (!Strings.isNullOrEmpty(talentPool)) {
             c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));
+        }
+        if (!Strings.isNullOrEmpty(key) && key.equals("follow")) {
+            c.add(Filters.eq(DbKeyConfig.FOLLOWERS, info.getUsername()));
+        }
+        if (from != null && from > 0) {
+            c.add(Filters.gte(DbKeyConfig.DATE_OF_APPLY, from));
+        }
+        if (to != null && to > 0) {
+            c.add(Filters.lte(DbKeyConfig.DATE_OF_APPLY, to));
         }
         if (!Strings.isNullOrEmpty(job)) {
             c.add(Filters.eq(DbKeyConfig.JOB_ID, job));
@@ -144,6 +166,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .avatarColor(AppUtils.parseString(doc.get(DbKeyConfig.AVATAR_COLOR)))
                         .isNew(AppUtils.parseString(doc.get(DbKeyConfig.IS_NEW)))
                         .match(AppUtils.parseString(doc.get(DbKeyConfig.MATCH)))
+                        .followers((List<String>) doc.get(DbKeyConfig.FOLLOWERS))
                         .build();
                 rows.add(profile);
             }
@@ -928,7 +951,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             // update roles
             Bson updates = Updates.combine(
-                    set(DbKeyConfig.STATUS_CV_ID, ""),
+                    set(DbKeyConfig.STATUS_CV_ID, "d0d08b54-4ac7-4947-9018-e8c4f991b7bs"),
                     set(DbKeyConfig.STATUS_CV_NAME, "Loại"),
                     set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
                     set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
@@ -1246,6 +1269,151 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Gộp trùng ứng viên", request.getInfo());
+
+            response.setSuccess();
+            return response;
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
+        }
+    }
+
+    @Override
+    public BaseResponse addFollower(AddFollowerRequest request) {
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
+
+        try {
+            //Validate
+            String idProfile = request.getProfileId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getUsername(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.FOLLOWER, request.getUsername(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed((String) validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            Bson updates = Updates.combine(
+                    push(DbKeyConfig.FOLLOWERS, request.getUsername())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Thêm người theo dõi ứng viên", request.getInfo());
+
+            response.setSuccess();
+            return response;
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
+        }
+    }
+
+    @Override
+    public BaseResponse deleteFollower(DeleteFollowerRequest request) {
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
+
+        try {
+            //Validate
+            String idProfile = request.getProfileId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getUsername(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed((String) validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            Bson updates = Updates.combine(
+                    pull(DbKeyConfig.FOLLOWERS, request.getUsername())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Thêm người theo dõi ứng viên", request.getInfo());
 
             response.setSuccess();
             return response;

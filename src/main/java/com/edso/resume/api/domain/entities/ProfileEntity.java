@@ -44,4 +44,5 @@ public class ProfileEntity {
     private String avatarColor;
     private String isNew;
     private String match;
+    private List<String> followers;
 }

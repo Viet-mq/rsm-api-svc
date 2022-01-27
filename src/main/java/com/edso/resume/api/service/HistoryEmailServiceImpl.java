@@ -59,7 +59,7 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             history.append(DbKeyConfig.TIME, System.currentTimeMillis());
             history.append(DbKeyConfig.USERNAME, info.getUsername());
             history.append(DbKeyConfig.STATUS, "Đang đợi gửi");
-            history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+//            history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
             history.append(DbKeyConfig.FILE, listDocument);
 
             // insert to database
@@ -104,7 +104,7 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
                 history.append(DbKeyConfig.TIME, System.currentTimeMillis());
                 history.append(DbKeyConfig.USERNAME, info.getUsername());
                 history.append(DbKeyConfig.STATUS, "Đang đợi gửi");
-                history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+//                history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
                 history.append(DbKeyConfig.FILE, listDocument);
                 historyList.add(history);
             }
