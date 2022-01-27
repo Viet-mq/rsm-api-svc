@@ -36,8 +36,6 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
-import static com.mongodb.client.model.Updates.pull;
-
 @Service
 public class RecruitmentServiceImpl extends BaseService implements RecruitmentService, IDictionaryValidator {
 
@@ -91,6 +89,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                                 .name(AppUtils.parseString(document.get(DbKeyConfig.NAME)))
                                 .total(AppUtils.parseLong(document.get(DbKeyConfig.TOTAL)))
                                 .isDragDisabled((Boolean) document.get(DbKeyConfig.DELETE))
+                                .isNew((Boolean) document.get(DbKeyConfig.NEW))
                                 .build();
                         roundEntityList.add(roundEntity);
                     }
@@ -244,6 +243,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 round.append(DbKeyConfig.NAME, roundEntity.getName());
                 round.append(DbKeyConfig.TOTAL, 0);
                 round.append(DbKeyConfig.DELETE, roundEntity.getIsDragDisabled());
+                round.append(DbKeyConfig.NEW, roundEntity.getIsNew());
                 interviewProcess.add(round);
             }
 
@@ -360,6 +360,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 round.append(DbKeyConfig.NAME, roundEntity.getName());
                 round.append(DbKeyConfig.TOTAL, roundEntity.getTotal());
                 round.append(DbKeyConfig.DELETE, roundEntity.getIsDragDisabled());
+                round.append(DbKeyConfig.NEW, false);
                 interviewProcess.add(round);
             }
 
@@ -424,10 +425,10 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 db.delete(CollectionNameDefs.COLL_RECRUITMENT, cond);
                 response.setSuccess();
                 return response;
-            } else {
-                response.setFailed("Không thể xóa tin tuyển dụng này!");
-                return response;
             }
+            response.setFailed("Không thể xóa tin tuyển dụng này!");
+            return response;
+
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
@@ -454,8 +455,6 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             if (statusCV != null) {
                 for (Document document : statusCV) {
                     if (AppUtils.parseString(document.get(DbKeyConfig.ID)).equals(request.getStatusCVId()) && AppUtils.parseLong(document.get(DbKeyConfig.TOTAL)) == 0) {
-                        Bson updates = Updates.combine(pull(DbKeyConfig.INTERVIEW_PROCESS, Filters.eq(DbKeyConfig.ID, request.getStatusCVId())));
-                        db.update(CollectionNameDefs.COLL_RECRUITMENT, cond, updates, true);
                         response.setSuccess();
                         return response;
                     }

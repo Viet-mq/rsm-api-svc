@@ -10,4 +10,5 @@ public class RoundEntity {
     private String name;
     private Long total;
     private Boolean isDragDisabled;
+    private Boolean isNew;
 }

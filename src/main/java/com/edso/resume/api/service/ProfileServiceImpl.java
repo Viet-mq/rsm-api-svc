@@ -231,6 +231,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .skill((List<SkillEntity>) one.get(DbKeyConfig.SKILL))
                 .avatarColor(AppUtils.parseString(one.get(DbKeyConfig.AVATAR_COLOR)))
                 .match(AppUtils.parseString(one.get(DbKeyConfig.MATCH)))
+                .followers((List<String>) one.get(DbKeyConfig.FOLLOWERS))
                 .build();
 
         response.setSuccess(profile);

@@ -10,7 +10,7 @@ import lombok.ToString;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class DeleteFollowerRequest extends BaseAuthRequest{
+public class DeleteFollowerRequest extends BaseAuthRequest {
     private String profileId;
     private String username;
 

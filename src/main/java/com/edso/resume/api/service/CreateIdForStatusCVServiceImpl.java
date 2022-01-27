@@ -32,6 +32,7 @@ public class CreateIdForStatusCVServiceImpl extends BaseService implements Creat
             response.setId(UUID.randomUUID().toString());
             response.setName(request.getName());
             response.setIsDragDisabled(false);
+            response.setIsNew(true);
             response.setSuccess();
             return response;
         } catch (Throwable ex) {

@@ -67,7 +67,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         Set<StatusCVEntity> rows = new HashSet<>();
         if (lst != null) {
             for (Document doc : lst) {
-                if(!Strings.isNullOrEmpty(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))) {
+                if (!Strings.isNullOrEmpty(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))) {
                     StatusCVEntity statusCV = StatusCVEntity.builder()
                             .id(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
                             .name(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))

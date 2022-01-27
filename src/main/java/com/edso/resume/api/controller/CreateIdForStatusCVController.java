@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/id")
-public class CreateIdForStatusCVController {
+public class CreateIdForStatusCVController extends BaseController {
     private final CreateIdForStatusCVService createIdForStatusCVService;
 
     public CreateIdForStatusCVController(CreateIdForStatusCVService createIdForStatusCVService) {
@@ -18,7 +18,18 @@ public class CreateIdForStatusCVController {
     }
 
     @PostMapping("/create")
-    StatusCVResponse createIdForStatusCV(@RequestBody CreateIdForStatusCVRequest request) {
-        return createIdForStatusCVService.createIdForStatusCV(request);
+    public StatusCVResponse createIdForStatusCV(@RequestBody CreateIdForStatusCVRequest request) {
+        StatusCVResponse response = new StatusCVResponse();
+        logger.info("=>createIdForStatusCV req: {}", request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                response = createIdForStatusCVService.createIdForStatusCV(request);
+            }
+        }
+        logger.info("<=createIdForStatusCV req: {}, resp: {}", request, response);
+        return response;
     }
 }

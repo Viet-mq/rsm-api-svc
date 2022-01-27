@@ -7,7 +7,10 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class StatusCVResponse extends BaseResponse {
+
     private String id;
     private String name;
     private Boolean isDragDisabled;
+    private Boolean isNew;
+
 }

@@ -40,11 +40,11 @@ public class StatusCVController extends BaseController {
     }
 
     @GetMapping("/profile")
-    public BaseResponse findAllStatusCV(@RequestHeader Map<String, String> headers) {
+    public BaseResponse findAllStatusCVProfile(@RequestHeader Map<String, String> headers) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllStatusCV u: {}", headerInfo);
+        logger.info("=>findAllStatusCVProfile u: {}", headerInfo);
         GetStatusCVResponse<StatusCVEntity> resp = statusCVService.findAllStatusCVProfile(headerInfo);
-        logger.info("<=findAllStatusCV u: {}, resp: {}", headerInfo, resp.info());
+        logger.info("<=findAllStatusCVProfile u: {}, resp: {}", headerInfo, resp.info());
         return resp;
     }
 

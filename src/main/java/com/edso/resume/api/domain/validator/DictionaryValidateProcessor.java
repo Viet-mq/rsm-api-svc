@@ -274,7 +274,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return Filters.eq(DbKeyConfig.TITLE, this.id);
             }
             case ThreadConfig.FOLLOWER: {
-                return Filters.eq(DbKeyConfig.FOLLOWER, this.id);
+                return Filters.eq(DbKeyConfig.FOLLOWERS, this.id);
             }
             default: {
                 return Filters.eq(DbKeyConfig.ID, this.id);

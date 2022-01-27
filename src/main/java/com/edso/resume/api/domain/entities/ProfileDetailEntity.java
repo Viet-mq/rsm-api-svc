@@ -46,5 +46,6 @@ public class ProfileDetailEntity {
     private String recruitmentName;
     private String avatarColor;
     private String match;
+    private List<String> followers;
 
 }
