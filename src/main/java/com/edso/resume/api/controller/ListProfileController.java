@@ -33,7 +33,7 @@ public class ListProfileController extends BaseController {
             return new BaseResponse(-1, "Vui lòng nhập vào file");
         }
         if (file.getSize() > fileSize) {
-            return new BaseResponse(-1, "FileEntity dung lượng quá lớn");
+            return new BaseResponse(-1, "File vượt quá dung lượng cho phép");
         }
         BaseResponse response = uploadProfilesService.uploadProfiles(file, headerInfo);
         logger.info("<=uploadProfiles u: {}, rep: {}", headerInfo, response);

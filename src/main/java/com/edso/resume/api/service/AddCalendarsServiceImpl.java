@@ -13,7 +13,9 @@ import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import org.bson.Document;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,9 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
     private final HistoryService historyService;
     private final RabbitMQOnlineActions rabbitMQOnlineActions;
     private final HistoryEmailService historyEmailService;
+
+    @Value("${mail.fileSize}")
+    private Long fileSize;
 
     protected AddCalendarsServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitMQOnlineActions rabbitMQOnlineActions, HistoryEmailService historyEmailService) {
         super(db);
@@ -44,6 +49,27 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
             List<CreateTimeCalendarRequest> list = JsonHelper.convertJsonToList(request.getTimes(), CreateTimeCalendarRequest[].class);
             if (list == null || list.isEmpty()) {
                 return new BaseResponse(-1, "Vui lòng nhập 1 list ứng viên");
+            }
+            if (presenter.getFilePresenters() != null && !presenter.getFilePresenters().isEmpty()) {
+                for (MultipartFile file : presenter.getFilePresenters()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
+            if (candidate.getFileCandidates() != null && !candidate.getFileCandidates().isEmpty()) {
+                for (MultipartFile file : candidate.getFileCandidates()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
+            if (recruitmentCouncil.getFileRecruitmentCouncils() != null && !recruitmentCouncil.getFileRecruitmentCouncils().isEmpty()) {
+                for (MultipartFile file : recruitmentCouncil.getFileRecruitmentCouncils()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
             }
             for (CreateTimeCalendarRequest calendarRequest : list) {
                 response = calendarRequest.validate();

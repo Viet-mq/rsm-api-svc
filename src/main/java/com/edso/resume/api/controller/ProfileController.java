@@ -35,14 +35,15 @@ public class ProfileController extends BaseController {
             @RequestParam(value = "calendar", required = false) String calendar,
             @RequestParam(value = "statusCV", required = false) String statusCV,
             @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "tag", required = false) String tag,
             @RequestParam(value = "from", required = false) Long from,
             @RequestParam(value = "to", required = false) Long to,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, from:{}, to:{}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, from, to, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, from, to, page, size);
-        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, from:{}, to:{}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, from, to, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, from:{}, to:{}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, from, to, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, from, to, page, size);
+        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, from:{}, to:{}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, from, to, page, size, resp.info());
         return resp;
     }
 
@@ -263,6 +264,42 @@ public class ProfileController extends BaseController {
             }
         }
         logger.info("<=deleteFollower u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
+    @PostMapping("/add-tags")
+    public BaseResponse addTags(@RequestHeader Map<String, String> headers, @RequestBody AddTagsProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>addTags u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.addTags(request);
+            }
+        }
+        logger.info("<=addTags u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
+    @PostMapping("/delete-tag")
+    public BaseResponse deleteTag(@RequestHeader Map<String, String> headers, @RequestBody DeleteTagProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>deleteTag u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.deleteTag(request);
+            }
+        }
+        logger.info("<=deleteTag u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 

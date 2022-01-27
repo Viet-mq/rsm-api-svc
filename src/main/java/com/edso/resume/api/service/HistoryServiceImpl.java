@@ -77,7 +77,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
             history.append(DbKeyConfig.TIME, System.currentTimeMillis());
             history.append(DbKeyConfig.ACTION, action);
             history.append(DbKeyConfig.USERNAME, info.getUsername());
-//            history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+            history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);

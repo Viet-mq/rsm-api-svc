@@ -1,6 +1,8 @@
 package com.edso.resume.api.domain.validator;
 
 import lombok.Data;
+import org.bson.Document;
+
 
 @Data
 public class DictionaryValidatorResult {
@@ -12,6 +14,7 @@ public class DictionaryValidatorResult {
     private String fullName;
     private String statusCVId;
     private String mailRef;
+    private Document document;
     private String key;
 
     public DictionaryValidatorResult(String type) {
@@ -22,6 +25,7 @@ public class DictionaryValidatorResult {
         this.fullName = "";
         this.statusCVId = "";
         this.mailRef = "";
+        this.document = new Document();
     }
 
 }

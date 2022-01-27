@@ -59,7 +59,7 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
         try {
             MultipartFile image = request.getImage();
             if (image.getSize() > fileSizeAvatar) {
-                return new BaseResponse(ErrorCodeDefs.IMAGE, "FileEntity vượt quá dung lượng cho phép");
+                return new BaseResponse(ErrorCodeDefs.IMAGE, "File vượt quá dung lượng cho phép");
             }
             Bson cond = Filters.eq(DbKeyConfig.ID, request.getIdProfile());
             Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
