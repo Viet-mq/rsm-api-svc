@@ -5,6 +5,7 @@ import com.edso.resume.api.domain.request.CreateStatusCVRequest;
 import com.edso.resume.api.domain.request.DeleteStatusCVRequest;
 import com.edso.resume.api.domain.request.UpdateAllStatusCVRequest;
 import com.edso.resume.api.domain.request.UpdateStatusCVRequest;
+import com.edso.resume.api.domain.response.GetStatusCVResponse;
 import com.edso.resume.api.service.StatusCVService;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
@@ -35,6 +36,15 @@ public class StatusCVController extends BaseController {
         logger.info("=>findAllStatusCV u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
         GetArrayResponse<StatusCVEntity> resp = statusCVService.findAll(headerInfo, name, page, size);
         logger.info("<=findAllStatusCV u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
+        return resp;
+    }
+
+    @GetMapping("/profile")
+    public BaseResponse findAllStatusCV(@RequestHeader Map<String, String> headers) {
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>findAllStatusCV u: {}", headerInfo);
+        GetStatusCVResponse<StatusCVEntity> resp = statusCVService.findAllStatusCVProfile(headerInfo);
+        logger.info("<=findAllStatusCV u: {}, resp: {}", headerInfo, resp.info());
         return resp;
     }
 

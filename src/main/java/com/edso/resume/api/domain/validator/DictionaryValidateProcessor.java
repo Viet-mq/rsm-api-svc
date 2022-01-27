@@ -126,7 +126,7 @@ public class DictionaryValidateProcessor implements Runnable {
                     Bson cond = getCondition();
                     Document doc = db.findOne(getCollectionName(), cond);
                     if (doc == null) {
-                        if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.RECRUITMENT_NAME)) {
+                        if (type.equals(ThreadConfig.BLACKLIST_EMAIL) || type.equals(ThreadConfig.BLACKLIST_PHONE_NUMBER) || type.equals(ThreadConfig.RECRUITMENT_NAME) || type.equals(ThreadConfig.FOLLOWER)) {
                             result.setResult(true);
                             return;
                         }
@@ -165,6 +165,11 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.MERGE_OTHER_PROFILE: {
                 result.setResult(true);
                 result.setName(doc);
+                return;
+            }
+            case ThreadConfig.FOLLOWER: {
+                result.setResult(false);
+                result.setName("User đã theo dõi ứng viên này");
                 return;
             }
             case ThreadConfig.CALENDAR_PROFILE: {
@@ -268,6 +273,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.RECRUITMENT_NAME: {
                 return Filters.eq(DbKeyConfig.TITLE, this.id);
             }
+            case ThreadConfig.FOLLOWER: {
+                return Filters.eq(DbKeyConfig.FOLLOWER, this.id);
+            }
             default: {
                 return Filters.eq(DbKeyConfig.ID, this.id);
             }
@@ -348,6 +356,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.SOURCE_CV: {
                 return CollectionNameDefs.COLL_SOURCE_CV;
             }
+            case ThreadConfig.FOLLOWER:
             case ThreadConfig.CALENDAR_PROFILE:
             case ThreadConfig.TALENT_POOL_PROFILE:
             case ThreadConfig.CHANGE_RECRUITMENT_PROFILE:
