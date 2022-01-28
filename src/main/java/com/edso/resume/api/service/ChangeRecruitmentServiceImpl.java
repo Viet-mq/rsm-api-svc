@@ -21,6 +21,7 @@ import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,8 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
     private String exchange;
     @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
+    @Value("${mail.fileSize}")
+    private Long fileSize;
 
     protected ChangeRecruitmentServiceImpl(MongoDbOnlineSyncActions db, RabbitTemplate rabbitTemplate, HistoryService historyService, HistoryEmailService historyEmailService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
@@ -61,6 +64,20 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
         try {
+            if (presenter.getFilePresenters() != null && !presenter.getFilePresenters().isEmpty()) {
+                for (MultipartFile file : presenter.getFilePresenters()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
+            if (candidate.getFileCandidates() != null && !candidate.getFileCandidates().isEmpty()) {
+                for (MultipartFile file : candidate.getFileCandidates()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CHANGE_RECRUITMENT_PROFILE, request.getIdProfile(), db, this));

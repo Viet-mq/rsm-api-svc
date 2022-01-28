@@ -231,7 +231,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     @Override
     public BaseResponse uploadProfiles(MultipartFile request, HeaderInfo info) {
         if (request != null && request.getSize() > fileSize) {
-            return new BaseResponse(ErrorCodeDefs.FILE, "FileEntity vượt quá dung lượng cho phép");
+            return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
         }
         BaseResponse response = new BaseResponse();
         try {

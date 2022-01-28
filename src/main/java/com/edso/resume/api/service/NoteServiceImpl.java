@@ -95,14 +95,13 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
 
     @Override
     public BaseResponse createNoteProfile(CreateNoteProfileRequest request) {
-        MultipartFile file = request.getFile();
-        if (file != null && file.getSize() > fileSize) {
-            return new BaseResponse(ErrorCodeDefs.FILE, "FileEntity vượt quá dung lượng cho phép");
-        }
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
         try {
-
+            MultipartFile file = request.getFile();
+            if (file != null && file.getSize() > fileSize) {
+                return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+            }
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getIdProfile(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getUsername(), db, this));
@@ -199,13 +198,14 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
 
     @Override
     public BaseResponse updateNoteProfile(UpdateNoteProfileRequest request) {
-        MultipartFile file = request.getFile();
-        if (file != null && file.getSize() > fileSize) {
-            return new BaseResponse(ErrorCodeDefs.FILE, "FileEntity vượt quá dung lượng cho phép");
-        }
+
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
         try {
+            MultipartFile file = request.getFile();
+            if (file != null && file.getSize() > fileSize) {
+                return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+            }
             Bson cond = Filters.eq(DbKeyConfig.ID, request.getId());
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.NOTE, request.getId(), db, this));

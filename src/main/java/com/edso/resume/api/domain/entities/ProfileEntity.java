@@ -45,4 +45,5 @@ public class ProfileEntity {
     private String isNew;
     private String match;
     private List<String> followers;
+    private List<String> tags;
 }

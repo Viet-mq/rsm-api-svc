@@ -22,6 +22,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -41,6 +42,9 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
 
     @Value("${calendar.nLoop}")
     private int nLoop;
+
+    @Value("${mail.fileSize}")
+    private Long fileSize;
 
     public CalendarServiceImpl2(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
@@ -111,7 +115,27 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
         String key = UUID.randomUUID().toString();
 
         try {
-
+            if (presenter.getFilePresenters() != null && !presenter.getFilePresenters().isEmpty()) {
+                for (MultipartFile file : presenter.getFilePresenters()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
+            if (candidate.getFileCandidates() != null && !candidate.getFileCandidates().isEmpty()) {
+                for (MultipartFile file : candidate.getFileCandidates()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
+            if (recruitmentCouncil.getFileRecruitmentCouncils() != null && !recruitmentCouncil.getFileRecruitmentCouncils().isEmpty()) {
+                for (MultipartFile file : recruitmentCouncil.getFileRecruitmentCouncils()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR_PROFILE, idProfile, db, this));
@@ -228,6 +252,27 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
         String key = UUID.randomUUID().toString();
 
         try {
+            if (presenter.getFilePresenters() != null && !presenter.getFilePresenters().isEmpty()) {
+                for (MultipartFile file : presenter.getFilePresenters()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
+            if (candidate.getFileCandidates() != null && !candidate.getFileCandidates().isEmpty()) {
+                for (MultipartFile file : candidate.getFileCandidates()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
+            if (recruitmentCouncil.getFileRecruitmentCouncils() != null && !recruitmentCouncil.getFileRecruitmentCouncils().isEmpty()) {
+                for (MultipartFile file : recruitmentCouncil.getFileRecruitmentCouncils()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
             //Validate
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.CALENDAR, id, db, this));

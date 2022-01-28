@@ -47,5 +47,6 @@ public class ProfileDetailEntity {
     private String avatarColor;
     private String match;
     private List<String> followers;
+    private List<String> tags;
 
 }

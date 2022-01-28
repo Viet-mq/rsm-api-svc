@@ -22,12 +22,10 @@ import org.bson.conversions.Bson;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
@@ -50,6 +48,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private String exchange;
     @Value("${spring.rabbitmq.profile.routingkey}")
     private String routingkey;
+    @Value("${mail.fileSize}")
+    private Long fileSize;
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
@@ -78,6 +78,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                                                    String calendar,
                                                    String statusCV,
                                                    String key,
+                                                   String tag,
                                                    Long from,
                                                    Long to,
                                                    Integer page,
@@ -101,6 +102,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         }
         if (!Strings.isNullOrEmpty(job)) {
             c.add(Filters.eq(DbKeyConfig.JOB_ID, job));
+        }
+        if (!Strings.isNullOrEmpty(tag)) {
+            c.add(Filters.eq(DbKeyConfig.TAGS, tag));
         }
         if (!Strings.isNullOrEmpty(levelJob)) {
             c.add(Filters.eq(DbKeyConfig.LEVEL_JOB_ID, levelJob));
@@ -167,6 +171,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .isNew(AppUtils.parseString(doc.get(DbKeyConfig.IS_NEW)))
                         .match(AppUtils.parseString(doc.get(DbKeyConfig.MATCH)))
                         .followers((List<String>) doc.get(DbKeyConfig.FOLLOWERS))
+                        .tags((List<String>) doc.get(DbKeyConfig.TAGS))
                         .build();
                 rows.add(profile);
             }
@@ -232,6 +237,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .avatarColor(AppUtils.parseString(one.get(DbKeyConfig.AVATAR_COLOR)))
                 .match(AppUtils.parseString(one.get(DbKeyConfig.MATCH)))
                 .followers((List<String>) one.get(DbKeyConfig.FOLLOWERS))
+                .tags((List<String>) one.get(DbKeyConfig.TAGS))
                 .build();
 
         response.setSuccess(profile);
@@ -905,6 +911,20 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         String key = UUID.randomUUID().toString();
 
         try {
+            if (presenter.getFilePresenters() != null && !presenter.getFilePresenters().isEmpty()) {
+                for (MultipartFile file : presenter.getFilePresenters()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
+            if (candidate.getFileCandidates() != null && !candidate.getFileCandidates().isEmpty()) {
+                for (MultipartFile file : candidate.getFileCandidates()) {
+                    if (file != null && file.getSize() > fileSize) {
+                        return new BaseResponse(ErrorCodeDefs.FILE, "File vượt quá dung lượng cho phép");
+                    }
+                }
+            }
             //Validate
             String idProfile = request.getIdProfile();
             Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
@@ -1431,6 +1451,158 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         }
     }
 
+    @Override
+    public BaseResponse addTags(AddTagsProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
+
+        try {
+            //Validate
+            String idProfile = request.getProfileId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_TAG, request.getTags(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed((String) validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            Document profile = getDictionayNames(rs).getDocument();
+            List<String> list = (List<String>) profile.get(DbKeyConfig.TAGS);
+            Set<String> tags = new HashSet<>();
+            if (list != null) {
+                tags.addAll(list);
+            }
+            tags.addAll(request.getTags());
+
+            Bson updates = Updates.combine(
+                    set(DbKeyConfig.TAGS, tags)
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Thêm thẻ cho ứng viên", request.getInfo());
+
+            response.setSuccess();
+            return response;
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
+        }
+    }
+
+    @Override
+    public BaseResponse deleteTag(DeleteTagProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        String key = UUID.randomUUID().toString();
+
+        try {
+            //Validate
+            String idProfile = request.getProfileId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
+
+            List<DictionaryValidateProcessor> rs = new ArrayList<>();
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, idProfile, db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TAG, request.getTag(), db, this));
+            int total = rs.size();
+
+            for (DictionaryValidateProcessor r : rs) {
+                Thread t = new Thread(r);
+                t.start();
+            }
+
+            long time = System.currentTimeMillis();
+            int count = 0;
+            while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
+                DictionaryValidatorResult validatorResult = queue.poll();
+                if (validatorResult != null) {
+                    if (validatorResult.getKey().equals(key)) {
+                        if (!validatorResult.isResult()) {
+                            response.setFailed((String) validatorResult.getName());
+                            return response;
+                        } else {
+                            count++;
+                        }
+                        total--;
+                    } else {
+                        queue.offer(validatorResult);
+                    }
+                }
+            }
+
+            if (count != rs.size()) {
+                for (DictionaryValidateProcessor r : rs) {
+                    if (!r.getResult().isResult()) {
+                        response.setFailed("Không thể kiếm tra: " + r.getResult().getType());
+                        return response;
+                    }
+                }
+            }
+
+            Bson updates = Updates.combine(
+                    pull(DbKeyConfig.TAGS, request.getTag())
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
+
+            //Insert history to DB
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Xóa thẻ của ứng viên", request.getInfo());
+
+            response.setSuccess();
+            return response;
+        } catch (Throwable ex) {
+
+            logger.error("Exception: ", ex);
+            response.setFailed("Hệ thống đang bận");
+            return response;
+
+        } finally {
+            synchronized (queue) {
+                queue.removeIf(s -> s.getKey().equals(key));
+            }
+        }
+    }
+
     private DictionaryNamesEntity getDictionayNames(List<DictionaryValidateProcessor> rs) {
         DictionaryNamesEntity dictionaryNames = new DictionaryNamesEntity();
         for (DictionaryValidateProcessor r : rs) {
@@ -1470,6 +1642,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
                 case ThreadConfig.PROFILE: {
                     dictionaryNames.setEmail((String) r.getResult().getName());
+                    dictionaryNames.setDocument(r.getResult().getDocument());
                     dictionaryNames.setRecruitmentId(r.getResult().getIdProfile());
                     break;
                 }
