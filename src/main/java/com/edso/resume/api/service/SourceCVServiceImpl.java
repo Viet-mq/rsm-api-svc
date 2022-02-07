@@ -37,7 +37,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
     public GetArrayResponse<SourceCVEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
@@ -67,8 +67,8 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
 
         BaseResponse response = new BaseResponse();
         try {
-            String name = request.getName().trim();
-            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            String name = request.getName();
+            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_SOURCE_CV, c);
 
             if (count > 0) {
@@ -78,10 +78,11 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
 
             Document sourceCV = new Document();
             sourceCV.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            sourceCV.append(DbKeyConfig.NAME, name);
-            sourceCV.append(DbKeyConfig.EMAIL, request.getEmail());
+            sourceCV.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
+            sourceCV.append(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail()));
             sourceCV.append(DbKeyConfig.STATUS, NameConfig.DANG_SU_DUNG);
-            sourceCV.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            sourceCV.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            sourceCV.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
             sourceCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             sourceCV.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             sourceCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -116,8 +117,8 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
                 return response;
             }
 
-            String name = request.getName().trim();
-            Document obj = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            String name = request.getName();
+            Document obj = db.findOne(CollectionNameDefs.COLL_SOURCE_CV, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {
@@ -128,17 +129,18 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
 
             Bson idSourceCV = Filters.eq(DbKeyConfig.SOURCE_CV_ID, request.getId());
             Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, request.getName())
+                    Updates.set(DbKeyConfig.SOURCE_CV_NAME, AppUtils.mergeWhitespace(name))
             );
             db.update(CollectionNameDefs.COLL_PROFILE, idSourceCV, updateProfile, true);
 
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, name),
-                    Updates.set(DbKeyConfig.EMAIL, request.getEmail()),
+                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
+                    Updates.set(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail())),
                     Updates.set(DbKeyConfig.STATUS, request.getStatus()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

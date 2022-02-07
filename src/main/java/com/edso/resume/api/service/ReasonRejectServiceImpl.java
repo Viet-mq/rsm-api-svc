@@ -12,6 +12,7 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
+import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class ReasonRejectServiceImpl extends BaseService implements ReasonRejectService {
@@ -32,10 +34,15 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
 
 
     @Override
-    public GetArrayResponse<ReasonRejectEntity> findAll(HeaderInfo info, Integer page, Integer size) {
+    public GetArrayResponse<ReasonRejectEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
+        List<Bson> c = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(name)) {
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
+        }
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
+        Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_REASON_REJECT, null, sort, pagingInfo.getStart(), pagingInfo.getLimit());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_REASON_REJECT, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
         List<ReasonRejectEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
@@ -57,9 +64,20 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
     public BaseResponse createReasonReject(CreateReasonRejectRequest request) {
         BaseResponse response = new BaseResponse();
         try {
+            String name = request.getReason();
+            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            long count = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, c);
+
+            if (count > 0) {
+                response.setFailed("Lý do này đã tồn tại");
+                return response;
+            }
+
             Document reason = new Document();
             reason.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            reason.append(DbKeyConfig.REASON, request.getReason());
+            reason.append(DbKeyConfig.REASON, AppUtils.mergeWhitespace(request.getReason()));
+            reason.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getReason().toLowerCase()));
+            reason.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getReason()));
             reason.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             reason.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             reason.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -91,14 +109,26 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
                 return response;
             }
 
+            String name = request.getReason();
+            Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
+            if (obj != null) {
+                String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
+                if (!objId.equals(id)) {
+                    response.setFailed("Lý do này đã tồn tại");
+                    return response;
+                }
+            }
+
             Bson updateReject = Updates.combine(
-                    Updates.set(DbKeyConfig.REASON, request.getReason())
+                    Updates.set(DbKeyConfig.REASON, AppUtils.mergeWhitespace(request.getReason()))
             );
             db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.REASON_ID, request.getId()), updateReject);
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.REASON, request.getReason()),
+                    Updates.set(DbKeyConfig.REASON, AppUtils.mergeWhitespace(request.getReason())),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getReason())),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getReason().toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

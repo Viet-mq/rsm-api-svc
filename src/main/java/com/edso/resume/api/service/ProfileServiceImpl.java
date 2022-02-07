@@ -326,12 +326,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             // conventions
             Document profile = new Document();
             profile.append(DbKeyConfig.ID, idProfile);
-            profile.append(DbKeyConfig.FULL_NAME, request.getFullName());
+            profile.append(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName()));
             profile.append(DbKeyConfig.GENDER, request.getGender());
-            profile.append(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber());
-            profile.append(DbKeyConfig.EMAIL, request.getEmail());
+            profile.append(DbKeyConfig.PHONE_NUMBER, AppUtils.mergeWhitespace(request.getPhoneNumber()));
+            profile.append(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail()));
             profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
-            profile.append(DbKeyConfig.HOMETOWN, request.getHometown());
+            profile.append(DbKeyConfig.HOMETOWN, AppUtils.mergeWhitespace(request.getHometown()));
             profile.append(DbKeyConfig.SCHOOL_ID, request.getSchool());
             profile.append(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName());
             profile.append(DbKeyConfig.JOB_ID, request.getJob());
@@ -346,7 +346,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             profile.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
             profile.append(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName());
-            profile.append(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool());
+            profile.append(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool()));
             profile.append(DbKeyConfig.USERNAME, request.getHrRef());
             profile.append(DbKeyConfig.HR_REF, dictionaryNames.getFullNameUser());
             profile.append(DbKeyConfig.MAIL_REF, dictionaryNames.getEmailUser());
@@ -494,14 +494,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             Bson updates;
             if (check) {
                 updates = Updates.combine(
-                        set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                        set(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName())),
                         set(DbKeyConfig.GENDER, request.getGender()),
                         set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                        set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                        set(DbKeyConfig.HOMETOWN, AppUtils.mergeWhitespace(request.getHometown())),
                         set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
                         set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                        set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                        set(DbKeyConfig.EMAIL, request.getEmail()),
+                        set(DbKeyConfig.PHONE_NUMBER, AppUtils.mergeWhitespace(request.getPhoneNumber())),
+                        set(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail())),
                         set(DbKeyConfig.JOB_ID, request.getJob()),
                         set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                         set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
@@ -517,21 +517,20 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                         set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                         set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                        set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                        set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
                         set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
                         set(DbKeyConfig.MATCH, matchName)
-
                 );
             } else {
                 updates = Updates.combine(
-                        set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                        set(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName())),
                         set(DbKeyConfig.GENDER, request.getGender()),
                         set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                        set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                        set(DbKeyConfig.HOMETOWN, AppUtils.mergeWhitespace(request.getHometown())),
                         set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
                         set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                        set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                        set(DbKeyConfig.EMAIL, request.getEmail()),
+                        set(DbKeyConfig.PHONE_NUMBER, AppUtils.mergeWhitespace(request.getPhoneNumber())),
+                        set(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail())),
                         set(DbKeyConfig.JOB_ID, request.getJob()),
                         set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                         set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
@@ -547,7 +546,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                         set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                         set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                        set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                        set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
                         set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
                         set(DbKeyConfig.MATCH, "")
                 );
@@ -686,20 +685,20 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             if (check) {
                 updates = Updates.combine(
-                        set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                        set(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName())),
                         set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                        set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                        set(DbKeyConfig.HOMETOWN, AppUtils.mergeWhitespace(request.getHometown())),
                         set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
                         set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                        set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                        set(DbKeyConfig.EMAIL, request.getEmail()),
+                        set(DbKeyConfig.PHONE_NUMBER, AppUtils.mergeWhitespace(request.getPhoneNumber())),
+                        set(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail())),
                         set(DbKeyConfig.JOB_ID, request.getJob()),
                         set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                         set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
                         set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
                         set(DbKeyConfig.GENDER, request.getGender()),
                         set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
-                        set(DbKeyConfig.EVALUATION, request.getEvaluation()),
+                        set(DbKeyConfig.EVALUATION, AppUtils.mergeWhitespace(request.getEvaluation())),
                         set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
                         set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                         set(DbKeyConfig.USERNAME, request.getHrRef()),
@@ -711,26 +710,26 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                         set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                         set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                        set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                        set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
                         set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
                         set(DbKeyConfig.MATCH, matchName)
                 );
             } else {
                 updates = Updates.combine(
-                        set(DbKeyConfig.FULL_NAME, request.getFullName()),
+                        set(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName())),
                         set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
-                        set(DbKeyConfig.HOMETOWN, request.getHometown()),
+                        set(DbKeyConfig.HOMETOWN, AppUtils.mergeWhitespace(request.getHometown())),
                         set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
                         set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                        set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber()),
-                        set(DbKeyConfig.EMAIL, request.getEmail()),
+                        set(DbKeyConfig.PHONE_NUMBER, AppUtils.mergeWhitespace(request.getPhoneNumber())),
+                        set(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail())),
                         set(DbKeyConfig.JOB_ID, request.getJob()),
                         set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                         set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
                         set(DbKeyConfig.LEVEL_JOB_NAME, dictionaryNames.getLevelJobName()),
                         set(DbKeyConfig.GENDER, request.getGender()),
                         set(DbKeyConfig.LAST_APPLY, request.getLastApply()),
-                        set(DbKeyConfig.EVALUATION, request.getEvaluation()),
+                        set(DbKeyConfig.EVALUATION, AppUtils.mergeWhitespace(request.getEvaluation())),
                         set(DbKeyConfig.SOURCE_CV_ID, request.getSourceCV()),
                         set(DbKeyConfig.SOURCE_CV_NAME, dictionaryNames.getSourceCVName()),
                         set(DbKeyConfig.USERNAME, request.getHrRef()),
@@ -742,7 +741,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername()),
                         set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                         set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
-                        set(DbKeyConfig.LEVEL_SCHOOL, request.getLevelSchool()),
+                        set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
                         set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
                         set(DbKeyConfig.MATCH, "")
                 );

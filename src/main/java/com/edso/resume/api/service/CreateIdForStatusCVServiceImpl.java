@@ -4,6 +4,7 @@ import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.StatusCV;
 import com.edso.resume.api.domain.request.CreateIdForStatusCVRequest;
 import com.edso.resume.api.domain.response.StatusCVResponse;
+import com.edso.resume.lib.common.AppUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -24,7 +25,7 @@ public class CreateIdForStatusCVServiceImpl extends BaseService implements Creat
                     response.setFailed("Vui lòng nhập vòng tuyển dụng!");
                     return response;
                 }
-                if (request.getName().toLowerCase().trim().equals(statusCV.getName().toLowerCase())) {
+                if (AppUtils.mergeWhitespace(request.getName().toLowerCase()).equals(AppUtils.mergeWhitespace(statusCV.getName().toLowerCase()))) {
                     response.setFailed("Vòng tuyển dụng này đã tồn tại!");
                     return response;
                 }

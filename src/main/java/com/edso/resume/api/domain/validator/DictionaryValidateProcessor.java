@@ -43,18 +43,17 @@ public class DictionaryValidateProcessor implements Runnable {
         try {
             switch (type) {
                 case ThreadConfig.LIST_USER: {
-                    List<Document> list = new ArrayList<>();
                     List<String> listString = (List<String>) id;
-                    for (String username : listString) {
-                        Bson cond = Filters.eq(DbKeyConfig.USERNAME, username);
-                        Document doc = db.findOne(CollectionNameDefs.COLL_USER, cond);
-                        if (doc == null) {
-                            result.setResult(false);
-                            result.setName("Không tồn tại username này!");
-                            return;
-                        }
+                    List<Document> lst = db.findAll(CollectionNameDefs.COLL_USER, Filters.in(DbKeyConfig.USERNAME, listString), null, 0, 0);
+                    if (lst.size() != listString.size()) {
+                        result.setResult(false);
+                        result.setName("Không tồn tại username này!");
+                        return;
+                    }
+                    List<Document> list = new ArrayList<>();
+                    for (Document doc : lst) {
                         Document document = new Document();
-                        document.append(DbKeyConfig.USERNAME, username);
+                        document.append(DbKeyConfig.USERNAME, doc.get(DbKeyConfig.USERNAME));
                         document.append(DbKeyConfig.FULL_NAME, doc.get(DbKeyConfig.FULL_NAME));
                         document.append(DbKeyConfig.EMAIL, doc.get(DbKeyConfig.EMAIL));
                         list.add(document);
@@ -65,14 +64,11 @@ public class DictionaryValidateProcessor implements Runnable {
                 }
                 case ThreadConfig.LIST_TAG: {
                     List<String> listString = (List<String>) id;
-                    for (String id : listString) {
-                        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                        Document doc = db.findOne(CollectionNameDefs.COLL_TAG, cond);
-                        if (doc == null) {
-                            result.setResult(false);
-                            result.setName("Không tồn tại thẻ này!");
-                            return;
-                        }
+                    List<Document> list = db.findAll(CollectionNameDefs.COLL_TAG, Filters.in(DbKeyConfig.ID, listString), null, 0, 0);
+                    if (list.size() != listString.size()) {
+                        result.setResult(false);
+                        result.setName("Không tồn tại thẻ này!");
+                        return;
                     }
                     result.setResult(true);
                     return;
@@ -96,18 +92,17 @@ public class DictionaryValidateProcessor implements Runnable {
                     return;
                 }
                 case ThreadConfig.LIST_SKILL: {
-                    List<Document> list = new ArrayList<>();
                     List<String> listString = (List<String>) id;
-                    for (String id : listString) {
-                        Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                        Document doc = db.findOne(CollectionNameDefs.COLL_SKILL, cond);
-                        if (doc == null) {
-                            result.setResult(false);
-                            result.setName("Không tồn tại kỹ năng công việc này!");
-                            return;
-                        }
+                    List<Document> lst = db.findAll(CollectionNameDefs.COLL_TAG, Filters.in(DbKeyConfig.ID, listString), null, 0, 0);
+                    if (lst.size() != listString.size()) {
+                        result.setResult(false);
+                        result.setName("Không tồn tại kỹ năng công việc này!");
+                        return;
+                    }
+                    List<Document> list = new ArrayList<>();
+                    for (Document doc : lst) {
                         Document document = new Document();
-                        document.append(DbKeyConfig.ID, id);
+                        document.append(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
                         document.append(DbKeyConfig.NAME, doc.get(DbKeyConfig.NAME));
                         list.add(document);
                     }
@@ -291,7 +286,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return Filters.eq(DbKeyConfig.PHONE_NUMBER, this.id);
             }
             case ThreadConfig.RECRUITMENT_NAME: {
-                return Filters.eq(DbKeyConfig.TITLE, this.id);
+                return Filters.eq(DbKeyConfig.NAME_EQUAL, this.id);
             }
             case ThreadConfig.FOLLOWER: {
                 return Filters.eq(DbKeyConfig.FOLLOWERS, this.id);

@@ -9,7 +9,7 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 
 public interface ReasonRejectService {
-    GetArrayResponse<ReasonRejectEntity> findAll(HeaderInfo info, Integer page, Integer size);
+    GetArrayResponse<ReasonRejectEntity> findAll(HeaderInfo info, String name, Integer page, Integer size);
 
     BaseResponse createReasonReject(CreateReasonRejectRequest request);
 

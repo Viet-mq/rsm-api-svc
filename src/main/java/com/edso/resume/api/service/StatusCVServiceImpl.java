@@ -37,7 +37,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     public GetArrayResponse<StatusCVEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -88,7 +88,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     public GetArrayResponse<StatusCVEntity> findAllStatusCVForRecruitment(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -117,8 +117,8 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
 
         BaseResponse response = new BaseResponse();
         try {
-            String name = request.getName().trim();
-            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            String name = request.getName();
+            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_STATUS_CV, c);
 
             if (count > 0) {
@@ -144,10 +144,11 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
 
             Document statusCV = new Document();
             statusCV.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            statusCV.append(DbKeyConfig.NAME, name);
+            statusCV.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
             statusCV.append(DbKeyConfig.CHILDREN, list);
             statusCV.append(DbKeyConfig.DELETE, false);
-            statusCV.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            statusCV.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
+            statusCV.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             statusCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -181,7 +182,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             }
 
             String name = request.getName().trim();
-            Document obj = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            Document obj = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {
@@ -208,15 +209,16 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             }
 
             Bson updateRecruitment = Updates.combine(
-                    Updates.set(DbKeyConfig.RECRUITMENT_STATUS_CV_NAME, request.getName())
+                    Updates.set(DbKeyConfig.RECRUITMENT_STATUS_CV_NAME, AppUtils.mergeWhitespace(name))
             );
             db.update(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.RECRUITMENT_STATUS_CV_ID, request.getId()), updateRecruitment, true);
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, name),
+                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
                     Updates.set(DbKeyConfig.CHILDREN, list),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

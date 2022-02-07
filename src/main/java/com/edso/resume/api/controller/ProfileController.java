@@ -286,10 +286,10 @@ public class ProfileController extends BaseController {
     }
 
     @PostMapping("/delete-tag")
-    public BaseResponse deleteTag(@RequestHeader Map<String, String> headers, @RequestBody DeleteTagProfileRequest request) {
+    public BaseResponse deleteTagProfile(@RequestHeader Map<String, String> headers, @RequestBody DeleteTagProfileRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>deleteTag u: {}, req: {}", headerInfo, request);
+        logger.info("=>deleteTagProfile u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
@@ -299,7 +299,7 @@ public class ProfileController extends BaseController {
                 response = profileService.deleteTag(request);
             }
         }
-        logger.info("<=deleteTag u: {}, req: {}, resp: {}", headerInfo, request, response);
+        logger.info("<=deleteTagProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 
