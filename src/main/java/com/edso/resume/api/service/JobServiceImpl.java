@@ -36,7 +36,7 @@ public class JobServiceImpl extends BaseService implements JobService {
     public GetArrayResponse<CategoryEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
@@ -65,7 +65,7 @@ public class JobServiceImpl extends BaseService implements JobService {
         BaseResponse response = new BaseResponse();
         try {
             String name = request.getName().trim();
-            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_JOB, c);
 
             if (count > 0) {
@@ -75,8 +75,9 @@ public class JobServiceImpl extends BaseService implements JobService {
 
             Document job = new Document();
             job.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            job.append(DbKeyConfig.NAME, name);
-            job.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            job.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
+            job.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
+            job.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             job.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             job.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             job.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -111,8 +112,8 @@ public class JobServiceImpl extends BaseService implements JobService {
                 return response;
             }
 
-            String name = request.getName().trim();
-            Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            String name = request.getName();
+            Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {
@@ -123,14 +124,15 @@ public class JobServiceImpl extends BaseService implements JobService {
 
             Bson idJob = Filters.eq(DbKeyConfig.JOB_ID, request.getId());
             Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.JOB_NAME, request.getName())
+                    Updates.set(DbKeyConfig.JOB_NAME, AppUtils.mergeWhitespace(name))
             );
             db.update(CollectionNameDefs.COLL_PROFILE, idJob, updateProfile, true);
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, name),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

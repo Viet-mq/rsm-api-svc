@@ -4,6 +4,7 @@ import com.edso.resume.api.domain.entities.*;
 import com.edso.resume.api.domain.request.CandidateRequest;
 import com.edso.resume.api.domain.request.PresenterRequest;
 import com.edso.resume.api.domain.request.RecruitmentCouncilRequest;
+import com.edso.resume.api.domain.request.SendEmailRequest;
 import com.google.gson.Gson;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -11,7 +12,9 @@ import com.rabbitmq.client.Connection;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 @Component
 public class RabbitMQOnlineActions extends BaseAction {
@@ -39,271 +42,272 @@ public class RabbitMQOnlineActions extends BaseAction {
         this.rabbitMQAccess = rabbitMQAccess;
     }
 
-    public void publishEmailToRabbit(String email, String time) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishEmailToRabbit(String email, String time) throws IOException, TimeoutException {
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "fanout", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "fanout", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            EmailMessageEntity messageEntity = new EmailMessageEntity();
-            messageEntity.setToEmail(email);
-            messageEntity.setMessage("Bạn có cuộc phỏng tại công ty Edsolabs\n" +
-                    "Tại: No 9, Lane 4, Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội\n" +
-                    "Thời gian: " + time);
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(messageEntity).getBytes());
-            channel.close();
+        EmailMessageEntity messageEntity = new EmailMessageEntity();
+        messageEntity.setToEmail(email);
+        messageEntity.setMessage("Bạn có cuộc phỏng tại công ty Edsolabs\n" +
+                "Tại: No 9, Lane 4, Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội\n" +
+                "Thời gian: " + time);
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(messageEntity).getBytes());
+        channel.close();
 
-            logger.info("=>publishEmailToRabbit toEmail: {}, time: {}", email, time);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        logger.info("=>publishEmailToRabbit toEmail: {}, time: {}", email, time);
 
     }
 
-    public void publishCalendarCandidateEmail(String type, CandidateRequest candidate, List<String> listPath, String calendarId, String historyId, String profileId) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishEmails(String type, SendEmailRequest request, List<String> listPath, List<IdEntity> ids) throws IOException, TimeoutException {
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            Email email = Email.builder()
-                    .type(type)
-                    .calendarId(calendarId)
-                    .profileId(profileId)
-                    .historyId(historyId)
-                    .subject(candidate.getSubjectCandidate())
-                    .content(candidate.getContentCandidate())
-                    .files(listPath)
-                    .build();
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
-            channel.close();
+        Emails emails = Emails.builder()
+                .type(type)
+                .ids(ids)
+                .subject(request.getSubject())
+                .content(request.getContent())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
+        channel.close();
 
-            logger.info("=>publishCandidateEmail email: {}", email);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        logger.info("=>publishEmails emails: {}", emails);
     }
 
-    public void publishCandidateEmail(String type, CandidateRequest candidate, List<String> listPath, String historyId, String profileId) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishCalendarCandidateEmail(String type, CandidateRequest candidate, List<String> listPath, String calendarId, String historyId, String profileId) throws IOException, TimeoutException {
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            Email email = Email.builder()
-                    .type(type)
-                    .profileId(profileId)
-                    .historyId(historyId)
-                    .subject(candidate.getSubjectCandidate())
-                    .content(candidate.getContentCandidate())
-                    .files(listPath)
-                    .build();
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
-            channel.close();
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            logger.info("=>publishCandidateEmail email: {}", email);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        Email email = Email.builder()
+                .type(type)
+                .calendarId(calendarId)
+                .profileId(profileId)
+                .historyId(historyId)
+                .subject(candidate.getSubjectCandidate())
+                .content(candidate.getContentCandidate())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+        channel.close();
+
+        logger.info("=>publishCandidateEmail email: {}", email);
     }
 
-    public void publishCandidateEmails(String type, CandidateRequest candidate, List<String> listPath, List<IdEntity> ids) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishCandidateEmail(String type, CandidateRequest candidate, List<String> listPath, String historyId, String profileId) throws IOException, TimeoutException {
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            Emails emails = Emails.builder()
-                    .type(type)
-                    .ids(ids)
-                    .subject(candidate.getSubjectCandidate())
-                    .content(candidate.getContentCandidate())
-                    .files(listPath)
-                    .build();
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
-            channel.close();
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            logger.info("=>publishCandidateEmail emails: {}", emails);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        Email email = Email.builder()
+                .type(type)
+                .profileId(profileId)
+                .historyId(historyId)
+                .subject(candidate.getSubjectCandidate())
+                .content(candidate.getContentCandidate())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+        channel.close();
+
+        logger.info("=>publishCandidateEmail email: {}", email);
+
     }
 
-    public void publishRecruitmentCouncilEmail(String type, RecruitmentCouncilRequest recruitmentCouncil, List<String> listPath, String historyId, String calendarId) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishCandidateEmails(String type, CandidateRequest candidate, List<String> listPath, List<IdEntity> ids) throws IOException, TimeoutException {
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            EmailRecruitmentCouncil email = EmailRecruitmentCouncil.builder()
-                    .type(type)
-                    .calendarId(calendarId)
-                    .historyId(historyId)
-                    .subject(recruitmentCouncil.getSubjectRecruitmentCouncil())
-                    .content(recruitmentCouncil.getContentRecruitmentCouncil())
-                    .files(listPath)
-                    .build();
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
-            channel.close();
+        Emails emails = Emails.builder()
+                .type(type)
+                .ids(ids)
+                .subject(candidate.getSubjectCandidate())
+                .content(candidate.getContentCandidate())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
+        channel.close();
 
-            logger.info("=>publishRecruitmentCouncilEmail email: {}", email);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        logger.info("=>publishCandidateEmail emails: {}", emails);
     }
 
-    public void publishRecruitmentCouncilEmails(String type, RecruitmentCouncilRequest recruitmentCouncil, List<String> listPath, List<IdEntity> ids) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishRecruitmentCouncilEmail(String type, RecruitmentCouncilRequest recruitmentCouncil, List<String> listPath, String historyId, String calendarId) throws IOException, TimeoutException {
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            Emails emails = Emails.builder()
-                    .type(type)
-                    .ids(ids)
-                    .subject(recruitmentCouncil.getSubjectRecruitmentCouncil())
-                    .content(recruitmentCouncil.getContentRecruitmentCouncil())
-                    .files(listPath)
-                    .build();
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
-            channel.close();
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            logger.info("=>publishRecruitmentCouncilEmail emails: {}", emails);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        EmailRecruitmentCouncil email = EmailRecruitmentCouncil.builder()
+                .type(type)
+                .calendarId(calendarId)
+                .historyId(historyId)
+                .subject(recruitmentCouncil.getSubjectRecruitmentCouncil())
+                .content(recruitmentCouncil.getContentRecruitmentCouncil())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+        channel.close();
+
+        logger.info("=>publishRecruitmentCouncilEmail email: {}", email);
     }
 
-    public void publishCalendarPresenterEmail(String type, PresenterRequest presenter, List<String> listPath, String calendarId, String historyId, String profileId) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishRecruitmentCouncilEmails(String type, RecruitmentCouncilRequest recruitmentCouncil, List<String> listPath, List<IdEntity> ids) throws IOException, TimeoutException {
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            Email email = Email.builder()
-                    .type(type)
-                    .calendarId(calendarId)
-                    .profileId(profileId)
-                    .historyId(historyId)
-                    .subject(presenter.getSubjectPresenter())
-                    .content(presenter.getContentPresenter())
-                    .files(listPath)
-                    .build();
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
-            channel.close();
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            logger.info("=>publishPresenterEmail email: {}", email);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        Emails emails = Emails.builder()
+                .type(type)
+                .ids(ids)
+                .subject(recruitmentCouncil.getSubjectRecruitmentCouncil())
+                .content(recruitmentCouncil.getContentRecruitmentCouncil())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
+        channel.close();
+
+        logger.info("=>publishRecruitmentCouncilEmail emails: {}", emails);
+
     }
 
-    public void publishPresenterEmail(String type, PresenterRequest presenter, List<String> listPath, String historyId, String profileId) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishCalendarPresenterEmail(String type, PresenterRequest presenter, List<String> listPath, String calendarId, String historyId, String profileId) throws IOException, TimeoutException {
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            Email email = Email.builder()
-                    .type(type)
-                    .profileId(profileId)
-                    .historyId(historyId)
-                    .subject(presenter.getSubjectPresenter())
-                    .content(presenter.getContentPresenter())
-                    .files(listPath)
-                    .build();
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
-            channel.close();
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            logger.info("=>publishPresenterEmail email: {}", email);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        Email email = Email.builder()
+                .type(type)
+                .calendarId(calendarId)
+                .profileId(profileId)
+                .historyId(historyId)
+                .subject(presenter.getSubjectPresenter())
+                .content(presenter.getContentPresenter())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+        channel.close();
+
+        logger.info("=>publishPresenterEmail email: {}", email);
+
     }
 
-    public void publishPresenterEmails(String type, PresenterRequest presenter, List<String> listPath, List<IdEntity> ids) {
-        try {
-            Connection connection = rabbitMQAccess.getConnection();
-            Channel channel = connection.createChannel();
+    public void publishPresenterEmail(String type, PresenterRequest presenter, List<String> listPath, String historyId, String profileId) throws IOException, TimeoutException {
 
-            //Neu khong co thi tao
-            channel.exchangeDeclare(exchangeEmail, "direct", true);
-            channel.queueDeclare(queueEmail, true, false, false, null);
-            channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
 
-            Emails emails = Emails.builder()
-                    .type(type)
-                    .ids(ids)
-                    .subject(presenter.getSubjectPresenter())
-                    .content(presenter.getContentPresenter())
-                    .files(listPath)
-                    .build();
-            BasicProperties messageProperties = new BasicProperties.Builder()
-                    .contentType("application/json")
-                    .build();
-            channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
-            channel.close();
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
 
-            logger.info("=>publishPresenterEmail emails: {}", emails);
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        }
+        Email email = Email.builder()
+                .type(type)
+                .profileId(profileId)
+                .historyId(historyId)
+                .subject(presenter.getSubjectPresenter())
+                .content(presenter.getContentPresenter())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(email).getBytes());
+        channel.close();
+
+        logger.info("=>publishPresenterEmail email: {}", email);
+
+    }
+
+    public void publishPresenterEmails(String type, PresenterRequest presenter, List<String> listPath, List<IdEntity> ids) throws IOException, TimeoutException {
+
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
+
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+        Emails emails = Emails.builder()
+                .type(type)
+                .ids(ids)
+                .subject(presenter.getSubjectPresenter())
+                .content(presenter.getContentPresenter())
+                .files(listPath)
+                .build();
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emails).getBytes());
+        channel.close();
+
+        logger.info("=>publishPresenterEmail emails: {}", emails);
+
     }
 
 

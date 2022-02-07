@@ -132,8 +132,8 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
                 }
             }
 
-            String name = request.getName().trim();
-            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            String name = request.getName();
+            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, c);
 
             if (count > 0) {
@@ -143,12 +143,13 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
 
             Document department = new Document();
             department.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            department.append(DbKeyConfig.NAME, request.getName());
+            department.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
             department.append(DbKeyConfig.DESCRIPTION, request.getDescription());
             department.append(DbKeyConfig.COMPANY_ID, null);
             department.append(DbKeyConfig.PARENT_ID, idParent);
             department.append(DbKeyConfig.PARENT_NAME, parentName);
-            department.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            department.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            department.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
             department.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             department.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -179,8 +180,8 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
                 return response;
             }
 
-            String name = request.getName().trim();
-            Document obj = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            String name = request.getName();
+            Document obj = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {
@@ -191,7 +192,7 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
 
             Bson idJobLevel = Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId());
             Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, request.getName())
+                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, AppUtils.mergeWhitespace(name))
             );
             db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
 
@@ -202,10 +203,11 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
                     String parentName = AppUtils.parseString(doc.get(DbKeyConfig.NAME));
                     // update roles
                     updates = Updates.combine(
-                            Updates.set(DbKeyConfig.NAME, request.getName()),
+                            Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
                             Updates.set(DbKeyConfig.DESCRIPTION, request.getDescription()),
                             Updates.set(DbKeyConfig.PARENT_NAME, parentName),
-                            Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                            Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
+                            Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                             Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                             Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
                     );
@@ -219,7 +221,8 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
                     updates = Updates.combine(
                             Updates.set(DbKeyConfig.NAME, request.getName()),
                             Updates.set(DbKeyConfig.DESCRIPTION, request.getDescription()),
-                            Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                            Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
+                            Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                             Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                             Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
                     );

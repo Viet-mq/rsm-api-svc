@@ -38,7 +38,7 @@ public class SkillServiceImpl extends BaseService implements SkillService {
     public GetArrayResponse<SkillEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
 //        c.add(Filters.eq(DbKeyConfig.STATUS, NameConfig.DANG_SU_DUNG));
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
@@ -69,8 +69,8 @@ public class SkillServiceImpl extends BaseService implements SkillService {
 
         BaseResponse response = new BaseResponse();
         try {
-            String name = request.getName().trim();
-            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            String name = request.getName();
+            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_SKILL, c);
 
             if (count > 0) {
@@ -78,29 +78,30 @@ public class SkillServiceImpl extends BaseService implements SkillService {
                 return response;
             }
 
-            List<Document> jobs = null;
-            if (request.getJobs() != null && !request.getJobs().isEmpty()) {
-                for (String jobId : request.getJobs()) {
-                    Bson cond = Filters.eq(DbKeyConfig.ID, jobId);
-                    Document doc = db.findOne(CollectionNameDefs.COLL_JOB, cond);
-                    if (doc == null) {
-                        response.setResult(ErrorCodeDefs.JOB, "Không tồn tại vị trí công việc này");
-                        return response;
-                    }
-                    jobs = new ArrayList<>();
-                    Document job = new Document();
-                    job.append(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
-                    job.append(DbKeyConfig.NAME, doc.get(DbKeyConfig.NAME));
-                    jobs.add(job);
-                }
-            }
+//            List<Document> jobs = null;
+//            if (request.getJobs() != null && !request.getJobs().isEmpty()) {
+//                for (String jobId : request.getJobs()) {
+//                    Bson cond = Filters.eq(DbKeyConfig.ID, jobId);
+//                    Document doc = db.findOne(CollectionNameDefs.COLL_JOB, cond);
+//                    if (doc == null) {
+//                        response.setResult(ErrorCodeDefs.JOB, "Không tồn tại vị trí công việc này");
+//                        return response;
+//                    }
+//                    jobs = new ArrayList<>();
+//                    Document job = new Document();
+//                    job.append(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+//                    job.append(DbKeyConfig.NAME, doc.get(DbKeyConfig.NAME));
+//                    jobs.add(job);
+//                }
+//            }
 
             Document skill = new Document();
             skill.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            skill.append(DbKeyConfig.NAME, name);
+            skill.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
 //            skill.append(DbKeyConfig.JOBS, jobs);
 //            skill.append(DbKeyConfig.STATUS, NameConfig.DANG_SU_DUNG);
-            skill.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            skill.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
+            skill.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             skill.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             skill.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             skill.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -136,7 +137,7 @@ public class SkillServiceImpl extends BaseService implements SkillService {
             }
 
             String name = request.getName().trim();
-            Document obj = db.findOne(CollectionNameDefs.COLL_SKILL, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            Document obj = db.findOne(CollectionNameDefs.COLL_SKILL, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {
@@ -145,35 +146,36 @@ public class SkillServiceImpl extends BaseService implements SkillService {
                 }
             }
 
-            List<Document> jobs = null;
-            if (request.getJobs() != null && !request.getJobs().isEmpty()) {
-                for (String jobId : request.getJobs()) {
-                    Bson con = Filters.eq(DbKeyConfig.ID, jobId);
-                    Document doc = db.findOne(CollectionNameDefs.COLL_JOB, con);
-                    if (doc == null) {
-                        response.setResult(ErrorCodeDefs.JOB, "Không tồn tại vị trí công việc này");
-                        return response;
-                    }
-                    jobs = new ArrayList<>();
-                    Document job = new Document();
-                    job.append(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
-                    job.append(DbKeyConfig.NAME, doc.get(DbKeyConfig.NAME));
-                    jobs.add(job);
-                }
-            }
+//            List<Document> jobs = null;
+//            if (request.getJobs() != null && !request.getJobs().isEmpty()) {
+//                for (String jobId : request.getJobs()) {
+//                    Bson con = Filters.eq(DbKeyConfig.ID, jobId);
+//                    Document doc = db.findOne(CollectionNameDefs.COLL_JOB, con);
+//                    if (doc == null) {
+//                        response.setResult(ErrorCodeDefs.JOB, "Không tồn tại vị trí công việc này");
+//                        return response;
+//                    }
+//                    jobs = new ArrayList<>();
+//                    Document job = new Document();
+//                    job.append(DbKeyConfig.ID, doc.get(DbKeyConfig.ID));
+//                    job.append(DbKeyConfig.NAME, doc.get(DbKeyConfig.NAME));
+//                    jobs.add(job);
+//                }
+//            }
 
             Bson idSkill = Filters.eq(DbKeyConfig.SKILL_ID, request.getId());
             Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.SKILL_NAME, request.getName())
+                    Updates.set(DbKeyConfig.SKILL_NAME, AppUtils.mergeWhitespace(name))
             );
             db.update(CollectionNameDefs.COLL_PROFILE, idSkill, updateProfile, true);
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, name),
+                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
 //                    Updates.set(DbKeyConfig.JOBS, jobs),
 //                    Updates.set(DbKeyConfig.STATUS, request.getStatus()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

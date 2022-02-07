@@ -193,7 +193,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             if (!Strings.isNullOrEmpty(request.getTalentPool())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, request.getTitle(), db, this));
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             if (request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
@@ -250,7 +250,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             // conventions
             Document recruitment = new Document();
             recruitment.append(DbKeyConfig.ID, idProfile);
-            recruitment.append(DbKeyConfig.TITLE, request.getTitle());
+            recruitment.append(DbKeyConfig.TITLE, AppUtils.mergeWhitespace(request.getTitle()));
             recruitment.append(DbKeyConfig.JOB_ID, request.getJob());
             recruitment.append(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName());
             recruitment.append(DbKeyConfig.ADDRESS_ID, request.getAddress());
@@ -271,6 +271,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess);
             recruitment.append(DbKeyConfig.STATUS, "Đang tuyển dụng");
             recruitment.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getTitle()));
+            recruitment.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()));
             recruitment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             recruitment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -308,7 +309,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
-            DictionaryValidateProcessor dictionaryValidateProcessor = new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, request.getTitle(), db, this);
+            DictionaryValidateProcessor dictionaryValidateProcessor = new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this);
             dictionaryValidateProcessor.setRecruitmentId(request.getId());
             rs.add(dictionaryValidateProcessor);
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getId(), db, this));
@@ -367,7 +368,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.ID, request.getId()),
-                    Updates.set(DbKeyConfig.TITLE, request.getTitle()),
+                    Updates.set(DbKeyConfig.TITLE, AppUtils.mergeWhitespace(request.getTitle())),
                     Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
                     Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                     Updates.set(DbKeyConfig.ADDRESS_ID, request.getAddress()),
@@ -388,6 +389,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess),
                     Updates.set(DbKeyConfig.STATUS, request.getStatus()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getTitle())),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getTitle().toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );

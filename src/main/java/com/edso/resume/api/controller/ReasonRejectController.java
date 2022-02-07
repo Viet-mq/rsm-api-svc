@@ -25,12 +25,13 @@ public class ReasonRejectController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAllReasonReject(
             @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllReasonReject u: {}, page: {}, size: {}", headerInfo, page, size);
-        GetArrayResponse<ReasonRejectEntity> resp = reasonRejectService.findAll(headerInfo, page, size);
-        logger.info("<=findAllReasonReject u: {}, page: {}, size: {}, resp: {}", headerInfo, page, size, resp.info());
+        logger.info("=>findAllReasonReject u: {}, name:{}, page: {}, size: {}", headerInfo, name, page, size);
+        GetArrayResponse<ReasonRejectEntity> resp = reasonRejectService.findAll(headerInfo, name, page, size);
+        logger.info("<=findAllReasonReject u: {}, name:{}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
         return resp;
     }
 

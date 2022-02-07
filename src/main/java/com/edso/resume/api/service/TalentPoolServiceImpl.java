@@ -40,7 +40,7 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
         try {
             List<Bson> c = new ArrayList<>();
             if (!Strings.isNullOrEmpty(name)) {
-                c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+                c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
             }
             if (!Strings.isNullOrEmpty(id)) {
                 c.add(Filters.eq(DbKeyConfig.ID, id));
@@ -81,8 +81,8 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
     public BaseResponse createTalentPool(CreateTalentPoolRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String name = request.getName().trim();
-            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            String name = request.getName();
+            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_TALENT_POOL, c);
 
             if (count > 0) {
@@ -102,11 +102,12 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
 
             Document talentPool = new Document();
             talentPool.append(DbKeyConfig.ID, AppUtils.slugify(name));
-            talentPool.append(DbKeyConfig.NAME, name);
+            talentPool.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
             talentPool.append(DbKeyConfig.MANAGERS, request.getManagers());
             talentPool.append(DbKeyConfig.DESCRIPTION, request.getDescription());
             talentPool.append(DbKeyConfig.NUMBER_OF_PROFILE, 0);
-            talentPool.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            talentPool.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
+            talentPool.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             talentPool.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             talentPool.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             talentPool.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -147,8 +148,8 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
             }
 
             //Check if the name already exists or not
-            String name = request.getName().trim();
-            Document obj = db.findOne(CollectionNameDefs.COLL_TALENT_POOL, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            String name = request.getName();
+            Document obj = db.findOne(CollectionNameDefs.COLL_TALENT_POOL, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {
@@ -169,8 +170,9 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
 
             //update
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, name),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.MANAGERS, request.getManagers()),
                     Updates.set(DbKeyConfig.DESCRIPTION, request.getDescription()),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
