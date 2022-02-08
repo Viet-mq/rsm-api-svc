@@ -65,7 +65,7 @@ public class TagServiceImpl extends BaseService implements TagService {
     public BaseResponse createTag(CreateTagRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            Document name = db.findOne(CollectionNameDefs.COLL_TAG, Filters.eq(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getName())));
+            Document name = db.findOne(CollectionNameDefs.COLL_TAG, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getName().toLowerCase())));
             if (name != null) {
                 response.setFailed("Tên thẻ này đã tồn tại!");
                 return response;

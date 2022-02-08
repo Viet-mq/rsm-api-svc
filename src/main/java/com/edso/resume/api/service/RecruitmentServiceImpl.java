@@ -132,6 +132,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .salaryDescription(AppUtils.parseString(doc.get(DbKeyConfig.SALARY_DESCRIPTION)))
                         .interviewer(userEntityList)
                         .interviewProcess(roundEntityList)
+                        .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
                         .build();
                 rows.add(recruitment);
             }
@@ -247,6 +248,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 interviewProcess.add(round);
             }
 
+            Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, request.getInfo().getUsername()));
+
             // conventions
             Document recruitment = new Document();
             recruitment.append(DbKeyConfig.ID, idProfile);
@@ -274,6 +277,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()));
             recruitment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             recruitment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            recruitment.append(DbKeyConfig.FULL_NAME, AppUtils.parseString(user.get(DbKeyConfig.FULL_NAME)));
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_RECRUITMENT, recruitment);
@@ -363,6 +367,12 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 round.append(DbKeyConfig.DELETE, roundEntity.getIsDragDisabled());
                 round.append(DbKeyConfig.NEW, false);
                 interviewProcess.add(round);
+
+                //update profile
+                Bson update = Updates.combine(
+                        Updates.set(DbKeyConfig.STATUS_CV_NAME, roundEntity.getName())
+                );
+                db.update(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.RECRUITMENT_ID, request.getId()), Filters.eq(DbKeyConfig.STATUS_CV_ID, roundEntity.getId())), update);
             }
 
             // update roles
@@ -394,6 +404,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
             db.update(CollectionNameDefs.COLL_RECRUITMENT, cond, updates, true);
+
             response.setSuccess();
             return response;
 
@@ -457,8 +468,10 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             if (statusCV != null) {
                 for (Document document : statusCV) {
                     if (AppUtils.parseString(document.get(DbKeyConfig.ID)).equals(request.getStatusCVId()) && AppUtils.parseLong(document.get(DbKeyConfig.TOTAL)) == 0) {
-                        response.setSuccess();
-                        return response;
+                        if (!(boolean) document.get(DbKeyConfig.DELETE)) {
+                            response.setSuccess();
+                            return response;
+                        }
                     }
                 }
             }

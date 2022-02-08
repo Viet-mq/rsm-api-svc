@@ -124,7 +124,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
 
             Bson idSchool = Filters.eq(DbKeyConfig.SCHOOL_ID, request.getId());
             Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.SCHOOL_NAME, AppUtils.mergeWhitespace(name.toLowerCase()))
+                    Updates.set(DbKeyConfig.SCHOOL_NAME, AppUtils.mergeWhitespace(name))
             );
             db.update(CollectionNameDefs.COLL_PROFILE, idSchool, updateProfile, true);
 
@@ -133,7 +133,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.mergeWhitespace(name.toLowerCase())),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
