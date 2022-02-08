@@ -29,6 +29,7 @@ public class RecruitmentEntity {
     private String status;
     private Long createAt;
     private String createBy;
+    private String fullName;
     private List<UserEntity> interviewer;
     private List<RoundEntity> interviewProcess;
 }

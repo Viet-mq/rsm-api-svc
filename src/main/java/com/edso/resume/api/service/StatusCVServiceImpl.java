@@ -246,10 +246,11 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             for (StatusCV statusCV : list) {
                 Document status = new Document();
                 status.append(DbKeyConfig.ID, statusCV.getId());
-                status.append(DbKeyConfig.NAME, statusCV.getName());
+                status.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(statusCV.getName()));
 //                status.append(DbKeyConfig.CHILDREN, list);
                 status.append(DbKeyConfig.DELETE, statusCV.getIsDragDisabled());
-                status.append(DbKeyConfig.NAME_SEARCH, statusCV.getName().toLowerCase());
+                status.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(statusCV.getName()));
+                status.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(statusCV.getName().toLowerCase()));
                 status.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                 status.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
                 documentList.add(status);

@@ -175,7 +175,7 @@ public class SkillServiceImpl extends BaseService implements SkillService {
 //                    Updates.set(DbKeyConfig.JOBS, jobs),
 //                    Updates.set(DbKeyConfig.STATUS, request.getStatus()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.mergeWhitespace(name.toLowerCase())),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
