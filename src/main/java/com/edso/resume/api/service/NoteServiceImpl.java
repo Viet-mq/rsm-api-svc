@@ -32,7 +32,6 @@ import java.util.regex.Pattern;
 @Service
 public class NoteServiceImpl extends BaseService implements NoteService, IDictionaryValidator {
 
-    private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
 
     @Value("${note.serverPath}")
@@ -42,9 +41,8 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     @Value("${note.fileSize}")
     private Long fileSize;
 
-    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+    public NoteServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
-        this.historyService = historyService;
     }
 
     @Override
@@ -178,10 +176,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_NOTE_PROFILE, note);
             response.setSuccess();
-
-            //Insert history to DB
-            historyService.createHistory(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo());
-
             return response;
         } catch (Throwable ex) {
 
@@ -293,10 +287,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             );
             db.update(CollectionNameDefs.COLL_NOTE_PROFILE, cond, updates, true);
             response.setSuccess();
-
-            //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo());
-
             return response;
         } catch (Throwable ex) {
 
@@ -332,8 +322,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
 
             db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
-            //Insert history to DB
-            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo());
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);
