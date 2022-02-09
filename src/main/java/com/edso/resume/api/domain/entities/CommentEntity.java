@@ -9,6 +9,7 @@ public class CommentEntity {
     private String id;
     private String idProfile;
     private String content;
+    private String fullName;
     private String createAt;
     private String createBy;
     private String updateAt;

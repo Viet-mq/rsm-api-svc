@@ -12,15 +12,11 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class UpdateCommentRequest extends BaseAuthRequest {
     private String id;
-    private String idProfile;
     private String content;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
-        }
-        if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.ID_PROFILE, "Vui lòng nhập id profile");
         }
         if (Strings.isNullOrEmpty(content) || content.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.CONTENT, "Vui lòng nhập nội dung");

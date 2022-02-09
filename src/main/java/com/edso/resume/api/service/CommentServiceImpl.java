@@ -25,7 +25,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class CommentServiceImpl extends BaseService implements CommentService {
+public class CommentServiceImpl extends BaseService implements CommentService  {
     protected CommentServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
     }
@@ -57,6 +57,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .idProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)))
                         .content(AppUtils.parseString(doc.get(DbKeyConfig.CONTENT)))
+                        .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
                         .createAt(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_AT)))
                         .createBy(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)))
                         .updateAt(AppUtils.parseString(doc.get(DbKeyConfig.UPDATE_AT)))
@@ -83,11 +84,14 @@ public class CommentServiceImpl extends BaseService implements CommentService {
                 return response;
             }
 
+            Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, request.getInfo().getUsername()));
+
             Document job = new Document();
             job.append(DbKeyConfig.ID, UUID.randomUUID().toString());
             job.append(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent()));
             job.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             job.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            job.append(DbKeyConfig.FULL_NAME, user.get(DbKeyConfig.FULL_NAME));
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_COMMENT, job);
@@ -104,13 +108,6 @@ public class CommentServiceImpl extends BaseService implements CommentService {
     public BaseResponse updateCommentProfile(UpdateCommentRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.ID, request.getIdProfile()));
-
-            if (profile == null) {
-                response.setFailed("Id profile này không tồn tại!");
-                return response;
-            }
-
             Document comment = db.findOne(CollectionNameDefs.COLL_COMMENT, Filters.eq(DbKeyConfig.ID, request.getId()));
 
             if (comment == null) {
