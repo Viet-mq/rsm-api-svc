@@ -25,7 +25,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class CommentServiceImpl extends BaseService implements CommentService  {
+public class CommentServiceImpl extends BaseService implements CommentService {
     protected CommentServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
     }
