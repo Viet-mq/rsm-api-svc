@@ -131,7 +131,7 @@ public class SourceCVServiceImpl extends BaseService implements SourceCVService 
             Bson updateProfile = Updates.combine(
                     Updates.set(DbKeyConfig.SOURCE_CV_NAME, AppUtils.mergeWhitespace(name))
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, idSourceCV, updateProfile, true);
+            db.update(CollectionNameDefs.COLL_PROFILE, idSourceCV, updateProfile);
 
 
             // update roles

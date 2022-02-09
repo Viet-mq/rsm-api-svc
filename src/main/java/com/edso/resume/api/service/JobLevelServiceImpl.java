@@ -126,7 +126,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
             Bson updateProfile = Updates.combine(
                     Updates.set(DbKeyConfig.LEVEL_JOB_NAME, AppUtils.mergeWhitespace(name))
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
+            db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile);
 
 
             // update roles

@@ -126,7 +126,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
             Bson updateProfile = Updates.combine(
                     Updates.set(DbKeyConfig.SCHOOL_NAME, AppUtils.mergeWhitespace(name))
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, idSchool, updateProfile, true);
+            db.update(CollectionNameDefs.COLL_PROFILE, idSchool, updateProfile);
 
 
             // update roles
