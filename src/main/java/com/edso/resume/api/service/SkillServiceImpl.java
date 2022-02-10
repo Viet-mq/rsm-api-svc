@@ -167,7 +167,7 @@ public class SkillServiceImpl extends BaseService implements SkillService {
             Bson updateProfile = Updates.combine(
                     Updates.set(DbKeyConfig.SKILL_NAME, AppUtils.mergeWhitespace(name))
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, idSkill, updateProfile, true);
+            db.update(CollectionNameDefs.COLL_PROFILE, idSkill, updateProfile);
 
             // update roles
             Bson updates = Updates.combine(

@@ -208,11 +208,6 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
                 }
             }
 
-            Bson updateRecruitment = Updates.combine(
-                    Updates.set(DbKeyConfig.RECRUITMENT_STATUS_CV_NAME, AppUtils.mergeWhitespace(name))
-            );
-            db.update(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.RECRUITMENT_STATUS_CV_ID, request.getId()), updateRecruitment, true);
-
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),

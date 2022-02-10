@@ -66,15 +66,11 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
         AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
 
         if (lst != null) {
+            Set<String> recruitmentNames = new HashSet<>();
             Set<String> sourceCVNames = new HashSet<>();
             for (Document document : lst) {
                 Document id = (Document) document.get(DbKeyConfig._ID);
                 sourceCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)));
-            }
-
-            Set<String> recruitmentNames = new HashSet<>();
-            for (Document document : lst) {
-                Document id = (Document) document.get(DbKeyConfig._ID);
                 recruitmentNames.add(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)));
             }
 
@@ -144,14 +140,10 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
         AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
         Set<String> sourceCVNames = new HashSet<>();
         if (lst != null) {
-            for (Document document : lst) {
-                Document id = (Document) document.get(DbKeyConfig._ID);
-                sourceCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)));
-            }
-
             Set<String> recruitmentNames = new HashSet<>();
             for (Document document : lst) {
                 Document id = (Document) document.get(DbKeyConfig._ID);
+                sourceCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.SOURCE_CV_NAME)));
                 recruitmentNames.add(AppUtils.parseString(id.get(DbKeyConfig.RECRUITMENT_NAME)));
             }
 

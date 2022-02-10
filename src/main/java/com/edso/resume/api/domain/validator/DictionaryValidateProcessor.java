@@ -93,7 +93,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 }
                 case ThreadConfig.LIST_SKILL: {
                     List<String> listString = (List<String>) id;
-                    List<Document> lst = db.findAll(CollectionNameDefs.COLL_TAG, Filters.in(DbKeyConfig.ID, listString), null, 0, 0);
+                    List<Document> lst = db.findAll(CollectionNameDefs.COLL_SKILL, Filters.in(DbKeyConfig.ID, listString), null, 0, 0);
                     if (lst.size() != listString.size()) {
                         result.setResult(false);
                         result.setName("Không tồn tại kỹ năng công việc này!");

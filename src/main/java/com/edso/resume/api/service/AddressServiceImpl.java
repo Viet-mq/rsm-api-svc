@@ -36,7 +36,7 @@ public class AddressServiceImpl extends BaseService implements AddressService {
     public GetArrayResponse<AddressEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
@@ -65,7 +65,7 @@ public class AddressServiceImpl extends BaseService implements AddressService {
         BaseResponse response = new BaseResponse();
         try {
             String name = request.getName().trim();
-            Bson c = Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_ADDRESS, c);
 
             if (count > 0) {
@@ -75,9 +75,10 @@ public class AddressServiceImpl extends BaseService implements AddressService {
 
             Document address = new Document();
             address.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            address.append(DbKeyConfig.NAME, name);
-            address.append(DbKeyConfig.OFFICE_NAME, request.getOfficeName());
-            address.append(DbKeyConfig.NAME_SEARCH, name.toLowerCase());
+            address.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
+            address.append(DbKeyConfig.OFFICE_NAME, AppUtils.mergeWhitespace(request.getOfficeName()));
+            address.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
+            address.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             address.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             address.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             address.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -110,7 +111,7 @@ public class AddressServiceImpl extends BaseService implements AddressService {
             }
 
             String name = request.getName().trim();
-            Document obj = db.findOne(CollectionNameDefs.COLL_ADDRESS, Filters.eq(DbKeyConfig.NAME_SEARCH, name.toLowerCase()));
+            Document obj = db.findOne(CollectionNameDefs.COLL_ADDRESS, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {
@@ -121,22 +122,23 @@ public class AddressServiceImpl extends BaseService implements AddressService {
 
             Bson idAddress = Filters.eq(DbKeyConfig.ADDRESS_ID, request.getId());
             Bson updateRecruitment = Updates.combine(
-                    Updates.set(DbKeyConfig.ADDRESS_NAME, request.getName())
+                    Updates.set(DbKeyConfig.ADDRESS_NAME, AppUtils.mergeWhitespace(request.getName()))
             );
-            db.update(CollectionNameDefs.COLL_RECRUITMENT, idAddress, updateRecruitment, true);
+            db.update(CollectionNameDefs.COLL_RECRUITMENT, idAddress, updateRecruitment);
 
             Bson address = Filters.eq(DbKeyConfig.INTERVIEW_ADDRESS_ID, request.getId());
             Bson updateCalendar = Updates.combine(
-                    Updates.set(DbKeyConfig.INTERVIEW_ADDRESS_NAME, request.getName())
+                    Updates.set(DbKeyConfig.INTERVIEW_ADDRESS_NAME, AppUtils.mergeWhitespace(request.getName()))
             );
-            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, address, updateCalendar, true);
+            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, address, updateCalendar);
 
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, name),
-                    Updates.set(DbKeyConfig.OFFICE_NAME, request.getOfficeName()),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, name.toLowerCase()),
+                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
+                    Updates.set(DbKeyConfig.OFFICE_NAME, AppUtils.mergeWhitespace(request.getOfficeName())),
+                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
@@ -157,23 +159,26 @@ public class AddressServiceImpl extends BaseService implements AddressService {
         BaseResponse response = new BaseResponse();
         try {
             Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.ADDRESS_ID, request.getId()));
-            Document calendar = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.INTERVIEW_ADDRESS_ID, request.getId()));
-            if (recruitment == null && calendar == null) {
-                String id = request.getId();
-                Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                Document idDocument = db.findOne(CollectionNameDefs.COLL_ADDRESS, cond);
-
-                if (idDocument == null) {
-                    response.setFailed("Id này không tồn tại");
-                    return response;
-                }
-                db.delete(CollectionNameDefs.COLL_ADDRESS, cond);
-                response.setSuccess();
-                return response;
-            } else {
+            if (recruitment != null) {
                 response.setFailed("Không thể xóa địa chỉ này!");
                 return response;
             }
+            Document calendar = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.INTERVIEW_ADDRESS_ID, request.getId()));
+            if (calendar != null) {
+                response.setFailed("Không thể xóa địa chỉ này!");
+                return response;
+            }
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_ADDRESS, cond);
+
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+            db.delete(CollectionNameDefs.COLL_ADDRESS, cond);
+            response.setSuccess();
+            return response;
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);

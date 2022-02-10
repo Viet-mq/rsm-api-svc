@@ -194,7 +194,7 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
             Bson updateProfile = Updates.combine(
                     Updates.set(DbKeyConfig.DEPARTMENT_NAME, AppUtils.mergeWhitespace(name))
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile, true);
+            db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile);
 
             Bson updates;
             if (!Strings.isNullOrEmpty(idParent)) {
