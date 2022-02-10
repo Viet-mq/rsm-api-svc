@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.regex.Pattern;
 
 @Service
 public class NoteServiceImpl extends BaseService implements NoteService, IDictionaryValidator {
@@ -49,18 +48,9 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     public GetArrayResponse<NoteProfileEntity> findAllNote(HeaderInfo info, String idProfile, Integer page, Integer size) {
 
         GetArrayResponse<NoteProfileEntity> resp = new GetArrayResponse<>();
-
-        Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
-
-        if (idProfileDocument == null) {
-            resp.setFailed("Id profile không tồn tại");
-            return resp;
-        }
-
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
-            c.add(Filters.regex(DbKeyConfig.ID_PROFILE, Pattern.compile(idProfile)));
+            c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.FULL_NAME, 1);

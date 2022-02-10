@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Service
 public class CommentServiceImpl extends BaseService implements CommentService {
@@ -36,7 +35,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
         GetArrayResponse<CommentEntity> resp = new GetArrayResponse<>();
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
-            c.add(Filters.regex(DbKeyConfig.ID_PROFILE, Pattern.compile(idProfile)));
+            c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.FULL_NAME, 1);
