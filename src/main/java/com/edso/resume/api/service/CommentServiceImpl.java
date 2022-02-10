@@ -15,6 +15,7 @@ import com.edso.resume.lib.response.GetArrayResponse;
 import com.google.common.base.Strings;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.stereotype.Service;
@@ -33,15 +34,6 @@ public class CommentServiceImpl extends BaseService implements CommentService {
     @Override
     public GetArrayResponse<CommentEntity> findAllComment(HeaderInfo info, String idProfile, Integer page, Integer size) {
         GetArrayResponse<CommentEntity> resp = new GetArrayResponse<>();
-
-        Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
-
-        if (idProfileDocument == null) {
-            resp.setFailed("Id profile không tồn tại");
-            return resp;
-        }
-
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.regex(DbKeyConfig.ID_PROFILE, Pattern.compile(idProfile)));
@@ -66,10 +58,9 @@ public class CommentServiceImpl extends BaseService implements CommentService {
                 rows.add(noteProfile);
             }
         }
-
-        resp.setSuccess();
         resp.setTotal(db.countAll(CollectionNameDefs.COLL_COMMENT, cond));
         resp.setRows(rows);
+        resp.setSuccess();
         return resp;
     }
 
@@ -88,6 +79,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
 
             Document job = new Document();
             job.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            job.append(DbKeyConfig.ID_PROFILE, request.getIdProfile());
             job.append(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent()));
             job.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             job.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
@@ -115,14 +107,15 @@ public class CommentServiceImpl extends BaseService implements CommentService {
                 return response;
             }
 
-            Document job = new Document();
-            job.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            job.append(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent()));
-            job.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
-            job.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.ID, request.getId()),
+                    Updates.set(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent())),
+                    Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
+                    Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
+            );
 
             // insert to database
-            db.insertOne(CollectionNameDefs.COLL_COMMENT, job);
+            db.update(CollectionNameDefs.COLL_COMMENT, Filters.eq(DbKeyConfig.ID, request.getId()), update);
             response.setSuccess();
             return response;
         } catch (Throwable ex) {
@@ -148,7 +141,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
                 return response;
             }
 
-            db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
+            db.delete(CollectionNameDefs.COLL_COMMENT, cond);
             response.setSuccess();
             return response;
         } catch (Throwable ex) {
@@ -165,6 +158,6 @@ public class CommentServiceImpl extends BaseService implements CommentService {
     @Override
     public void deleteCommentProfileByIdProfile(String idProfile) {
         Bson cond = Filters.eq(DbKeyConfig.ID_PROFILE, idProfile);
-        db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
+        db.delete(CollectionNameDefs.COLL_COMMENT, cond);
     }
 }
