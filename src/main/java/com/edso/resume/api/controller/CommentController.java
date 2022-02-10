@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/commnet")
+@RequestMapping("/comment")
 public class CommentController extends BaseController {
 
     private final CommentService commentService;
@@ -26,13 +26,13 @@ public class CommentController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAllComment(
             @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "idProfile", required = false) String idProfile,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllComment u: {}, name: {}, page: {}, size: {}", headerInfo, name, page, size);
-        GetArrayResponse<CommentEntity> resp = commentService.findAllComment(headerInfo, name, page, size);
-        logger.info("<=findAllComment u: {}, name: {}, page: {}, size: {}, resp: {}", headerInfo, name, page, size, resp.info());
+        logger.info("=>findAllComment u: {}, idProfile: {}, page: {}, size: {}", headerInfo, idProfile, page, size);
+        GetArrayResponse<CommentEntity> resp = commentService.findAllComment(headerInfo, idProfile, page, size);
+        logger.info("<=findAllComment u: {}, idProfile: {}, page: {}, size: {}, resp: {}", headerInfo, idProfile, page, size, resp.info());
         return resp;
     }
 
