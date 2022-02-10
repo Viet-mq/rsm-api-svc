@@ -64,10 +64,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
         if (!Strings.isNullOrEmpty(levelSchool) && levelSchool.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.LEVEL_SCHOOL, "Vui lòng nhập trình độ đào tạo ít hơn 255 ký tự");
         }
-        if (Strings.isNullOrEmpty(email)) {
-            return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập email");
-        }
-        if (email.length() > 255 || !AppUtils.validateEmail(email)) {
+        if (!Strings.isNullOrEmpty(email) && !AppUtils.validateEmail(email)) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(job) || job.length() > 255) {

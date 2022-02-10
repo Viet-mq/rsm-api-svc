@@ -73,20 +73,24 @@ public class DictionaryValidateProcessor implements Runnable {
                     result.setResult(true);
                     return;
                 }
-                case ThreadConfig.PROFILE_PHONE_NUMBER:
+                case ThreadConfig.PROFILE_PHONE_NUMBER: {
+                    Bson cond = getCondition();
+                    FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
+                    if (list != null) {
+                        result.setResult(false);
+                        result.setName("Đã tồn tại ứng viên có số điện thoại này");
+                        return;
+                    }
+                    result.setResult(true);
+                    return;
+                }
                 case ThreadConfig.PROFILE_EMAIL: {
                     Bson cond = getCondition();
                     FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
-                    if (list == null) {
-                        result.setResult(true);
+                    if (list != null) {
+                        result.setResult(false);
+                        result.setName("Đã tồn tại ứng viên có email này");
                         return;
-                    }
-                    for (Document document : list) {
-                        if (!AppUtils.parseString(document.get(DbKeyConfig.ID)).equals(idProfile)) {
-                            result.setResult(true);
-                            result.setName("Đã tồn tại ứng viên có email này");
-                            return;
-                        }
                     }
                     result.setResult(true);
                     return;
