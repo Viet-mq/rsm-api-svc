@@ -27,12 +27,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.regex.Pattern;
 
 @Service
 public class NoteServiceImpl extends BaseService implements NoteService, IDictionaryValidator {
 
-    private final HistoryService historyService;
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
 
     @Value("${note.serverPath}")
@@ -42,27 +40,17 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
     @Value("${note.fileSize}")
     private Long fileSize;
 
-    public NoteServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService) {
+    public NoteServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
-        this.historyService = historyService;
     }
 
     @Override
     public GetArrayResponse<NoteProfileEntity> findAllNote(HeaderInfo info, String idProfile, Integer page, Integer size) {
 
         GetArrayResponse<NoteProfileEntity> resp = new GetArrayResponse<>();
-
-        Bson con = Filters.eq(DbKeyConfig.ID, idProfile);
-        Document idProfileDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, con);
-
-        if (idProfileDocument == null) {
-            resp.setFailed("Id profile không tồn tại");
-            return resp;
-        }
-
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(idProfile)) {
-            c.add(Filters.regex(DbKeyConfig.ID_PROFILE, Pattern.compile(idProfile)));
+            c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.FULL_NAME, 1);
@@ -178,10 +166,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_NOTE_PROFILE, note);
             response.setSuccess();
-
-            //Insert history to DB
-            historyService.createHistory(request.getIdProfile(), TypeConfig.CREATE, "Tạo chú ý", request.getInfo());
-
             return response;
         } catch (Throwable ex) {
 
@@ -293,10 +277,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             );
             db.update(CollectionNameDefs.COLL_NOTE_PROFILE, cond, updates, true);
             response.setSuccess();
-
-            //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Sửa chú ý", request.getInfo());
-
             return response;
         } catch (Throwable ex) {
 
@@ -332,8 +312,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
 
             db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
 
-            //Insert history to DB
-            historyService.createHistory(AppUtils.parseString(idDocument.get(DbKeyConfig.ID_PROFILE)), TypeConfig.DELETE, "Xóa chú ý", request.getInfo());
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);

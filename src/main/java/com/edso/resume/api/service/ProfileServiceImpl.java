@@ -40,6 +40,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private final RabbitTemplate rabbitTemplate;
     private final CalendarService calendarService;
     private final NoteService noteService;
+    private final CommentService commentService;
     private final RabbitMQOnlineActions rabbitMQOnlineActions;
 
     private final String matchName = "Ứng viên này bị trùng";
@@ -51,13 +52,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     @Value("${mail.fileSize}")
     private Long fileSize;
 
-    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService, RabbitMQOnlineActions rabbitMQOnlineActions) {
+    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService, CommentService commentService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
         this.historyService = historyService;
         this.historyEmailService = historyEmailService;
         this.rabbitTemplate = rabbitTemplate;
         this.calendarService = calendarService;
         this.noteService = noteService;
+        this.commentService = commentService;
         this.rabbitMQOnlineActions = rabbitMQOnlineActions;
     }
 
@@ -799,14 +801,17 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             db.delete(CollectionNameDefs.COLL_PROFILE, cond);
 
             //Xóa lịch phỏng vấn
-            calendarService.deleteCalendarByIdProfile(request.getId());
+            calendarService.deleteCalendarByIdProfile(id);
 
             //Xóa note
-            noteService.deleteNoteProfileByIdProfile(request.getId());
+            noteService.deleteNoteProfileByIdProfile(id);
 
             //Xóa lịch sử
             historyService.deleteHistory(id);
             historyEmailService.deleteHistoryEmail(id);
+
+            //Xóa comment
+            commentService.deleteCommentProfileByIdProfile(id);
 
             response.setSuccess();
 
