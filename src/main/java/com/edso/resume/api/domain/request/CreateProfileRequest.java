@@ -14,7 +14,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateProfileRequest extends BaseAuthRequest {
+public class
+CreateProfileRequest extends BaseAuthRequest {
 
     private String fullName;
     private Long dateOfBirth;
@@ -31,6 +32,7 @@ public class CreateProfileRequest extends BaseAuthRequest {
     private String levelJob;
     private String talentPool;
     private String hrRef;
+    private String pic;
     private String department;
     private String avatarColor;
 

@@ -7,10 +7,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-@ToString(callSuper = true)
-@Data
 @EqualsAndHashCode(callSuper = true)
-public class DeleteCommentRequest extends BaseAuthRequest {
+@Data
+@ToString(callSuper = true)
+public class DeleteReminderRequest extends BaseAuthRequest {
     private String id;
 
     public BaseResponse validate() {

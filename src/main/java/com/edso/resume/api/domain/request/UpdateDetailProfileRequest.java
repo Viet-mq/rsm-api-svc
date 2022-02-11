@@ -32,6 +32,7 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private String department;
     private Long lastApply;
     private String evaluation;
+    private String pic;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {

@@ -11,6 +11,7 @@ public class DictionaryNamesEntity {
     private String jobName;
     private String fullName;
     private String fullNameUser;
+    private String fullNamePIC;
     private String levelJobName;
     private String sourceCVName;
     private String talentPoolName;
