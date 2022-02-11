@@ -31,6 +31,7 @@ public class UpdateProfileRequest extends BaseAuthRequest {
     private String levelJob;
     private String hrRef;
     private String department;
+    private String pic;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {

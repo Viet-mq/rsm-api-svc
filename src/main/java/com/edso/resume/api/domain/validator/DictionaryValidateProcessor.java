@@ -5,7 +5,6 @@ import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.common.ThreadConfig;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.model.Filters;
 import lombok.Data;
 import org.bson.Document;
@@ -75,8 +74,8 @@ public class DictionaryValidateProcessor implements Runnable {
                 }
                 case ThreadConfig.PROFILE_PHONE_NUMBER: {
                     Bson cond = getCondition();
-                    FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
-                    if (list != null) {
+                    Document phoneNumber = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+                    if (phoneNumber != null) {
                         result.setResult(false);
                         result.setName("Đã tồn tại ứng viên có số điện thoại này");
                         return;
@@ -86,8 +85,8 @@ public class DictionaryValidateProcessor implements Runnable {
                 }
                 case ThreadConfig.PROFILE_EMAIL: {
                     Bson cond = getCondition();
-                    FindIterable<Document> list = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
-                    if (list != null) {
+                    Document email = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+                    if (email != null) {
                         result.setResult(false);
                         result.setName("Đã tồn tại ứng viên có email này");
                         return;
@@ -216,6 +215,11 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setStatusCVId(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)));
                 return;
             }
+            case ThreadConfig.PIC: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
+                return;
+            }
             case ThreadConfig.USER: {
                 result.setResult(true);
                 result.setFullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
@@ -278,6 +282,7 @@ public class DictionaryValidateProcessor implements Runnable {
 
     private Bson getCondition() {
         switch (type) {
+            case ThreadConfig.PIC:
             case ThreadConfig.USER: {
                 return Filters.eq(DbKeyConfig.USERNAME, this.id);
             }
@@ -333,6 +338,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.CALENDAR: {
                 return "id calendar";
             }
+            case ThreadConfig.PIC:
             case ThreadConfig.LIST_USER:
             case ThreadConfig.USER: {
                 return "username";
@@ -394,6 +400,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.CALENDAR: {
                 return CollectionNameDefs.COLL_CALENDAR_PROFILE;
             }
+            case ThreadConfig.PIC:
             case ThreadConfig.USER: {
                 return CollectionNameDefs.COLL_USER;
             }

@@ -272,6 +272,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getHrRef())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.USER, request.getHrRef(), db, this));
             }
+            if (!Strings.isNullOrEmpty(request.getPic())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PIC, request.getPic(), db, this));
+            }
             if (request.getSkill() != null && !request.getSkill().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
             }
@@ -355,6 +358,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.SKILL, dictionaryNames.getSkill());
             profile.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
             profile.append(DbKeyConfig.IS_NEW, true);
+            profile.append(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC());
 
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(idProfile, request, dictionaryNames);
@@ -409,6 +413,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             if (request.getSkill() != null && !request.getSkill().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getPic())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PIC, request.getPic(), db, this));
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
@@ -486,7 +493,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                     set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
-                    set(DbKeyConfig.SKILL, dictionaryNames.getSkill())
+                    set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
+                    set(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC())
             );
 
             // insert to rabbitmq
@@ -543,6 +551,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             if (request.getSkill() != null && !request.getSkill().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getPic())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PIC, request.getPic(), db, this));
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
@@ -631,7 +642,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
                     set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
-                    set(DbKeyConfig.SKILL, dictionaryNames.getSkill())
+                    set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
+                    set(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC())
             );
 
             // insert to rabbitmq
@@ -1506,6 +1518,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 case ThreadConfig.USER: {
                     dictionaryNames.setEmailUser((String) r.getResult().getName());
                     dictionaryNames.setFullNameUser(r.getResult().getFullName());
+                    break;
+                }
+                case ThreadConfig.PIC: {
+                    dictionaryNames.setFullNamePIC((String) r.getResult().getName());
                     break;
                 }
                 case ThreadConfig.JOB_LEVEL: {

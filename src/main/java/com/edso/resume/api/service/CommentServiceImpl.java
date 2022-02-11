@@ -44,7 +44,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
         List<CommentEntity> rows = new ArrayList<>();
         if (lst != null) {
             for (Document doc : lst) {
-                CommentEntity noteProfile = CommentEntity.builder()
+                CommentEntity comment = CommentEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .idProfile(AppUtils.parseString(doc.get(DbKeyConfig.ID_PROFILE)))
                         .content(AppUtils.parseString(doc.get(DbKeyConfig.CONTENT)))
@@ -54,7 +54,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
                         .updateAt(AppUtils.parseString(doc.get(DbKeyConfig.UPDATE_AT)))
                         .updateBy(AppUtils.parseString(doc.get(DbKeyConfig.UPDATE_BY)))
                         .build();
-                rows.add(noteProfile);
+                rows.add(comment);
             }
         }
         resp.setTotal(db.countAll(CollectionNameDefs.COLL_COMMENT, cond));
@@ -76,16 +76,16 @@ public class CommentServiceImpl extends BaseService implements CommentService {
 
             Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, request.getInfo().getUsername()));
 
-            Document job = new Document();
-            job.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            job.append(DbKeyConfig.ID_PROFILE, request.getIdProfile());
-            job.append(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent()));
-            job.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-            job.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-            job.append(DbKeyConfig.FULL_NAME, user.get(DbKeyConfig.FULL_NAME));
+            Document comment = new Document();
+            comment.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+            comment.append(DbKeyConfig.ID_PROFILE, request.getIdProfile());
+            comment.append(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent()));
+            comment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+            comment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            comment.append(DbKeyConfig.FULL_NAME, user.get(DbKeyConfig.FULL_NAME));
 
             // insert to database
-            db.insertOne(CollectionNameDefs.COLL_COMMENT, job);
+            db.insertOne(CollectionNameDefs.COLL_COMMENT, comment);
             response.setSuccess();
             return response;
         } catch (Throwable ex) {
@@ -107,7 +107,6 @@ public class CommentServiceImpl extends BaseService implements CommentService {
             }
 
             Bson update = Updates.combine(
-                    Updates.set(DbKeyConfig.ID, request.getId()),
                     Updates.set(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())

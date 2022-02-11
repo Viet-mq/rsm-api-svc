@@ -377,7 +377,6 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.ID, request.getId()),
                     Updates.set(DbKeyConfig.TITLE, AppUtils.mergeWhitespace(request.getTitle())),
                     Updates.set(DbKeyConfig.JOB_ID, request.getJob()),
                     Updates.set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
