@@ -39,4 +39,16 @@ public class ProfileRabbitMQEntity {
     private String recruitmentName;
     private String avatarColor;
     private Boolean isNew;
+    private Long time;
+    private String linkedin;
+    private String facebook;
+    private String skype;
+    private String github;
+    private String otherTech;
+    private String web;
+    private String picId;
+    private String picName;
+    private String status;
+    private String companyId;
+    private String companyName;
 }

@@ -358,7 +358,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.SKILL, dictionaryNames.getSkill());
             profile.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
             profile.append(DbKeyConfig.IS_NEW, true);
-            profile.append(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC());
+            profile.append(DbKeyConfig.PIC_ID, request.getPic());
+            profile.append(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC());
 
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(idProfile, request, dictionaryNames);
@@ -494,7 +495,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
                     set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
-                    set(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC())
+                    set(DbKeyConfig.PIC_ID, request.getPic()),
+                    set(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC())
             );
 
             // insert to rabbitmq
@@ -643,7 +645,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
                     set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
-                    set(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC())
+                    set(DbKeyConfig.PIC_ID, request.getPic()),
+                    set(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC())
             );
 
             // insert to rabbitmq

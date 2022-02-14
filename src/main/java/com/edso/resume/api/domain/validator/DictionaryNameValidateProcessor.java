@@ -82,6 +82,11 @@ public class DictionaryNameValidateProcessor implements Runnable {
                 logger.info("Đã có ứng viên dùng số điện thoại này! phoneNumber: {}", this.name);
                 break;
             }
+            case ThreadConfig.PIC: {
+                result.setResult(true);
+                result.setId(AppUtils.parseString(doc.get(DbKeyConfig.USERNAME)));
+                break;
+            }
             default: {
                 result.setResult(true);
                 result.setId(AppUtils.parseString(doc.get(DbKeyConfig.ID)));
@@ -99,6 +104,12 @@ public class DictionaryNameValidateProcessor implements Runnable {
             case ThreadConfig.BLACKLIST_PHONE_NUMBER: {
                 return Filters.eq(DbKeyConfig.PHONE_NUMBER, this.name);
             }
+            case ThreadConfig.COMPANY: {
+                return Filters.eq(DbKeyConfig.COMPANY_NAME, this.name);
+            }
+            case ThreadConfig.PIC: {
+                return Filters.eq(DbKeyConfig.FULL_NAME, this.name);
+            }
             default: {
                 return Filters.eq(DbKeyConfig.NAME, this.name);
             }
@@ -107,8 +118,11 @@ public class DictionaryNameValidateProcessor implements Runnable {
 
     private String getDictionaryName() {
         switch (type) {
+            case ThreadConfig.PIC: {
+                return "người chịu trách nhiệm";
+            }
             case ThreadConfig.JOB_LEVEL: {
-                return "vị trí tuyển dụng";
+                return "cấp bậc công việc";
             }
             case ThreadConfig.SCHOOL: {
                 return "trường học";
@@ -122,6 +136,12 @@ public class DictionaryNameValidateProcessor implements Runnable {
             case ThreadConfig.TALENT_POOL: {
                 return "talent pool";
             }
+            case ThreadConfig.COMPANY: {
+                return "công ty";
+            }
+            case ThreadConfig.JOB: {
+                return "vị trí công việc";
+            }
             default: {
                 logger.info("Không có dictionary này!");
                 return null;
@@ -133,6 +153,9 @@ public class DictionaryNameValidateProcessor implements Runnable {
         switch (type) {
             case ThreadConfig.JOB_LEVEL: {
                 return CollectionNameDefs.COLL_JOB_LEVEL;
+            }
+            case ThreadConfig.JOB: {
+                return CollectionNameDefs.COLL_JOB;
             }
             case ThreadConfig.SCHOOL: {
                 return CollectionNameDefs.COLL_SCHOOL;
@@ -153,6 +176,12 @@ public class DictionaryNameValidateProcessor implements Runnable {
             }
             case ThreadConfig.TALENT_POOL: {
                 return CollectionNameDefs.COLL_TALENT_POOL;
+            }
+            case ThreadConfig.COMPANY: {
+                return CollectionNameDefs.COLL_COMPANY;
+            }
+            case ThreadConfig.PIC: {
+                return CollectionNameDefs.COLL_USER;
             }
             default: {
                 logger.info("Không có collection này!");
