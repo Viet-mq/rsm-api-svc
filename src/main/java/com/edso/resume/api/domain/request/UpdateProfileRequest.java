@@ -32,6 +32,15 @@ public class UpdateProfileRequest extends BaseAuthRequest {
     private String hrRef;
     private String department;
     private String pic;
+    private Long time;
+    private String linkedin;
+    private String facebook;
+    private String skype;
+    private String github;
+    private String otherTech;
+    private String web;
+    private String status;
+    private String company;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
@@ -40,9 +49,9 @@ public class UpdateProfileRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập họ và tên");
         }
-        if (fullName.length() > 255 || !AppUtils.validateFullName(fullName)) {
-            return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập đúng định dạng họ và tên");
-        }
+//        if (fullName.length() > 255 || !AppUtils.validateFullName(fullName)) {
+//            return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập đúng định dạng họ và tên");
+//        }
         if (dateOfBirth != null && dateOfBirth < 0) {
             return new BaseResponse(ErrorCodeDefs.DATE_OF_BIRTH, "Vui lòng nhập đúng định dạng ngày sinh");
         }

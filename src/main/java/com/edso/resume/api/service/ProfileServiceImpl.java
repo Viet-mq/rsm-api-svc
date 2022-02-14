@@ -278,6 +278,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (request.getSkill() != null && !request.getSkill().isEmpty()) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.LIST_SKILL, request.getSkill(), db, this));
             }
+            if (!Strings.isNullOrEmpty(request.getCompany())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.COMPANY, request.getCompany(), db, this));
+            }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
@@ -358,7 +361,18 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.SKILL, dictionaryNames.getSkill());
             profile.append(DbKeyConfig.AVATAR_COLOR, request.getAvatarColor());
             profile.append(DbKeyConfig.IS_NEW, true);
-            profile.append(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC());
+            profile.append(DbKeyConfig.PIC_ID, request.getPic());
+            profile.append(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC());
+            profile.append(DbKeyConfig.TIME, request.getTime());
+            profile.append(DbKeyConfig.LINKEDIN, request.getLinkedin());
+            profile.append(DbKeyConfig.FACEBOOK, request.getFacebook());
+            profile.append(DbKeyConfig.SKYPE, request.getSkype());
+            profile.append(DbKeyConfig.GITHUB, request.getGithub());
+            profile.append(DbKeyConfig.OTHER_TECH, request.getOtherTech());
+            profile.append(DbKeyConfig.WEB, request.getWeb());
+            profile.append(DbKeyConfig.STATUS, request.getStatus());
+            profile.append(DbKeyConfig.COMPANY_ID, request.getCompany());
+            profile.append(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName());
 
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(idProfile, request, dictionaryNames);
@@ -416,6 +430,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             if (!Strings.isNullOrEmpty(request.getPic())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PIC, request.getPic(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getCompany())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.COMPANY, request.getCompany(), db, this));
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
@@ -494,7 +511,18 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
                     set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
-                    set(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC())
+                    set(DbKeyConfig.PIC_ID, request.getPic()),
+                    set(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC()),
+                    set(DbKeyConfig.TIME, request.getTime()),
+                    set(DbKeyConfig.LINKEDIN, request.getLinkedin()),
+                    set(DbKeyConfig.FACEBOOK, request.getFacebook()),
+                    set(DbKeyConfig.SKYPE, request.getSkype()),
+                    set(DbKeyConfig.GITHUB, request.getGithub()),
+                    set(DbKeyConfig.OTHER_TECH, request.getOtherTech()),
+                    set(DbKeyConfig.WEB, request.getWeb()),
+                    set(DbKeyConfig.STATUS, request.getStatus()),
+                    set(DbKeyConfig.COMPANY_ID, request.getCompany()),
+                    set(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName())
             );
 
             // insert to rabbitmq
@@ -554,6 +582,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             if (!Strings.isNullOrEmpty(request.getPic())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PIC, request.getPic(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getCompany())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.COMPANY, request.getCompany(), db, this));
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
@@ -643,7 +674,18 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     set(DbKeyConfig.LEVEL_SCHOOL, AppUtils.mergeWhitespace(request.getLevelSchool())),
                     set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
-                    set(DbKeyConfig.PIC, dictionaryNames.getFullNamePIC())
+                    set(DbKeyConfig.PIC_ID, request.getPic()),
+                    set(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC()),
+                    set(DbKeyConfig.TIME, request.getTime()),
+                    set(DbKeyConfig.LINKEDIN, request.getLinkedin()),
+                    set(DbKeyConfig.FACEBOOK, request.getFacebook()),
+                    set(DbKeyConfig.SKYPE, request.getSkype()),
+                    set(DbKeyConfig.GITHUB, request.getGithub()),
+                    set(DbKeyConfig.OTHER_TECH, request.getOtherTech()),
+                    set(DbKeyConfig.WEB, request.getWeb()),
+                    set(DbKeyConfig.STATUS, request.getStatus()),
+                    set(DbKeyConfig.COMPANY_ID, request.getCompany()),
+                    set(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName())
             );
 
             // insert to rabbitmq
@@ -709,8 +751,25 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             //Xóa comment
             commentService.deleteCommentProfileByIdProfile(id);
 
-            response.setSuccess();
+            //-1 in recruitment
+            if (Strings.isNullOrEmpty(AppUtils.parseString(idDocument.get(DbKeyConfig.RECRUITMENT_ID)))) {
+                Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.ID, idDocument.get(DbKeyConfig.RECRUITMENT_ID)));
+                if (recruitment != null) {
+                    List<Document> doc = (List<Document>) recruitment.get(DbKeyConfig.INTERVIEW_PROCESS);
+                    for (Document document : doc) {
+                        if (AppUtils.parseString(document.get(DbKeyConfig.ID)).equals(AppUtils.parseString(idDocument.get(DbKeyConfig.STATUS_CV_ID)))) {
+                            Bson con = Filters.and(Filters.eq(DbKeyConfig.ID, idDocument.get(DbKeyConfig.RECRUITMENT_ID)), Filters.eq("interview_process.id", idDocument.get(DbKeyConfig.STATUS_CV_ID)));
+                            Bson updateTotal = Updates.combine(
+                                    Updates.set("interview_process.$.total", AppUtils.parseLong(document.get(DbKeyConfig.TOTAL)) - 1)
+                            );
+                            db.update(CollectionNameDefs.COLL_RECRUITMENT, con, updateTotal, true);
+                            break;
+                        }
+                    }
+                }
+            }
 
+            response.setSuccess();
             return response;
         } catch (Throwable e) {
             logger.info("Exception: ", e);
@@ -1578,6 +1637,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
                 case ThreadConfig.MERGE_PROFILE: {
                     dictionaryNames.setProfile((Document) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.COMPANY: {
+                    dictionaryNames.setCompanyName((String) r.getResult().getName());
                     break;
                 }
                 default: {

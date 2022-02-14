@@ -35,14 +35,23 @@ CreateProfileRequest extends BaseAuthRequest {
     private String pic;
     private String department;
     private String avatarColor;
+    private Long time;
+    private String linkedin;
+    private String facebook;
+    private String skype;
+    private String github;
+    private String otherTech;
+    private String web;
+    private String status;
+    private String company;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(fullName)) {
             return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập họ và tên");
         }
-        if (fullName.length() > 255 || !AppUtils.validateFullName(fullName)) {
-            return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập đúng định dạng họ và tên");
-        }
+//        if (fullName.length() > 255 || !AppUtils.validateFullName(fullName)) {
+//            return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập đúng định dạng họ và tên");
+//        }
         if (dateOfBirth != null && dateOfBirth < 0) {
             return new BaseResponse(ErrorCodeDefs.DATE_OF_BIRTH, "Vui lòng nhập đúng định dạng ngày sinh");
         }
@@ -87,6 +96,9 @@ CreateProfileRequest extends BaseAuthRequest {
         }
         if (!Strings.isNullOrEmpty(department) && department.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.DEPARTMENT, "Vui lòng nhập phòng ban ít hơn 255 ký tự");
+        }
+        if (time != null && time < 0) {
+            return new BaseResponse(ErrorCodeDefs.TIME, "Vui lòng nhập thời gian nhập lớn hơn 0");
         }
         return null;
     }

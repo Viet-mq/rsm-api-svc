@@ -75,7 +75,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 case ThreadConfig.PROFILE_PHONE_NUMBER: {
                     Bson cond = getCondition();
                     Document phoneNumber = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-                    if (phoneNumber != null) {
+                    if (phoneNumber != null && !AppUtils.parseString(phoneNumber.get(DbKeyConfig.ID)).equals(idProfile)) {
                         result.setResult(false);
                         result.setName("Đã tồn tại ứng viên có số điện thoại này");
                         return;
@@ -86,7 +86,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 case ThreadConfig.PROFILE_EMAIL: {
                     Bson cond = getCondition();
                     Document email = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
-                    if (email != null) {
+                    if (email != null && !AppUtils.parseString(email.get(DbKeyConfig.ID)).equals(idProfile)) {
                         result.setResult(false);
                         result.setName("Đã tồn tại ứng viên có email này");
                         return;
@@ -247,6 +247,11 @@ public class DictionaryValidateProcessor implements Runnable {
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.REASON)));
                 return;
             }
+            case ThreadConfig.COMPANY: {
+                result.setResult(true);
+                result.setName(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_NAME)));
+                return;
+            }
             case ThreadConfig.RECRUITMENT: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)));
@@ -364,6 +369,9 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.TAG: {
                 return "thẻ";
             }
+            case ThreadConfig.COMPANY: {
+                return "công ty";
+            }
             default: {
                 return null;
             }
@@ -430,6 +438,9 @@ public class DictionaryValidateProcessor implements Runnable {
             }
             case ThreadConfig.TAG: {
                 return CollectionNameDefs.COLL_TAG;
+            }
+            case ThreadConfig.COMPANY: {
+                return CollectionNameDefs.COLL_COMPANY;
             }
             default: {
                 return null;

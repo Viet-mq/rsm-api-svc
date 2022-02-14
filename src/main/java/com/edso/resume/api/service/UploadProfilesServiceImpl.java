@@ -12,6 +12,7 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
+import com.mongodb.client.model.Filters;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -30,20 +30,23 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Service
 public class UploadProfilesServiceImpl extends BaseService implements UploadProfilesService, IDictionaryNameValidator {
 
-    public static final int COLUMN_FULL_NAME = 0;
-    public static final int COLUMN_PHONE_NUMBER = 1;
-    public static final int COLUMN_EMAIL = 2;
-    public static final int COLUMN_DATE_OF_BIRTH = 3;
-    public static final int COLUMN_GENDER = 4;
-    public static final int COLUMN_HOMETOWN = 5;
-    public static final int COLUMN_LEVEL_SCHOOL = 6;
-    public static final int COLUMN_SCHOOL_NAME = 7;
-    public static final int COLUMN_LEVEL_JOB_NAME = 8;
-    public static final int COLUMN_DATE_OF_APPLY = 9;
-    public static final int COLUMN_SOURCE_CV = 10;
-    public static final int COLUMN_TALENT_POOL = 11;
-    public static final int COLUMN_HR_REFERENCE = 12;
-    public static final int COLUMN_DEPARTMENT = 13;
+    public static final int COLUMN_TIME = 0;
+    public static final int COLUMN_JOB_NAME = 1;
+    public static final int COLUMN_FULL_NAME = 2;
+    public static final int COLUMN_LINKEDIN = 3;
+    public static final int COLUMN_FACEBOOK = 4;
+    public static final int COLUMN_PHONE_NUMBER = 5;
+    public static final int COLUMN_EMAIL = 6;
+    public static final int COLUMN_SKYPE = 7;
+    public static final int COLUMN_GITHUB = 8;
+    public static final int COLUMN_OTHER_TECH = 9;
+    public static final int COLUMN_LEVEL_JOB_NAME = 10;
+    public static final int COLUMN_SOURCE_CV = 11;
+    public static final int COLUMN_WEB = 12;
+    public static final int COLUMN_PIC = 13;
+    public static final int COLUMN_STATUS = 14;
+    public static final int COLUMN_NOTE = 15;
+    public static final int COLUMN_COMPANY = 16;
 
     private final RabbitTemplate rabbitTemplate;
     @Value("${spring.rabbitmq.profile.exchange}")
@@ -111,7 +114,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 
         // Get all rows
         for (Row nextRow : sheet) {
-            if (nextRow.getRowNum() < 4) {
+            if (nextRow.getRowNum() < 1) {
                 continue;
             }
 
@@ -126,47 +129,56 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 // Set value for book object
                 int columnIndex = cell.getColumnIndex();
                 switch (columnIndex) {
+                    case COLUMN_TIME:
+                        profiles.setTime(AppUtils.mergeWhitespace((String) getCellValue(cell)));
+                        break;
+                    case COLUMN_JOB_NAME:
+                        profiles.setJob(AppUtils.mergeWhitespace((String) getCellValue(cell)));
+                        break;
                     case COLUMN_FULL_NAME:
-                        profiles.setFullName((String) getCellValue(cell));
+                        profiles.setFullName(AppUtils.mergeWhitespace((String) getCellValue(cell)));
+                        break;
+                    case COLUMN_LINKEDIN:
+                        profiles.setLinkedin(AppUtils.mergeWhitespace((String) getCellValue(cell)));
+                        break;
+                    case COLUMN_FACEBOOK:
+                        profiles.setFacebook(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
                     case COLUMN_PHONE_NUMBER:
-                        profiles.setPhoneNumber((String) getCellValue(cell));
+                        profiles.setPhoneNumber(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
                     case COLUMN_EMAIL:
-                        profiles.setEmail((String) getCellValue(cell));
+                        profiles.setEmail(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
-                    case COLUMN_DATE_OF_BIRTH:
-                        profiles.setDateOfBirth((String) getCellValue(cell));
+                    case COLUMN_SKYPE:
+                        profiles.setSkype(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
-                    case COLUMN_GENDER:
-                        profiles.setGender((String) getCellValue(cell));
+                    case COLUMN_GITHUB:
+                        profiles.setGithub(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
-                    case COLUMN_HOMETOWN:
-                        profiles.setHometown((String) getCellValue(cell));
-                        break;
-                    case COLUMN_LEVEL_SCHOOL:
-                        profiles.setLevelSchool((String) getCellValue(cell));
-                        break;
-                    case COLUMN_SCHOOL_NAME:
-                        profiles.setSchoolName((String) getCellValue(cell));
+                    case COLUMN_OTHER_TECH:
+                        profiles.setOtherTech(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
                     case COLUMN_LEVEL_JOB_NAME:
-                        profiles.setJobName((String) getCellValue(cell));
-                        break;
-                    case COLUMN_DATE_OF_APPLY:
-                        profiles.setDateOfApply((String) getCellValue(cell));
+                        profiles.setLevel(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
                     case COLUMN_SOURCE_CV:
-                        profiles.setSourceCVName((String) getCellValue(cell));
+                        profiles.setSourceCV(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
-                    case COLUMN_TALENT_POOL:
-                        profiles.setTalentPoolName((String) getCellValue(cell));
+                    case COLUMN_WEB:
+                        profiles.setWeb(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
-                    case COLUMN_HR_REFERENCE:
-                        profiles.setHrRef((String) getCellValue(cell));
+                    case COLUMN_PIC:
+                        profiles.setPic(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
-                    case COLUMN_DEPARTMENT:
-                        profiles.setDepartmentName((String) getCellValue(cell));
+                    case COLUMN_STATUS:
+                        profiles.setStatus(AppUtils.mergeWhitespace((String) getCellValue(cell)));
+                        break;
+                    case COLUMN_NOTE:
+                        profiles.setNote(AppUtils.mergeWhitespace((String) getCellValue(cell)));
+                        break;
+                    case COLUMN_COMPANY:
+                        profiles.setCompany(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
                     default:
                         break;
@@ -176,40 +188,23 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
             if (Strings.isNullOrEmpty(profiles.getFullName())) {
                 continue;
             }
-            if (Strings.isNullOrEmpty(profiles.getPhoneNumber())) {
+            if (Strings.isNullOrEmpty(profiles.getJob())) {
                 continue;
             }
-            if (Strings.isNullOrEmpty(profiles.getEmail())) {
+            if (Strings.isNullOrEmpty(profiles.getSourceCV())) {
                 continue;
             }
-            if (Strings.isNullOrEmpty(profiles.getJobName())) {
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profiles.getDateOfApply())) {
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profiles.getSourceCVName())) {
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profiles.getTalentPoolName())) {
-                continue;
-            }
-            if (Strings.isNullOrEmpty(profiles.getDepartmentName())) {
-                continue;
-            }
-            if (!AppUtils.validateFullName(profiles.getFullName())) {
-                logger.info("Họ và tên không đúng định dạng! fullName: {}", profiles.getFullName());
-                continue;
-            }
-            if (!AppUtils.validateEmail(profiles.getEmail())) {
+//            if (!AppUtils.validateFullName(profiles.getFullName())) {
+//                logger.info("Họ và tên không đúng định dạng! fullName: {}", profiles.getFullName());
+//                continue;
+//            }
+            if (!Strings.isNullOrEmpty(profiles.getEmail()) && !AppUtils.validateEmail(profiles.getEmail())) {
                 logger.info("Email không đúng định dạng! email: {}", profiles.getEmail());
                 continue;
             }
-            if (!Strings.isNullOrEmpty(profiles.getGender())) {
-                if (!profiles.getGender().equals(NameConfig.NU) && !profiles.getGender().equals(NameConfig.NAM)) {
-                    logger.info("Giới tính chỉ có thể là Nam hoặc Nữ!");
-                    continue;
-                }
+            if (!Strings.isNullOrEmpty(profiles.getPhoneNumber()) && !AppUtils.validatePhone(profiles.getPhoneNumber())) {
+                logger.info("Số điện thoại không đúng định dạng! phoneNumber: {}", profiles.getPhoneNumber());
+                continue;
             }
             listProfile.add(profiles);
         }
@@ -246,23 +241,31 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 response.setFailed("Vui lòng nhập đúng file excel!");
                 return response;
             }
+            Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
             for (ProfileUploadEntity profile : profiles) {
                 String key = UUID.randomUUID().toString();
 
                 try {
                     List<DictionaryNameValidateProcessor> rs = new ArrayList<>();
-                    if (!Strings.isNullOrEmpty(profile.getSchoolName())) {
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SCHOOL, profile.getSchoolName(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCV(), db, this));
+                    if (!Strings.isNullOrEmpty(profile.getEmail())) {
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail(), db, this));
                     }
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCVName(), db, this));
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail(), db, this));
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail(), db, this));
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.TALENT_POOL, profile.getTalentPoolName(), db, this));
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB, profile.getJobName(), db, this));
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.DEPARTMENT, profile.getDepartmentName(), db, this));
-
+                    if (!Strings.isNullOrEmpty(profile.getPhoneNumber())) {
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
+                    }
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB, profile.getJob(), db, this));
+                    if (!Strings.isNullOrEmpty(profile.getLevel())) {
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB_LEVEL, profile.getLevel(), db, this));
+                    }
+                    if (!Strings.isNullOrEmpty(profile.getPic())) {
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PIC, profile.getPic(), db, this));
+                    }
+                    if (!Strings.isNullOrEmpty(profile.getCompany())) {
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.COMPANY, profile.getCompany(), db, this));
+                    }
                     int total = rs.size();
 
                     for (DictionaryNameValidateProcessor r : rs) {
@@ -292,51 +295,34 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         continue;
                     }
 
-                    String schoolId = null;
                     String sourceCVId = null;
-                    String talentPoolId = null;
+                    String jobLevelId = null;
                     String jobId = null;
-                    String departmentId = null;
+                    String companyId = null;
+                    String picId = null;
 
                     for (DictionaryNameValidateProcessor r : rs) {
                         switch (r.getResult().getType()) {
-                            case ThreadConfig.SCHOOL: {
-                                schoolId = r.getResult().getId();
-                                break;
-                            }
                             case ThreadConfig.SOURCE_CV: {
                                 sourceCVId = r.getResult().getId();
                                 break;
                             }
-                            case ThreadConfig.TALENT_POOL: {
-                                talentPoolId = r.getResult().getId();
+                            case ThreadConfig.JOB_LEVEL: {
+                                jobLevelId = r.getResult().getId();
                                 break;
                             }
-                            case ThreadConfig.JOB_LEVEL: {
+                            case ThreadConfig.JOB: {
                                 jobId = r.getResult().getId();
                                 break;
                             }
-                            case ThreadConfig.DEPARTMENT: {
-                                departmentId = r.getResult().getId();
+                            case ThreadConfig.COMPANY: {
+                                companyId = r.getResult().getId();
                                 break;
                             }
-                        }
-                    }
-
-                    Long dateOfBirth = null;
-                    Long dateOfApply;
-                    try {
-                        dateOfApply = parseMillis(profile.getDateOfApply());
-                    } catch (Throwable e) {
-                        logger.error("Exception: ", e);
-                        continue;
-                    }
-                    if (!Strings.isNullOrEmpty(profile.getDateOfBirth())) {
-                        try {
-                            dateOfBirth = parseMillis(profile.getDateOfBirth());
-                        } catch (Throwable e) {
-                            logger.error("Exception: ", e);
-                            continue;
+                            case ThreadConfig.PIC: {
+                                picId = r.getResult().getId();
+                                break;
+                            }
                         }
                     }
 
@@ -345,53 +331,67 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     String idProfile = UUID.randomUUID().toString();
                     Document pro = new Document();
                     pro.append(DbKeyConfig.ID, idProfile);
+                    pro.append(DbKeyConfig.TIME, parseMillis(profile.getTime()));
+                    pro.append(DbKeyConfig.JOB_ID, jobId);
+                    pro.append(DbKeyConfig.JOB_NAME, profile.getJob());
                     pro.append(DbKeyConfig.FULL_NAME, profile.getFullName());
+                    pro.append(DbKeyConfig.LINKEDIN, profile.getLinkedin());
+                    pro.append(DbKeyConfig.FACEBOOK, profile.getFacebook());
                     pro.append(DbKeyConfig.PHONE_NUMBER, profile.getPhoneNumber());
                     pro.append(DbKeyConfig.EMAIL, profile.getEmail());
-                    pro.append(DbKeyConfig.DATE_OF_BIRTH, dateOfBirth);
-                    pro.append(DbKeyConfig.GENDER, profile.getGender());
-                    pro.append(DbKeyConfig.HOMETOWN, profile.getHometown());
-                    pro.append(DbKeyConfig.LEVEL_SCHOOL, profile.getLevelSchool());
-                    pro.append(DbKeyConfig.SCHOOL_NAME, profile.getSchoolName());
-                    pro.append(DbKeyConfig.SCHOOL_ID, schoolId);
-                    pro.append(DbKeyConfig.DATE_OF_APPLY, dateOfApply);
-                    pro.append(DbKeyConfig.JOB_ID, jobId);
-                    pro.append(DbKeyConfig.JOB_NAME, profile.getJobName());
-                    pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCVName());
+                    pro.append(DbKeyConfig.SKYPE, profile.getSkype());
+                    pro.append(DbKeyConfig.GITHUB, profile.getGithub());
+                    pro.append(DbKeyConfig.OTHER_TECH, profile.getOtherTech());
+                    pro.append(DbKeyConfig.LEVEL_JOB_ID, jobLevelId);
+                    pro.append(DbKeyConfig.LEVEL_JOB_NAME, profile.getLevel());
                     pro.append(DbKeyConfig.SOURCE_CV_ID, sourceCVId);
+                    pro.append(DbKeyConfig.SOURCE_CV_NAME, profile.getSourceCV());
+                    pro.append(DbKeyConfig.WEB, profile.getWeb());
+                    pro.append(DbKeyConfig.PIC_ID, picId);
+                    pro.append(DbKeyConfig.PIC_NAME, profile.getPic());
+                    pro.append(DbKeyConfig.STATUS, profile.getStatus());
+                    pro.append(DbKeyConfig.COMPANY_ID, companyId);
+                    pro.append(DbKeyConfig.COMPANY_NAME, profile.getCompany());
                     pro.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(profile.getFullName()));
                     pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
-                    pro.append(DbKeyConfig.TALENT_POOL_ID, talentPoolId);
-                    pro.append(DbKeyConfig.TALENT_POOL_NAME, profile.getTalentPoolName());
-                    pro.append(DbKeyConfig.HR_REF, profile.getHrRef());
-                    pro.append(DbKeyConfig.DEPARTMENT_ID, departmentId);
-                    pro.append(DbKeyConfig.DEPARTMENT_NAME, profile.getDepartmentName());
                     pro.append(DbKeyConfig.AVATAR_COLOR, color);
 
                     db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
 
+                    Document comment = new Document();
+                    comment.append(DbKeyConfig.ID, UUID.randomUUID().toString());
+                    comment.append(DbKeyConfig.ID_PROFILE, idProfile);
+                    comment.append(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(profile.getNote()));
+                    comment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
+                    comment.append(DbKeyConfig.CREATE_BY, info.getUsername());
+                    comment.append(DbKeyConfig.FULL_NAME, user.get(DbKeyConfig.FULL_NAME));
+
+                    db.insertOne(CollectionNameDefs.COLL_COMMENT, comment);
+
                     ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
                     profileEntity.setId(idProfile);
+                    profileEntity.setTime(parseMillis(profile.getTime()));
+                    profileEntity.setJobId(jobId);
+                    profileEntity.setJobName(profile.getJob());
                     profileEntity.setFullName(profile.getFullName());
-                    profileEntity.setGender(profile.getGender());
+                    profileEntity.setLinkedin(profile.getLinkedin());
+                    profileEntity.setFacebook(profile.getFacebook());
                     profileEntity.setPhoneNumber(profile.getPhoneNumber());
                     profileEntity.setEmail(profile.getEmail());
-                    profileEntity.setDateOfBirth(dateOfBirth);
-                    profileEntity.setHometown(profile.getHometown());
-                    profileEntity.setSchoolId(schoolId);
-                    profileEntity.setSchoolName(profile.getSchoolName());
-                    profileEntity.setDateOfApply(dateOfApply);
+                    profileEntity.setSkype(profile.getSkype());
+                    profileEntity.setGithub(profile.getGithub());
+                    profileEntity.setOtherTech(profile.getOtherTech());
+                    profileEntity.setLevelJobId(jobLevelId);
+                    profileEntity.setLevelJobName(profile.getLevel());
                     profileEntity.setSourceCVId(sourceCVId);
-                    profileEntity.setLevelSchool(profile.getLevelSchool());
-                    profileEntity.setJobId(jobId);
-                    profileEntity.setJobName(profile.getJobName());
-                    profileEntity.setSourceCVName(profile.getSourceCVName());
-                    profileEntity.setTalentPoolId(talentPoolId);
-                    profileEntity.setTalentPoolName(profile.getTalentPoolName());
-                    profileEntity.setHrRef(profile.getHrRef());
-                    profileEntity.setDepartmentId(departmentId);
-                    profileEntity.setDepartmentName(profile.getDepartmentName());
+                    profileEntity.setSourceCVName(profile.getSourceCV());
+                    profileEntity.setWeb(profile.getWeb());
+                    profileEntity.setPicId(picId);
+                    profileEntity.setPicName(profile.getPic());
+                    profileEntity.setStatus(profile.getStatus());
+                    profileEntity.setCompanyId(companyId);
+                    profileEntity.setCompanyName(profile.getCompany());
                     profileEntity.setAvatarColor(color);
                     publishActionToRabbitMQ(profileEntity);
                 } finally {
@@ -408,9 +408,17 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
     }
 
 
-    public Long parseMillis(String date) throws ParseException {
-        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-        return format.parse(date).getTime();
+    public Long parseMillis(String date) {
+        try {
+            if (Strings.isNullOrEmpty(date)) {
+                return null;
+            }
+            SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+            return format.parse(date).getTime();
+        } catch (Throwable ex) {
+            logger.error("Ex: ", ex);
+            return null;
+        }
     }
 
     private void publishActionToRabbitMQ(Object obj) {
