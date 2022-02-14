@@ -33,6 +33,15 @@ public class UpdateDetailProfileRequest extends BaseAuthRequest {
     private Long lastApply;
     private String evaluation;
     private String pic;
+    private Long time;
+    private String linkedin;
+    private String facebook;
+    private String skype;
+    private String github;
+    private String otherTech;
+    private String web;
+    private String status;
+    private String company;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
