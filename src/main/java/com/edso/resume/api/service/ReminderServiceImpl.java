@@ -32,10 +32,10 @@ public class ReminderServiceImpl extends BaseService implements ReminderService 
     public GetArrayResponse<ReminderEntity> findAll(HeaderInfo info, Long from, Long to) {
         List<Bson> c = new ArrayList<>();
         if (from != null && from > 0) {
-            c.add(Filters.gte(DbKeyConfig.TIME, from));
+            c.add(Filters.gte(DbKeyConfig.START, from));
         }
         if (to != null && to > 0) {
-            c.add(Filters.lte(DbKeyConfig.TIME, to));
+            c.add(Filters.lte(DbKeyConfig.START, to));
         }
         Bson cond = buildCondition(c);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_REMINDER, cond, null, 0, 0);
@@ -44,9 +44,10 @@ public class ReminderServiceImpl extends BaseService implements ReminderService 
             for (Document doc : lst) {
                 ReminderEntity reminder = ReminderEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
-                        .content(AppUtils.parseString(doc.get(DbKeyConfig.CONTENT)))
-                        .repeat(AppUtils.parseString(doc.get(DbKeyConfig.REPEAT)))
-                        .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
+                        .title(AppUtils.parseString(doc.get(DbKeyConfig.TITLE)))
+                        .start(AppUtils.parseLong(doc.get(DbKeyConfig.START)))
+                        .end(AppUtils.parseLong(doc.get(DbKeyConfig.END)))
+                        .desc(AppUtils.parseString(doc.get(DbKeyConfig.DESCRIPTION)))
                         .createAt(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_AT)))
                         .createBy(AppUtils.parseString(doc.get(DbKeyConfig.CREATE_BY)))
                         .updateAt(AppUtils.parseString(doc.get(DbKeyConfig.UPDATE_AT)))
@@ -68,9 +69,10 @@ public class ReminderServiceImpl extends BaseService implements ReminderService 
         try {
             Document reminder = new Document();
             reminder.append(DbKeyConfig.ID, UUID.randomUUID().toString());
-            reminder.append(DbKeyConfig.REPEAT, request.getRepeat());
-            reminder.append(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent()));
-            reminder.append(DbKeyConfig.TIME, request.getTime());
+            reminder.append(DbKeyConfig.TITLE, AppUtils.mergeWhitespace(request.getTitle()));
+            reminder.append(DbKeyConfig.START, request.getStart());
+            reminder.append(DbKeyConfig.END, request.getEnd());
+            reminder.append(DbKeyConfig.DESCRIPTION, AppUtils.mergeWhitespace(request.getDesc()));
             reminder.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             reminder.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
 
@@ -97,9 +99,10 @@ public class ReminderServiceImpl extends BaseService implements ReminderService 
             }
 
             Bson update = Updates.combine(
-                    Updates.set(DbKeyConfig.REPEAT, request.getRepeat()),
-                    Updates.set(DbKeyConfig.CONTENT, AppUtils.mergeWhitespace(request.getContent())),
-                    Updates.set(DbKeyConfig.TIME, request.getTime()),
+                    Updates.set(DbKeyConfig.TITLE, AppUtils.mergeWhitespace(request.getTitle())),
+                    Updates.set(DbKeyConfig.START, request.getStart()),
+                    Updates.set(DbKeyConfig.END, request.getEnd()),
+                    Updates.set(DbKeyConfig.DESCRIPTION, AppUtils.mergeWhitespace(request.getDesc())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
