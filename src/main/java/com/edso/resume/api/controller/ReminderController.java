@@ -26,8 +26,8 @@ public class ReminderController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAll(
             @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "from") Long from,
-            @RequestParam(value = "to") Long to) {
+            @RequestParam(value = "from", required = false) Long from,
+            @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>findAllReminder u: {}, from: {}, to: {}", headerInfo, from, to);
         GetArrayResponse<ReminderEntity> resp = reminderService.findAll(headerInfo, from, to);

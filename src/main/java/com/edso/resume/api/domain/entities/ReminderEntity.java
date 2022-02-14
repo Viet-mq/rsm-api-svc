@@ -7,9 +7,10 @@ import lombok.Data;
 @Builder
 public class ReminderEntity {
     private String id;
-    private String content;
-    private Long time;
-    private String repeat;
+    private String title;
+    private Long start;
+    private Long end;
+    private String desc;
     private String createAt;
     private String createBy;
     private String updateAt;
