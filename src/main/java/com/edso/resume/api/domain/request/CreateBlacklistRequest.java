@@ -22,13 +22,13 @@ public class CreateBlacklistRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(email)) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập blacklist email");
         }
-        if (email.length() > 255 || !AppUtils.validateEmail(email)) {
+        if (email.length() > 255 || !AppUtils.validateEmail(email.trim())) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập họ và tên");
         }
-        if (!Strings.isNullOrEmpty(phoneNumber) && !AppUtils.validatePhone(phoneNumber)) {
+        if (!Strings.isNullOrEmpty(phoneNumber) && !AppUtils.validatePhone(phoneNumber.trim())) {
             return new BaseResponse(ErrorCodeDefs.PHONE_NUMBER, "Vui lòng nhập đúng định dạng số điện thoại");
         }
         if (!Strings.isNullOrEmpty(ssn) && !validateSSN(ssn)) {

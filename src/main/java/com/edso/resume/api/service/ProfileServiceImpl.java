@@ -49,6 +49,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private String routingkey;
     @Value("${mail.fileSize}")
     private Long fileSize;
+    @Value("${cv.path}")
+    private String cvPath;
 
     public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService, CommentService commentService, RabbitMQOnlineActions rabbitMQOnlineActions) {
         super(db);
@@ -169,9 +171,21 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .skill((List<SkillEntity>) doc.get(DbKeyConfig.SKILL))
                         .avatarColor(AppUtils.parseString(doc.get(DbKeyConfig.AVATAR_COLOR)))
                         .isNew(AppUtils.parseString(doc.get(DbKeyConfig.IS_NEW)))
-                        .match(AppUtils.parseString(doc.get(DbKeyConfig.MATCH)))
                         .followers((List<String>) doc.get(DbKeyConfig.FOLLOWERS))
                         .tags((List<String>) doc.get(DbKeyConfig.TAGS))
+                        .picId(AppUtils.parseString(doc.get(DbKeyConfig.PIC_ID)))
+                        .picName(AppUtils.parseString(doc.get(DbKeyConfig.PIC_NAME)))
+                        .picMail(AppUtils.parseString(doc.get(DbKeyConfig.PIC_MAIL)))
+                        .time(AppUtils.parseLong(doc.get(DbKeyConfig.TIME)))
+                        .linkedin(AppUtils.parseString(doc.get(DbKeyConfig.LINKEDIN)))
+                        .facebook(AppUtils.parseString(doc.get(DbKeyConfig.FACEBOOK)))
+                        .skype(AppUtils.parseString(doc.get(DbKeyConfig.SKYPE)))
+                        .github(AppUtils.parseString(doc.get(DbKeyConfig.GITHUB)))
+                        .otherTech(AppUtils.parseString(doc.get(DbKeyConfig.OTHER_TECH)))
+                        .web(AppUtils.parseString(doc.get(DbKeyConfig.WEB)))
+                        .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
+                        .companyId(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_ID)))
+                        .companyName(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_NAME)))
                         .build();
                 rows.add(profile);
             }
@@ -235,9 +249,21 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .username(AppUtils.parseString(one.get(DbKeyConfig.USERNAME)))
                 .skill((List<SkillEntity>) one.get(DbKeyConfig.SKILL))
                 .avatarColor(AppUtils.parseString(one.get(DbKeyConfig.AVATAR_COLOR)))
-                .match(AppUtils.parseString(one.get(DbKeyConfig.MATCH)))
                 .followers((List<String>) one.get(DbKeyConfig.FOLLOWERS))
                 .tags((List<String>) one.get(DbKeyConfig.TAGS))
+                .picId(AppUtils.parseString(one.get(DbKeyConfig.PIC_ID)))
+                .picName(AppUtils.parseString(one.get(DbKeyConfig.PIC_NAME)))
+                .picMail(AppUtils.parseString(one.get(DbKeyConfig.PIC_MAIL)))
+                .time(AppUtils.parseLong(one.get(DbKeyConfig.TIME)))
+                .linkedin(AppUtils.parseString(one.get(DbKeyConfig.LINKEDIN)))
+                .facebook(AppUtils.parseString(one.get(DbKeyConfig.FACEBOOK)))
+                .skype(AppUtils.parseString(one.get(DbKeyConfig.SKYPE)))
+                .github(AppUtils.parseString(one.get(DbKeyConfig.GITHUB)))
+                .otherTech(AppUtils.parseString(one.get(DbKeyConfig.OTHER_TECH)))
+                .web(AppUtils.parseString(one.get(DbKeyConfig.WEB)))
+                .status(AppUtils.parseString(one.get(DbKeyConfig.STATUS)))
+                .companyId(AppUtils.parseString(one.get(DbKeyConfig.COMPANY_ID)))
+                .companyName(AppUtils.parseString(one.get(DbKeyConfig.COMPANY_NAME)))
                 .build();
 
         response.setSuccess(profile);
@@ -283,14 +309,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this);
                 dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
                 rs.add(dictionaryValidateProcessorPhoneNumber);
             }
             if (!Strings.isNullOrEmpty(request.getEmail())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail().trim(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail().trim(), db, this);
                 dictionaryValidateProcessorEmail.setIdProfile(idProfile);
                 rs.add(dictionaryValidateProcessorEmail);
             }
@@ -363,6 +389,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.IS_NEW, true);
             profile.append(DbKeyConfig.PIC_ID, request.getPic());
             profile.append(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC());
+            profile.append(DbKeyConfig.PIC_MAIL, dictionaryNames.getPicEmail());
             profile.append(DbKeyConfig.TIME, request.getTime());
             profile.append(DbKeyConfig.LINKEDIN, request.getLinkedin());
             profile.append(DbKeyConfig.FACEBOOK, request.getFacebook());
@@ -437,14 +464,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this);
                 dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
                 rs.add(dictionaryValidateProcessorPhoneNumber);
             }
             if (!Strings.isNullOrEmpty(request.getEmail())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail().trim(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail().trim(), db, this);
                 dictionaryValidateProcessorEmail.setIdProfile(idProfile);
                 rs.add(dictionaryValidateProcessorEmail);
             }
@@ -513,6 +540,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
                     set(DbKeyConfig.PIC_ID, request.getPic()),
                     set(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC()),
+                    set(DbKeyConfig.PIC_MAIL, dictionaryNames.getPicEmail()),
                     set(DbKeyConfig.TIME, request.getTime()),
                     set(DbKeyConfig.LINKEDIN, request.getLinkedin()),
                     set(DbKeyConfig.FACEBOOK, request.getFacebook()),
@@ -589,14 +617,14 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber(), db, this);
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this);
                 dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
                 rs.add(dictionaryValidateProcessorPhoneNumber);
             }
             if (!Strings.isNullOrEmpty(request.getEmail())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail(), db, this);
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail().trim(), db, this));
+                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail().trim(), db, this);
                 dictionaryValidateProcessorEmail.setIdProfile(idProfile);
                 rs.add(dictionaryValidateProcessorEmail);
             }
@@ -676,6 +704,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.SKILL, dictionaryNames.getSkill()),
                     set(DbKeyConfig.PIC_ID, request.getPic()),
                     set(DbKeyConfig.PIC_NAME, dictionaryNames.getFullNamePIC()),
+                    set(DbKeyConfig.PIC_MAIL, dictionaryNames.getPicEmail()),
                     set(DbKeyConfig.TIME, request.getTime()),
                     set(DbKeyConfig.LINKEDIN, request.getLinkedin()),
                     set(DbKeyConfig.FACEBOOK, request.getFacebook()),
@@ -727,9 +756,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 return response;
             }
 
-            String path = AppUtils.parseString(idDocument.get(DbKeyConfig.URL_CV));
-            if (!Strings.isNullOrEmpty(path)) {
-                deleteFile(path);
+            String cv = AppUtils.parseString(idDocument.get(DbKeyConfig.CV));
+            if (!Strings.isNullOrEmpty(cv)) {
+                deleteFile(cvPath + cv);
             }
 
             // insert to rabbitmq
@@ -752,7 +781,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             commentService.deleteCommentProfileByIdProfile(id);
 
             //-1 in recruitment
-            if (Strings.isNullOrEmpty(AppUtils.parseString(idDocument.get(DbKeyConfig.RECRUITMENT_ID)))) {
+            if (!Strings.isNullOrEmpty(AppUtils.parseString(idDocument.get(DbKeyConfig.RECRUITMENT_ID)))) {
                 Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.ID, idDocument.get(DbKeyConfig.RECRUITMENT_ID)));
                 if (recruitment != null) {
                     List<Document> doc = (List<Document>) recruitment.get(DbKeyConfig.INTERVIEW_PROCESS);
@@ -1581,6 +1610,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 }
                 case ThreadConfig.PIC: {
                     dictionaryNames.setFullNamePIC((String) r.getResult().getName());
+                    dictionaryNames.setPicEmail(r.getResult().getMailRef());
                     break;
                 }
                 case ThreadConfig.JOB_LEVEL: {

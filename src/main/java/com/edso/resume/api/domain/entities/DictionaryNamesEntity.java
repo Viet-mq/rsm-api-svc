@@ -30,6 +30,7 @@ public class DictionaryNamesEntity {
     private String email;
     private String emailUser;
     private String profileEmail;
+    private String picEmail;
     private String profilePhoneNumber;
     private String companyName;
     private Document profile;

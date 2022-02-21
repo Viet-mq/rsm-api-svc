@@ -18,7 +18,7 @@ public class UpdateCommentRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
         }
-        if (Strings.isNullOrEmpty(content) || content.length() > 255) {
+        if (Strings.isNullOrEmpty(content)) {
             return new BaseResponse(ErrorCodeDefs.CONTENT, "Vui lòng nhập nội dung");
         }
         return null;

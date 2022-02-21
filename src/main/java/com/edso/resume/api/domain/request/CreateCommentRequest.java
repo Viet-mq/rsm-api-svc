@@ -18,7 +18,7 @@ public class CreateCommentRequest extends BaseAuthRequest {
         if (Strings.isNullOrEmpty(idProfile) || idProfile.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.ID_PROFILE, "Vui lòng nhập id profile");
         }
-        if (Strings.isNullOrEmpty(content) || content.length() > 255) {
+        if (Strings.isNullOrEmpty(content)) {
             return new BaseResponse(ErrorCodeDefs.CONTENT, "Vui lòng nhập nội dung");
         }
         return null;

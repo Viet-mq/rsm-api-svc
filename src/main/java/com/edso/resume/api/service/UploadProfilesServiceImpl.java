@@ -198,11 +198,11 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 //                logger.info("Họ và tên không đúng định dạng! fullName: {}", profiles.getFullName());
 //                continue;
 //            }
-            if (!Strings.isNullOrEmpty(profiles.getEmail()) && !AppUtils.validateEmail(profiles.getEmail())) {
+            if (!Strings.isNullOrEmpty(profiles.getEmail()) && !AppUtils.validateEmail(profiles.getEmail().trim())) {
                 logger.info("Email không đúng định dạng! email: {}", profiles.getEmail());
                 continue;
             }
-            if (!Strings.isNullOrEmpty(profiles.getPhoneNumber()) && !AppUtils.validatePhone(profiles.getPhoneNumber())) {
+            if (!Strings.isNullOrEmpty(profiles.getPhoneNumber()) && !AppUtils.validatePhone(profiles.getPhoneNumber().trim())) {
                 logger.info("Số điện thoại không đúng định dạng! phoneNumber: {}", profiles.getPhoneNumber());
                 continue;
             }
@@ -242,29 +242,31 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 return response;
             }
             Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
+            List<Document> profileList = new ArrayList<>();
+            List<Document> comments = new ArrayList<>();
             for (ProfileUploadEntity profile : profiles) {
                 String key = UUID.randomUUID().toString();
 
                 try {
                     List<DictionaryNameValidateProcessor> rs = new ArrayList<>();
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCV(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCV().trim(), db, this));
                     if (!Strings.isNullOrEmpty(profile.getEmail())) {
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail(), db, this));
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail().trim(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail().trim(), db, this));
                     }
                     if (!Strings.isNullOrEmpty(profile.getPhoneNumber())) {
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber().trim(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber().trim(), db, this));
                     }
-                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB, profile.getJob(), db, this));
+                    rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB, profile.getJob().trim(), db, this));
                     if (!Strings.isNullOrEmpty(profile.getLevel())) {
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB_LEVEL, profile.getLevel(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB_LEVEL, profile.getLevel().trim(), db, this));
                     }
                     if (!Strings.isNullOrEmpty(profile.getPic())) {
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PIC, profile.getPic(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PIC, profile.getPic().trim(), db, this));
                     }
                     if (!Strings.isNullOrEmpty(profile.getCompany())) {
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.COMPANY, profile.getCompany(), db, this));
+                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.COMPANY, profile.getCompany().trim(), db, this));
                     }
                     int total = rs.size();
 
@@ -275,12 +277,13 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 
                     long time = System.currentTimeMillis();
                     int count = 0;
+                    boolean check = false;
                     while (total > 0 && (time + 30000 > System.currentTimeMillis())) {
                         DictionaryNameValidatorResult validatorResult = queue.poll();
                         if (validatorResult != null) {
                             if (validatorResult.getKey().equals(key)) {
                                 if (!validatorResult.isResult()) {
-                                    break;
+                                    check = true;
                                 } else {
                                     count++;
                                 }
@@ -288,6 +291,9 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                             } else {
                                 queue.offer(validatorResult);
                             }
+                        }
+                        if (check) {
+                            break;
                         }
                     }
 
@@ -334,11 +340,11 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.TIME, parseMillis(profile.getTime()));
                     pro.append(DbKeyConfig.JOB_ID, jobId);
                     pro.append(DbKeyConfig.JOB_NAME, profile.getJob());
-                    pro.append(DbKeyConfig.FULL_NAME, profile.getFullName());
+                    pro.append(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(profile.getFullName()));
                     pro.append(DbKeyConfig.LINKEDIN, profile.getLinkedin());
                     pro.append(DbKeyConfig.FACEBOOK, profile.getFacebook());
-                    pro.append(DbKeyConfig.PHONE_NUMBER, profile.getPhoneNumber());
-                    pro.append(DbKeyConfig.EMAIL, profile.getEmail());
+                    pro.append(DbKeyConfig.PHONE_NUMBER, profile.getPhoneNumber().trim());
+                    pro.append(DbKeyConfig.EMAIL, profile.getEmail().trim());
                     pro.append(DbKeyConfig.SKYPE, profile.getSkype());
                     pro.append(DbKeyConfig.GITHUB, profile.getGithub());
                     pro.append(DbKeyConfig.OTHER_TECH, profile.getOtherTech());
@@ -356,8 +362,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
                     pro.append(DbKeyConfig.AVATAR_COLOR, color);
-
-                    db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
+                    profileList.add(pro);
 
                     Document comment = new Document();
                     comment.append(DbKeyConfig.ID, UUID.randomUUID().toString());
@@ -366,8 +371,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     comment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     comment.append(DbKeyConfig.CREATE_BY, info.getUsername());
                     comment.append(DbKeyConfig.FULL_NAME, user.get(DbKeyConfig.FULL_NAME));
-
-                    db.insertOne(CollectionNameDefs.COLL_COMMENT, comment);
+                    comments.add(comment);
 
                     ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
                     profileEntity.setId(idProfile);
@@ -399,6 +403,12 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         queue.removeIf(s -> s.getKey().equals(key));
                     }
                 }
+            }
+            if (!profileList.isEmpty()) {
+                db.insertMany(CollectionNameDefs.COLL_PROFILE, profileList);
+            }
+            if (!comments.isEmpty()) {
+                db.insertMany(CollectionNameDefs.COLL_COMMENT, comments);
             }
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);
