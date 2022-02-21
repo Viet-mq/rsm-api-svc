@@ -69,14 +69,10 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
 
         if (lst != null) {
             Set<String> statusCVName = new HashSet<>();
-            for (Document document : lst) {
-                Document id = (Document) document.get(DbKeyConfig._ID);
-                statusCVName.add(AppUtils.parseString(id.get(DbKeyConfig.STATUS_CV_NAME)));
-            }
-
             Set<Recruitment> recruitmentNames = new HashSet<>();
             for (Document document : lst) {
                 Document id = (Document) document.get(DbKeyConfig._ID);
+                statusCVName.add(AppUtils.parseString(id.get(DbKeyConfig.STATUS_CV_NAME)));
                 Recruitment recruitment = Recruitment.builder()
                         .fullNameCreator(AppUtils.parseString(id.get(DbKeyConfig.FULL_NAME_CREATOR)))
                         .createBy(AppUtils.parseString(id.get(DbKeyConfig.CREATE_RECRUITMENT_BY)))

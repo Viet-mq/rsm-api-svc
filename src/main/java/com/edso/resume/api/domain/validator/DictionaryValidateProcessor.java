@@ -218,6 +218,7 @@ public class DictionaryValidateProcessor implements Runnable {
             case ThreadConfig.PIC: {
                 result.setResult(true);
                 result.setName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)));
+                result.setMailRef(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                 return;
             }
             case ThreadConfig.USER: {

@@ -43,7 +43,6 @@ public class ProfileEntity {
     private String urlCV;
     private String avatarColor;
     private String isNew;
-    private String match;
     private List<String> followers;
     private List<String> tags;
     private Long time;
@@ -55,6 +54,7 @@ public class ProfileEntity {
     private String web;
     private String picId;
     private String picName;
+    private String picMail;
     private String status;
     private String companyId;
     private String companyName;

@@ -45,8 +45,20 @@ public class ProfileDetailEntity {
     private String recruitmentId;
     private String recruitmentName;
     private String avatarColor;
-    private String match;
     private List<String> followers;
     private List<String> tags;
+    private Long time;
+    private String linkedin;
+    private String facebook;
+    private String skype;
+    private String github;
+    private String otherTech;
+    private String web;
+    private String picId;
+    private String picName;
+    private String picMail;
+    private String status;
+    private String companyId;
+    private String companyName;
 
 }
