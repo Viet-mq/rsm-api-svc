@@ -362,8 +362,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.ID, idProfile);
             profile.append(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName()));
             profile.append(DbKeyConfig.GENDER, request.getGender());
-            profile.append(DbKeyConfig.PHONE_NUMBER, AppUtils.mergeWhitespace(request.getPhoneNumber()));
-            profile.append(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail()));
+            profile.append(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber().replaceAll(" ", ""));
+            profile.append(DbKeyConfig.EMAIL, request.getEmail().replaceAll(" ", ""));
             profile.append(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth());
             profile.append(DbKeyConfig.HOMETOWN, AppUtils.mergeWhitespace(request.getHometown()));
             profile.append(DbKeyConfig.SCHOOL_ID, request.getSchool());
@@ -519,8 +519,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.HOMETOWN, AppUtils.mergeWhitespace(request.getHometown())),
                     set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
                     set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                    set(DbKeyConfig.PHONE_NUMBER, AppUtils.mergeWhitespace(request.getPhoneNumber())),
-                    set(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail())),
+                    set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber().replaceAll(" ", "")),
+                    set(DbKeyConfig.EMAIL, request.getEmail().replaceAll(" ", "")),
                     set(DbKeyConfig.JOB_ID, request.getJob()),
                     set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                     set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),
@@ -680,8 +680,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.HOMETOWN, AppUtils.mergeWhitespace(request.getHometown())),
                     set(DbKeyConfig.SCHOOL_ID, request.getSchool()),
                     set(DbKeyConfig.SCHOOL_NAME, dictionaryNames.getSchoolName()),
-                    set(DbKeyConfig.PHONE_NUMBER, AppUtils.mergeWhitespace(request.getPhoneNumber())),
-                    set(DbKeyConfig.EMAIL, AppUtils.mergeWhitespace(request.getEmail())),
+                    set(DbKeyConfig.PHONE_NUMBER, request.getPhoneNumber().replaceAll(" ", "")),
+                    set(DbKeyConfig.EMAIL, request.getEmail().replaceAll(" ", "")),
                     set(DbKeyConfig.JOB_ID, request.getJob()),
                     set(DbKeyConfig.JOB_NAME, dictionaryNames.getJobName()),
                     set(DbKeyConfig.LEVEL_JOB_ID, request.getLevelJob()),

@@ -198,12 +198,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
 //                logger.info("Họ và tên không đúng định dạng! fullName: {}", profiles.getFullName());
 //                continue;
 //            }
-            if (!Strings.isNullOrEmpty(profiles.getEmail()) && !AppUtils.validateEmail(profiles.getEmail().trim())) {
+            if (!Strings.isNullOrEmpty(profiles.getEmail()) && !AppUtils.validateEmail(profiles.getEmail().replaceAll(" ", ""))) {
                 logger.info("Email không đúng định dạng! email: {}", profiles.getEmail());
-                continue;
-            }
-            if (!Strings.isNullOrEmpty(profiles.getPhoneNumber()) && !AppUtils.validatePhone(profiles.getPhoneNumber().trim())) {
-                logger.info("Số điện thoại không đúng định dạng! phoneNumber: {}", profiles.getPhoneNumber());
                 continue;
             }
             listProfile.add(profiles);

@@ -66,13 +66,10 @@ public class UpdateProfileRequest extends BaseAuthRequest {
         if (!Strings.isNullOrEmpty(school) && school.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.SCHOOL, "Vui lòng nhập nơi đào tạo học ít hơn 255 ký tự");
         }
-        if (!Strings.isNullOrEmpty(phoneNumber) && !AppUtils.validatePhone(phoneNumber.trim())) {
-            return new BaseResponse(ErrorCodeDefs.PHONE_NUMBER, "Vui lòng nhập số điện thoại đúng định dạng");
-        }
         if (!Strings.isNullOrEmpty(levelSchool) && levelSchool.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.LEVEL_SCHOOL, "Vui lòng nhập trình độ đào tạo ít hơn 255 ký tự");
         }
-        if (!Strings.isNullOrEmpty(email) && !AppUtils.validateEmail(email.trim())) {
+        if (!Strings.isNullOrEmpty(email) && !AppUtils.validateEmail(email.replaceAll(" ", ""))) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
         }
         if (Strings.isNullOrEmpty(job) || job.length() > 255) {

@@ -88,8 +88,8 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
             Document blacklist = new Document();
             blacklist.append("id", UUID.randomUUID().toString());
             blacklist.append("name", name);
-            blacklist.append("EMAIL", request.getEmail());
-            blacklist.append("phoneNumber", request.getPhoneNumber());
+            blacklist.append("EMAIL", request.getEmail().replaceAll(" ", ""));
+            blacklist.append("phoneNumber", request.getPhoneNumber().replaceAll(" ", ""));
             blacklist.append("ssn", request.getSsn());
             blacklist.append("reason", request.getReason());
             blacklist.append("name_search", name.toLowerCase());
@@ -136,8 +136,8 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
             logger.info(reason);
             if (request.getReason() != null) reason = request.getReason();
             Bson updates = Updates.combine(
-                    Updates.set("EMAIL", request.getEmail()),
-                    Updates.set("phoneNumber", request.getPhoneNumber()),
+                    Updates.set("EMAIL", request.getEmail().replaceAll(" ", "")),
+                    Updates.set("phoneNumber", request.getPhoneNumber().replaceAll(" ", "")),
                     Updates.set("ssn", request.getSsn()),
                     Updates.set("reason", reason),
                     Updates.set("name", request.getName()),
@@ -183,8 +183,8 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
     @Override
     public BaseResponse check(String email, String phoneNumber, String ssn) {
         BaseResponse response = new BaseResponse();
-        Bson emailCond = Filters.eq("EMAIL", email);
-        Bson phoneCond = Filters.eq("phoneNumber", phoneNumber);
+        Bson emailCond = Filters.eq("EMAIL", email.replaceAll(" ", ""));
+        Bson phoneCond = Filters.eq("phoneNumber", phoneNumber.replaceAll(" ", ""));
         Bson ssnCond = Filters.eq("ssn", ssn);
         Document emailDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, emailCond);
         Document phoneDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, phoneCond);
@@ -208,8 +208,8 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
 
     @Override
     public Boolean checkBlacklist(String email, String phoneNumber, String ssn) {
-        Bson emailCond = Filters.eq("EMAIL", email);
-        Bson phoneCond = Filters.eq("phoneNumber", phoneNumber);
+        Bson emailCond = Filters.eq("EMAIL", email.replaceAll(" ", ""));
+        Bson phoneCond = Filters.eq("phoneNumber", phoneNumber.replaceAll(" ", ""));
         Bson ssnCond = Filters.eq("ssn", ssn);
         Document emailDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, emailCond);
         Document phoneDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, phoneCond);

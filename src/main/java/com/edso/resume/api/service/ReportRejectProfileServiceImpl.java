@@ -77,12 +77,6 @@ public class ReportRejectProfileServiceImpl extends BaseService implements Repor
                     Document id = (Document) document.get(DbKeyConfig._ID);
                     if (AppUtils.parseString(id.get(DbKeyConfig.STATUS_CV_NAME)).equals(status)) {
                         total += AppUtils.parseLong(document.get(DbKeyConfig.COUNT));
-                    }
-                }
-
-                for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    if (AppUtils.parseString(id.get(DbKeyConfig.STATUS_CV_NAME)).equals(status)) {
                         long count = AppUtils.parseLong(document.get(DbKeyConfig.COUNT));
                         Reason reason = Reason.builder()
                                 .reason(AppUtils.parseString(id.get(DbKeyConfig.REASON)))
@@ -151,12 +145,6 @@ public class ReportRejectProfileServiceImpl extends BaseService implements Repor
                     Document id = (Document) document.get(DbKeyConfig._ID);
                     if (AppUtils.parseString(id.get(DbKeyConfig.STATUS_CV_NAME)).equals(status)) {
                         total += AppUtils.parseLong(document.get(DbKeyConfig.COUNT));
-                    }
-                }
-
-                for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    if (AppUtils.parseString(id.get(DbKeyConfig.STATUS_CV_NAME)).equals(status)) {
                         long count = AppUtils.parseLong(document.get(DbKeyConfig.COUNT));
                         Reason reason = Reason.builder()
                                 .reason(AppUtils.parseString(id.get(DbKeyConfig.REASON)))
