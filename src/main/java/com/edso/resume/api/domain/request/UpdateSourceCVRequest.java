@@ -25,7 +25,7 @@ public class UpdateSourceCVRequest extends BaseAuthRequest {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên nguồn CV");
         }
         if (!Strings.isNullOrEmpty(email)) {
-            if (email.length() > 255 || !AppUtils.validateEmail(email.trim())) {
+            if (email.length() > 255 || !AppUtils.validateEmail(email.replaceAll(" ", ""))) {
                 return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
             }
         }

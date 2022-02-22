@@ -60,7 +60,6 @@ public class ReportRecruitmentResultServiceImpl extends BaseService implements R
 
     @Override
     public ExportResponse exportReportRecruitmentResult(Long from, Long to) {
-        GetArrayResponse<ReportRecruitmentResultEntity> reponse = new GetArrayResponse<>();
         List<ReportRecruitmentResultEntity> rows = new ArrayList<>();
 
         List<Document> lst = db.findAll(CollectionNameDefs.COLL_RECRUITMENT, null, null, 0, 0);
