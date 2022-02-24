@@ -137,7 +137,7 @@ public class JobServiceImpl extends BaseService implements JobService {
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
-                    Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.mergeWhitespace(name.toLowerCase())),
+                    Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
                     Updates.set(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername())
             );
