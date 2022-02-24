@@ -36,6 +36,7 @@ public class DictionaryNamesEntity {
     private Document profile;
     private Document document;
     private Document otherProfile;
+    private Document statusCV;
     private List<Document> interviewer;
     private List<Document> skill;
 }

@@ -85,6 +85,7 @@ public class DictionaryNameValidateProcessor implements Runnable {
             case ThreadConfig.PIC: {
                 result.setResult(true);
                 result.setId(AppUtils.parseString(doc.get(DbKeyConfig.USERNAME)));
+                result.setMail(AppUtils.parseString(doc.get(DbKeyConfig.EMAIL)));
                 break;
             }
             default: {

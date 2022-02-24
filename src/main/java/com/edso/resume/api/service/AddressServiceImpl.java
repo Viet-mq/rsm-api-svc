@@ -64,7 +64,7 @@ public class AddressServiceImpl extends BaseService implements AddressService {
     public BaseResponse createAddress(CreateAddressRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            String name = request.getName().trim();
+            String name = request.getName();
             Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_ADDRESS, c);
 
@@ -110,7 +110,7 @@ public class AddressServiceImpl extends BaseService implements AddressService {
                 return response;
             }
 
-            String name = request.getName().trim();
+            String name = request.getName();
             Document obj = db.findOne(CollectionNameDefs.COLL_ADDRESS, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));

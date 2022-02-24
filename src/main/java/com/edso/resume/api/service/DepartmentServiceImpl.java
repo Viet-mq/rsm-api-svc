@@ -231,14 +231,14 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
                     Bson update = Updates.combine(
                             Updates.set(DbKeyConfig.PARENT_NAME, request.getName())
                     );
-                    db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, con, update, true);
+                    db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, con, update);
                 } else {
                     response.setFailed("Id này không tồn tại");
                     return response;
                 }
             }
 
-            db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, updates, true);
+            db.update(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, updates);
         } catch (Throwable e) {
             logger.error("Exception: ", e);
             response.setFailed("Hệ thống bận");
