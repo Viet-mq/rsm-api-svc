@@ -307,6 +307,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getCompany())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.COMPANY, request.getCompany(), db, this));
             }
+            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getRecruitment(), db, this));
+            }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
@@ -400,12 +406,33 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.STATUS, request.getStatus());
             profile.append(DbKeyConfig.COMPANY_ID, request.getCompany());
             profile.append(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName());
+            profile.append(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool());
+            profile.append(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName());
+
+            if (!Strings.isNullOrEmpty(request.getRecruitment())) {
+                Document document = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, dictionaryNames.getCreateRecruitmentBy()));
+                profile.append(DbKeyConfig.RECRUITMENT_ID, request.getRecruitment());
+                profile.append(DbKeyConfig.RECRUITMENT_NAME, dictionaryNames.getRecruitmentName());
+                profile.append(DbKeyConfig.RECRUITMENT_TIME, System.currentTimeMillis());
+                profile.append(DbKeyConfig.STATUS_CV_ID, AppUtils.parseString(dictionaryNames.getStatusCV().get(DbKeyConfig.ID)));
+                profile.append(DbKeyConfig.STATUS_CV_NAME, AppUtils.parseString(dictionaryNames.getStatusCV().get(DbKeyConfig.NAME)));
+                profile.append(DbKeyConfig.CREATE_RECRUITMENT_BY, dictionaryNames.getCreateRecruitmentBy());
+                profile.append(DbKeyConfig.FULL_NAME_CREATOR, AppUtils.parseString(document.get(DbKeyConfig.FULL_NAME)));
+
+                Bson cond1 = Filters.and(Filters.eq(DbKeyConfig.ID, request.getRecruitment()), Filters.eq("interview_process.id", AppUtils.parseString(dictionaryNames.getStatusCV().get(DbKeyConfig.ID))));
+                Bson updateTotal = Updates.combine(
+                        Updates.set("interview_process.$.total", AppUtils.parseLong(dictionaryNames.getStatusCV().get(DbKeyConfig.TOTAL)) + 1)
+                );
+                db.update(CollectionNameDefs.COLL_RECRUITMENT, cond1, updateTotal);
+            }
+
+            db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
 
             // insert to rabbitmq
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(idProfile, request, dictionaryNames);
             publishActionToRabbitMQ(RabbitMQConfig.CREATE, profileRabbitMQ);
             // insert to database
-            db.insertOne(CollectionNameDefs.COLL_PROFILE, profile);
+
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.CREATE, "Thêm ứng viên", request.getInfo());
 
@@ -559,6 +586,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
+            Bson updateCalendar = Updates.combine(
+                    set(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName())),
+                    set(DbKeyConfig.FULL_NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName()))
+            );
+            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, idProfile), updateCalendar);
+
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật thông tin ứng viên", request.getInfo());
 
@@ -665,15 +698,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             DictionaryNamesEntity dictionaryNames = getDictionayNames(rs);
 
-            //Update coll calendar
-            if (!dictionaryNames.getEmail().equals(request.getEmail())) {
-                Bson id = Filters.eq(DbKeyConfig.ID_PROFILE, request.getId());
-                Bson updateProfile = Updates.combine(
-                        set(DbKeyConfig.EMAIL, request.getEmail())
-                );
-                db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, id, updateProfile, true);
-            }
-
             Bson updates = Updates.combine(
                     set(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName())),
                     set(DbKeyConfig.DATE_OF_BIRTH, request.getDateOfBirth()),
@@ -723,6 +747,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             db.update(CollectionNameDefs.COLL_PROFILE, cond, updates, true);
 
+            Bson updateCalendar = Updates.combine(
+                    set(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(request.getFullName())),
+                    set(DbKeyConfig.FULL_NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getFullName()))
+            );
+            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, idProfile), updateCalendar);
+
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.UPDATE, "Cập nhật thông tin chi tiết ứng viên", request.getInfo());
 
@@ -746,8 +776,15 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     public BaseResponse deleteProfile(DeleteProfileRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            //Validate
             String id = request.getId();
+
+            long count = db.countAll(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, id));
+            if (count > 0) {
+                response.setFailed("Không thể xóa profile này!");
+                return response;
+            }
+
+            //Validate
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
             Document idDocument = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
 
@@ -960,7 +997,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             // update roles
             Bson updates = Updates.combine(
-                    set(DbKeyConfig.STATUS_CV_ID, "d0d08b54-4ac7-4947-9018-e8c4f991b7bs"),
+                    set(DbKeyConfig.STATUS_CV_ID, "d0d08b54-4ac7-4947-9018-e8c4f991b7b"),
                     set(DbKeyConfig.STATUS_CV_NAME, "Loại"),
                     set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
                     set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
@@ -1673,8 +1710,13 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     dictionaryNames.setCompanyName((String) r.getResult().getName());
                     break;
                 }
+                case ThreadConfig.RECRUITMENT: {
+                    dictionaryNames.setRecruitmentName((String) r.getResult().getName());
+                    dictionaryNames.setStatusCV(r.getResult().getDocument());
+                    dictionaryNames.setCreateRecruitmentBy(r.getResult().getFullName());
+                    break;
+                }
                 default: {
-                    logger.info("Không có tên của dictionary này!");
                     break;
                 }
             }
@@ -1693,12 +1735,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private ProfileRabbitMQEntity getProfileRabbit(String id, CreateProfileRequest request, DictionaryNamesEntity dictionaryNames) {
         ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
         profileEntity.setId(id);
-        profileEntity.setFullName(request.getFullName());
+        profileEntity.setFullName(AppUtils.mergeWhitespace(request.getFullName()));
         profileEntity.setGender(request.getGender());
-        profileEntity.setPhoneNumber(request.getPhoneNumber());
-        profileEntity.setEmail(request.getEmail());
+        profileEntity.setPhoneNumber(request.getPhoneNumber().replaceAll(" ", ""));
+        profileEntity.setEmail(request.getEmail().replaceAll(" ", ""));
         profileEntity.setDateOfBirth(request.getDateOfBirth());
-        profileEntity.setHometown(request.getHometown());
+        profileEntity.setHometown(AppUtils.mergeWhitespace(request.getHometown()));
         profileEntity.setSchoolId(request.getSchool());
         profileEntity.setSchoolName(dictionaryNames.getSchoolName());
         profileEntity.setJobId(request.getJob());
@@ -1713,23 +1755,44 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setTalentPoolName(dictionaryNames.getTalentPoolName());
         profileEntity.setDepartmentId(request.getDepartment());
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
-        profileEntity.setLevelSchool(request.getLevelSchool());
+        profileEntity.setLevelSchool(AppUtils.mergeWhitespace(request.getLevelSchool()));
         profileEntity.setMailRef(dictionaryNames.getEmailUser());
         profileEntity.setSkill(request.getSkill());
         profileEntity.setAvatarColor(request.getAvatarColor());
+        profileEntity.setUsername(request.getHrRef());
+        profileEntity.setPicId(request.getPic());
+        profileEntity.setPicName(dictionaryNames.getFullNamePIC());
+        profileEntity.setPicMail(dictionaryNames.getPicEmail());
+        profileEntity.setTime(request.getTime());
+        profileEntity.setLinkedin(request.getLinkedin());
+        profileEntity.setFacebook(request.getFacebook());
+        profileEntity.setSkype(request.getSkype());
+        profileEntity.setGithub(request.getGithub());
+        profileEntity.setOtherTech(request.getOtherTech());
+        profileEntity.setWeb(request.getWeb());
+        profileEntity.setStatus(request.getStatus());
+        profileEntity.setCompanyId(request.getCompany());
+        profileEntity.setCompanyName(dictionaryNames.getCompanyName());
+        profileEntity.setRecruitmentId(request.getRecruitment());
+        profileEntity.setRecruitmentName(dictionaryNames.getRecruitmentName());
+        if (dictionaryNames.getStatusCV() != null) {
+            profileEntity.setStatusCVName(AppUtils.parseString(dictionaryNames.getStatusCV().get(DbKeyConfig.NAME)));
+            profileEntity.setStatusCVId(AppUtils.parseString(dictionaryNames.getStatusCV().get(DbKeyConfig.ID)));
+        }
         profileEntity.setIsNew(true);
         return profileEntity;
     }
 
+
     private ProfileRabbitMQEntity getProfileRabbit(UpdateProfileRequest request, DictionaryNamesEntity dictionaryNames) {
         ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
         profileEntity.setId(request.getId());
-        profileEntity.setFullName(request.getFullName());
+        profileEntity.setFullName(AppUtils.mergeWhitespace(request.getFullName()));
         profileEntity.setGender(request.getGender());
-        profileEntity.setPhoneNumber(request.getPhoneNumber());
-        profileEntity.setEmail(request.getEmail());
+        profileEntity.setPhoneNumber(request.getPhoneNumber().replaceAll(" ", ""));
+        profileEntity.setEmail(request.getEmail().replaceAll(" ", ""));
         profileEntity.setDateOfBirth(request.getDateOfBirth());
-        profileEntity.setHometown(request.getHometown());
+        profileEntity.setHometown(AppUtils.mergeWhitespace(request.getHometown()));
         profileEntity.setSchoolId(request.getSchool());
         profileEntity.setSchoolName(dictionaryNames.getSchoolName());
         profileEntity.setJobId(request.getJob());
@@ -1740,23 +1803,38 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setSourceCVName(dictionaryNames.getSourceCVName());
         profileEntity.setHrRef(dictionaryNames.getFullNameUser());
         profileEntity.setDateOfApply(request.getDateOfApply());
+        profileEntity.setTalentPoolName(dictionaryNames.getTalentPoolName());
         profileEntity.setDepartmentId(request.getDepartment());
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
-        profileEntity.setLevelSchool(request.getLevelSchool());
+        profileEntity.setLevelSchool(AppUtils.mergeWhitespace(request.getLevelSchool()));
         profileEntity.setMailRef(dictionaryNames.getEmailUser());
         profileEntity.setSkill(request.getSkill());
+        profileEntity.setUsername(request.getHrRef());
+        profileEntity.setPicId(request.getPic());
+        profileEntity.setPicName(dictionaryNames.getFullNamePIC());
+        profileEntity.setPicMail(dictionaryNames.getPicEmail());
+        profileEntity.setTime(request.getTime());
+        profileEntity.setLinkedin(request.getLinkedin());
+        profileEntity.setFacebook(request.getFacebook());
+        profileEntity.setSkype(request.getSkype());
+        profileEntity.setGithub(request.getGithub());
+        profileEntity.setOtherTech(request.getOtherTech());
+        profileEntity.setWeb(request.getWeb());
+        profileEntity.setStatus(request.getStatus());
+        profileEntity.setCompanyId(request.getCompany());
+        profileEntity.setCompanyName(dictionaryNames.getCompanyName());
         return profileEntity;
     }
 
     private ProfileRabbitMQEntity getProfileRabbit(UpdateDetailProfileRequest request, DictionaryNamesEntity dictionaryNames) {
         ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
         profileEntity.setId(request.getId());
-        profileEntity.setFullName(request.getFullName());
+        profileEntity.setFullName(AppUtils.mergeWhitespace(request.getFullName()));
         profileEntity.setGender(request.getGender());
-        profileEntity.setPhoneNumber(request.getPhoneNumber());
-        profileEntity.setEmail(request.getEmail());
+        profileEntity.setPhoneNumber(request.getPhoneNumber().replaceAll(" ", ""));
+        profileEntity.setEmail(request.getEmail().replaceAll(" ", ""));
         profileEntity.setDateOfBirth(request.getDateOfBirth());
-        profileEntity.setHometown(request.getHometown());
+        profileEntity.setHometown(AppUtils.mergeWhitespace(request.getHometown()));
         profileEntity.setSchoolId(request.getSchool());
         profileEntity.setSchoolName(dictionaryNames.getSchoolName());
         profileEntity.setJobId(request.getJob());
@@ -1767,13 +1845,28 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setSourceCVName(dictionaryNames.getSourceCVName());
         profileEntity.setHrRef(dictionaryNames.getFullNameUser());
         profileEntity.setDateOfApply(request.getDateOfApply());
+        profileEntity.setTalentPoolName(dictionaryNames.getTalentPoolName());
         profileEntity.setDepartmentId(request.getDepartment());
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
-        profileEntity.setLevelSchool(request.getLevelSchool());
-        profileEntity.setEvaluation(request.getEvaluation());
-        profileEntity.setLastApply(request.getLastApply());
+        profileEntity.setLevelSchool(AppUtils.mergeWhitespace(request.getLevelSchool()));
         profileEntity.setMailRef(dictionaryNames.getEmailUser());
         profileEntity.setSkill(request.getSkill());
+        profileEntity.setUsername(request.getHrRef());
+        profileEntity.setPicId(request.getPic());
+        profileEntity.setPicName(dictionaryNames.getFullNamePIC());
+        profileEntity.setPicMail(dictionaryNames.getPicEmail());
+        profileEntity.setTime(request.getTime());
+        profileEntity.setLinkedin(request.getLinkedin());
+        profileEntity.setFacebook(request.getFacebook());
+        profileEntity.setSkype(request.getSkype());
+        profileEntity.setGithub(request.getGithub());
+        profileEntity.setOtherTech(request.getOtherTech());
+        profileEntity.setWeb(request.getWeb());
+        profileEntity.setStatus(request.getStatus());
+        profileEntity.setCompanyId(request.getCompany());
+        profileEntity.setCompanyName(dictionaryNames.getCompanyName());
+        profileEntity.setEvaluation(request.getEvaluation());
+        profileEntity.setLastApply(request.getLastApply());
         return profileEntity;
     }
 

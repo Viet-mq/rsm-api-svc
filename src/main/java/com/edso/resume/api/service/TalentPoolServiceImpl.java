@@ -168,6 +168,16 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
                 }
             }
 
+            Bson updateProfile = Updates.combine(
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, AppUtils.mergeWhitespace(name))
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.TALENT_POOL_ID, id), updateProfile);
+
+            Bson updateRecruitment = Updates.combine(
+                    Updates.set(DbKeyConfig.TALENT_POOL_NAME, AppUtils.mergeWhitespace(name))
+            );
+            db.update(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.TALENT_POOL_ID, id), updateRecruitment);
+
             //update
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
@@ -194,6 +204,17 @@ public class TalentPoolServiceImpl extends BaseService implements TalentPoolServ
     public BaseResponse deleteTalentPool(DeleteTalentPoolRequest request) {
         BaseResponse response = new BaseResponse();
         try {
+            long count = db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.TALENT_POOL_ID, request.getId()));
+            if (count > 0) {
+                response.setFailed("Không thể xóa talent pool này!");
+                return response;
+            }
+            long count2 = db.countAll(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.TALENT_POOL_ID, request.getId()));
+            if (count2 > 0) {
+                response.setFailed("Không thể xóa talent pool này!");
+                return response;
+            }
+
             String id = request.getId();
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
             Document idDocument = db.findOne(CollectionNameDefs.COLL_TALENT_POOL, cond);

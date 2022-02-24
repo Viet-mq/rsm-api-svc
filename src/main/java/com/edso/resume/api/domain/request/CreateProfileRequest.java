@@ -44,6 +44,7 @@ CreateProfileRequest extends BaseAuthRequest {
     private String web;
     private String status;
     private String company;
+    private String recruitment;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(fullName)) {

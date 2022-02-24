@@ -51,4 +51,8 @@ public class ProfileRabbitMQEntity {
     private String status;
     private String companyId;
     private String companyName;
+    private String username;
+    private List<String> followers;
+    private List<String> tags;
+    private String picMail;
 }

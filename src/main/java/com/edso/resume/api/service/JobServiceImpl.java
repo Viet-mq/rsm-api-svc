@@ -128,6 +128,11 @@ public class JobServiceImpl extends BaseService implements JobService {
             );
             db.update(CollectionNameDefs.COLL_PROFILE, idJob, updateProfile);
 
+            Bson updateRecruitment = Updates.combine(
+                    Updates.set(DbKeyConfig.JOB_NAME, AppUtils.mergeWhitespace(name))
+            );
+            db.update(CollectionNameDefs.COLL_RECRUITMENT, idJob, updateRecruitment);
+
             // update roles
             Bson updates = Updates.combine(
                     Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
@@ -153,24 +158,32 @@ public class JobServiceImpl extends BaseService implements JobService {
     public BaseResponse deleteJob(DeleteJobRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            Document job = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.JOB_ID, request.getId()));
-            if (job == null) {
-                String id = request.getId();
-                Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB, cond);
-
-                if (idDocument == null) {
-                    response.setFailed("Id này không tồn tại");
-                    return response;
-                }
-
-                db.delete(CollectionNameDefs.COLL_JOB, cond);
-                response.setSuccess();
-                return response;
-            } else {
+            long count = db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.JOB_ID, request.getId()));
+            if (count > 0) {
                 response.setFailed("Không thể xóa vị trí công việc này!");
                 return response;
             }
+            long count2 = db.countAll(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.JOB_ID, request.getId()));
+            if (count2 > 0) {
+                response.setFailed("Không thể xóa vị trí công việc này!");
+                return response;
+            }
+
+
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_JOB, cond);
+
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+
+            db.delete(CollectionNameDefs.COLL_JOB, cond);
+            response.setSuccess();
+            return response;
+
+
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);

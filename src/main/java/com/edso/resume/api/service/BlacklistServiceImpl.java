@@ -37,7 +37,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
     public GetArrayResponse<BlacklistEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(name)) {
-            c.add(Filters.regex("name_search", Pattern.compile(name.toLowerCase())));
+            c.add(Filters.regex("name_search", Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
@@ -74,14 +74,6 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
 
         try {
             String name = request.getName();
-            Bson c = Filters.eq("name_search", name.toLowerCase());
-            long count = db.countAll(CollectionNameDefs.COLL_BLACKLIST, c);
-
-            if (count > 0) {
-                response.setResult(ErrorCodeDefs.NAME, "Tên này đã tồn tại");
-                return response;
-            }
-
             response = check(request.getEmail(), request.getPhoneNumber(), request.getSsn());
             if (response != null) return response;
 
@@ -121,27 +113,13 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
                 return response;
             }
 
-            String name = request.getName();
-            Document obj = db.findOne(CollectionNameDefs.COLL_BLACKLIST, Filters.eq("name_search", name.toLowerCase()));
-            if (obj != null) {
-                String objId = AppUtils.parseString(obj.get("id"));
-                if (!objId.equals(id)) {
-                    response.setFailed("Name already existed !");
-                    return response;
-                }
-            }
-
-            //update roles
-            String reason = AppUtils.parseString(idDocument.get("reason"));
-            logger.info(reason);
-            if (request.getReason() != null) reason = request.getReason();
             Bson updates = Updates.combine(
                     Updates.set("EMAIL", request.getEmail().replaceAll(" ", "")),
                     Updates.set("phoneNumber", request.getPhoneNumber().replaceAll(" ", "")),
-                    Updates.set("ssn", request.getSsn()),
-                    Updates.set("reason", reason),
+                    Updates.set("ssn", request.getSsn().replaceAll(" ", "")),
+                    Updates.set("reason", request.getReason()),
                     Updates.set("name", request.getName()),
-                    Updates.set("name_search", request.getName().toLowerCase()),
+                    Updates.set("name_search", AppUtils.parseVietnameseToEnglish(request.getName())),
                     Updates.set("update_at", System.currentTimeMillis()),
                     Updates.set("update_by", request.getInfo().getUsername()),
                     Updates.set("update_blacklist_at", System.currentTimeMillis()),
@@ -185,7 +163,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
         BaseResponse response = new BaseResponse();
         Bson emailCond = Filters.eq("EMAIL", email.replaceAll(" ", ""));
         Bson phoneCond = Filters.eq("phoneNumber", phoneNumber.replaceAll(" ", ""));
-        Bson ssnCond = Filters.eq("ssn", ssn);
+        Bson ssnCond = Filters.eq("ssn", ssn.replaceAll(" ", ""));
         Document emailDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, emailCond);
         Document phoneDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, phoneCond);
         Document ssDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, ssnCond);
@@ -210,7 +188,7 @@ public class BlacklistServiceImpl extends BaseService implements BlacklistServic
     public Boolean checkBlacklist(String email, String phoneNumber, String ssn) {
         Bson emailCond = Filters.eq("EMAIL", email.replaceAll(" ", ""));
         Bson phoneCond = Filters.eq("phoneNumber", phoneNumber.replaceAll(" ", ""));
-        Bson ssnCond = Filters.eq("ssn", ssn);
+        Bson ssnCond = Filters.eq("ssn", ssn.replaceAll(" ", ""));
         Document emailDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, emailCond);
         Document phoneDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, phoneCond);
         Document ssDocument = db.findOne(CollectionNameDefs.COLL_BLACKLIST, ssnCond);

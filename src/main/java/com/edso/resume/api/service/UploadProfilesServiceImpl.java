@@ -238,8 +238,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                 return response;
             }
             Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
-            List<Document> profileList = new ArrayList<>();
-            List<Document> comments = new ArrayList<>();
             for (ProfileUploadEntity profile : profiles) {
                 String key = UUID.randomUUID().toString();
 
@@ -302,6 +300,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     String jobId = null;
                     String companyId = null;
                     String picId = null;
+                    String picMail = null;
 
                     for (DictionaryNameValidateProcessor r : rs) {
                         switch (r.getResult().getType()) {
@@ -323,6 +322,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                             }
                             case ThreadConfig.PIC: {
                                 picId = r.getResult().getId();
+                                picMail = r.getResult().getMail();
                                 break;
                             }
                         }
@@ -339,8 +339,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.FULL_NAME, AppUtils.mergeWhitespace(profile.getFullName()));
                     pro.append(DbKeyConfig.LINKEDIN, profile.getLinkedin());
                     pro.append(DbKeyConfig.FACEBOOK, profile.getFacebook());
-                    pro.append(DbKeyConfig.PHONE_NUMBER, profile.getPhoneNumber().trim());
-                    pro.append(DbKeyConfig.EMAIL, profile.getEmail().trim());
+                    pro.append(DbKeyConfig.PHONE_NUMBER, profile.getPhoneNumber().replaceAll(" ", ""));
+                    pro.append(DbKeyConfig.EMAIL, profile.getEmail().replaceAll(" ", ""));
                     pro.append(DbKeyConfig.SKYPE, profile.getSkype());
                     pro.append(DbKeyConfig.GITHUB, profile.getGithub());
                     pro.append(DbKeyConfig.OTHER_TECH, profile.getOtherTech());
@@ -351,6 +351,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.WEB, profile.getWeb());
                     pro.append(DbKeyConfig.PIC_ID, picId);
                     pro.append(DbKeyConfig.PIC_NAME, profile.getPic());
+                    pro.append(DbKeyConfig.PIC_MAIL, picMail);
                     pro.append(DbKeyConfig.STATUS, profile.getStatus());
                     pro.append(DbKeyConfig.COMPANY_ID, companyId);
                     pro.append(DbKeyConfig.COMPANY_NAME, profile.getCompany());
@@ -358,7 +359,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
                     pro.append(DbKeyConfig.AVATAR_COLOR, color);
-                    profileList.add(pro);
+                    db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
 
                     Document comment = new Document();
                     comment.append(DbKeyConfig.ID, UUID.randomUUID().toString());
@@ -367,7 +368,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     comment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     comment.append(DbKeyConfig.CREATE_BY, info.getUsername());
                     comment.append(DbKeyConfig.FULL_NAME, user.get(DbKeyConfig.FULL_NAME));
-                    comments.add(comment);
+                    db.insertOne(CollectionNameDefs.COLL_COMMENT, comment);
 
                     ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
                     profileEntity.setId(idProfile);
@@ -377,8 +378,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     profileEntity.setFullName(profile.getFullName());
                     profileEntity.setLinkedin(profile.getLinkedin());
                     profileEntity.setFacebook(profile.getFacebook());
-                    profileEntity.setPhoneNumber(profile.getPhoneNumber());
-                    profileEntity.setEmail(profile.getEmail());
+                    profileEntity.setPhoneNumber(profile.getPhoneNumber().replaceAll(" ", ""));
+                    profileEntity.setEmail(profile.getEmail().replaceAll(" ", ""));
                     profileEntity.setSkype(profile.getSkype());
                     profileEntity.setGithub(profile.getGithub());
                     profileEntity.setOtherTech(profile.getOtherTech());
@@ -399,12 +400,6 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                         queue.removeIf(s -> s.getKey().equals(key));
                     }
                 }
-            }
-            if (!profileList.isEmpty()) {
-                db.insertMany(CollectionNameDefs.COLL_PROFILE, profileList);
-            }
-            if (!comments.isEmpty()) {
-                db.insertMany(CollectionNameDefs.COLL_COMMENT, comments);
             }
         } catch (Throwable ex) {
             logger.error("Exception: ", ex);

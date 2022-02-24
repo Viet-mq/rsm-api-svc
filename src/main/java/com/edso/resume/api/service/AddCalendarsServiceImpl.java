@@ -47,7 +47,7 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
         BaseResponse response = null;
         try {
             List<CreateTimeCalendarRequest> list = JsonHelper.convertJsonToList(request.getTimes(), CreateTimeCalendarRequest[].class);
-            if (list == null || list.isEmpty()) {
+            if (list.isEmpty()) {
                 return new BaseResponse(-1, "Vui lòng nhập 1 list ứng viên");
             }
             if (presenter.getFilePresenters() != null && !presenter.getFilePresenters().isEmpty()) {
@@ -146,9 +146,7 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                 calendar.append(DbKeyConfig.FULL_NAME_SEARCH, AppUtils.parseVietnameseToEnglish(dictionaryNames.getFullName()));
                 calendar.append(DbKeyConfig.RECRUITMENT_NAME_SEARCH, AppUtils.parseVietnameseToEnglish(dictionaryNames.getRecruitmentName()));
                 calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
-                calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
                 calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-                calendar.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
 
                 // insert to database
                 db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);

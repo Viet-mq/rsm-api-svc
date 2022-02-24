@@ -111,4 +111,5 @@ cv:
   path: /usr/share/nginx/file-rs/
 id:
   pass: 'cc281050-00d8-486c-af68-b10cd83f937c'
-  reject: 'd0d08b54-4ac7-4947-9018-e8c4f991b7be'
+  reject: 'd0d08b54-4ac7-4947-9018-e8c4f991b7b'
+  apply: 'c8f1c1c3-efdd-4c96-9f9c-01dfb3dbef1a'

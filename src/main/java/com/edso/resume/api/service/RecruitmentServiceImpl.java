@@ -373,7 +373,19 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         Updates.set(DbKeyConfig.STATUS_CV_NAME, roundEntity.getName())
                 );
                 db.update(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.RECRUITMENT_ID, request.getId()), Filters.eq(DbKeyConfig.STATUS_CV_ID, roundEntity.getId())), update);
+                db.update(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.STATUS_CV_ID, roundEntity.getId()), update);
             }
+
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle()))
+            );
+            db.update(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.RECRUITMENT_ID, request.getId()), update);
+
+            Bson updateRecruitment = Updates.combine(
+                    Updates.set(DbKeyConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle())),
+                    Updates.set(DbKeyConfig.RECRUITMENT_NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getTitle()))
+            );
+            db.update(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.RECRUITMENT_ID, request.getId()), updateRecruitment);
 
             // update roles
             Bson updates = Updates.combine(
@@ -424,21 +436,27 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
     public BaseResponse deleteRecruitment(DeleteRecruitmentRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            Document recruitment = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.RECRUITMENT_ID, request.getId()));
-            if (recruitment == null) {
-                String id = request.getId();
-                Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                Document idDocument = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, cond);
+            String id = request.getId();
 
-                if (idDocument == null) {
-                    response.setFailed("Id này không tồn tại");
-                    return response;
-                }
-                db.delete(CollectionNameDefs.COLL_RECRUITMENT, cond);
-                response.setSuccess();
+            Document recruitment = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.RECRUITMENT_ID, id));
+            if (recruitment != null) {
+                response.setFailed("Không thể xóa tin tuyển dụng này!");
                 return response;
             }
-            response.setFailed("Không thể xóa tin tuyển dụng này!");
+            Document calendar = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.RECRUITMENT_ID, id));
+            if (calendar != null) {
+                response.setFailed("Không thể xóa tin tuyển dụng này!");
+                return response;
+            }
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, cond);
+
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+            db.delete(CollectionNameDefs.COLL_RECRUITMENT, cond);
+            response.setSuccess();
             return response;
 
         } catch (Throwable ex) {
