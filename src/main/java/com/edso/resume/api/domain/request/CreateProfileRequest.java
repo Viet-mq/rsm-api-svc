@@ -53,9 +53,6 @@ CreateProfileRequest extends BaseAuthRequest {
 //        if (fullName.length() > 255 || !AppUtils.validateFullName(fullName)) {
 //            return new BaseResponse(ErrorCodeDefs.FULL_NAME, "Vui lòng nhập đúng định dạng họ và tên");
 //        }
-        if (dateOfBirth != null && dateOfBirth < 0) {
-            return new BaseResponse(ErrorCodeDefs.DATE_OF_BIRTH, "Vui lòng nhập đúng định dạng ngày sinh");
-        }
         if (!Strings.isNullOrEmpty(gender)) {
             if (!gender.equals(NameConfig.NAM) && !gender.equals(NameConfig.NU)) {
                 return new BaseResponse(ErrorCodeDefs.GENDER, "Vui lòng nhập Nam hoặc Nữ");
@@ -85,17 +82,11 @@ CreateProfileRequest extends BaseAuthRequest {
         if (!Strings.isNullOrEmpty(hrRef) && hrRef.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.HR_REF, "Vui lòng nhập tên người giới thiệu ít hơn 255 ký tự");
         }
-        if (dateOfApply == null || dateOfApply < 0) {
-            return new BaseResponse(ErrorCodeDefs.DATE_OF_APPLY, "Vui lòng nhập ngày ứng tuyển");
-        }
         if (!Strings.isNullOrEmpty(talentPool) && talentPool.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.TALENT_POOL, "Vui lòng nhập talent pool ít hơn 255 ký tự");
         }
         if (!Strings.isNullOrEmpty(department) && department.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.DEPARTMENT, "Vui lòng nhập phòng ban ít hơn 255 ký tự");
-        }
-        if (time != null && time < 0) {
-            return new BaseResponse(ErrorCodeDefs.TIME, "Vui lòng nhập thời gian nhập lớn hơn 0");
         }
         return null;
     }
