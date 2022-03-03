@@ -804,6 +804,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             //Xóa profile
             db.delete(CollectionNameDefs.COLL_PROFILE, cond);
 
+            //Xóa trong bảng loại ứng viên
+            db.delete(CollectionNameDefs.COLL_REASON_REJECT_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, id));
+
             //Xóa lịch phỏng vấn
             calendarService.deleteCalendarByIdProfile(id);
 

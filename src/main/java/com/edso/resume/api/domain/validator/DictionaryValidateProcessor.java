@@ -204,7 +204,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return;
             }
             case ThreadConfig.REJECT_PROFILE: {
-                if (AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)).equals("")) {
+                if (AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)).equals("d0d08b54-4ac7-4947-9018-e8c4f991b7b")) {
                     result.setResult(false);
                     result.setName("Không thể loại ứng viên đã bị loại!");
                     return;
