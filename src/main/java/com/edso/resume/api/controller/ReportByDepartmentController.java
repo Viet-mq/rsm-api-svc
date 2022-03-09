@@ -1,6 +1,7 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.entities.ReportByDepartmentEntity;
+import com.edso.resume.api.domain.entities.ReportByDepartmentEntity2;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.api.service.ReportByDepartmentService;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -35,7 +36,7 @@ public class ReportByDepartmentController extends BaseController {
             @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>getReportByDepartmentService u: {}", headerInfo);
-        GetArrayStatisticalReponse<ReportByDepartmentEntity> resp = reportByDepartmentService.findAll(from, to);
+        GetArrayStatisticalReponse<ReportByDepartmentEntity2> resp = reportByDepartmentService.findAll(from, to);
         logger.info("<=getReportByDepartmentService u: {}, resp: {}", headerInfo, resp.info());
         return resp;
     }

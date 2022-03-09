@@ -10,6 +10,7 @@ import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,47 +34,65 @@ public class ReportRecruitmentResultServiceImpl extends BaseService implements R
 
     @Override
     public GetArrayResponse<ReportRecruitmentResultEntity> findAll(Long from, Long to) {
-        GetArrayResponse<ReportRecruitmentResultEntity> reponse = new GetArrayResponse<>();
+        GetArrayResponse<ReportRecruitmentResultEntity> response = new GetArrayResponse<>();
         List<ReportRecruitmentResultEntity> rows = new ArrayList<>();
-
-        List<Document> lst = db.findAll(CollectionNameDefs.COLL_RECRUITMENT, null, null, 0, 0);
+        List<Bson> c = new ArrayList<>();
+        if (from != null) {
+            c.add(Filters.gte(DbKeyConfig.CREATE_AT, from));
+        }
+        if (to != null) {
+            c.add(Filters.lte(DbKeyConfig.CREATE_AT, to));
+        }
+        Bson cond = buildCondition(c);
+        List<Document> lst = db.findAll(CollectionNameDefs.COLL_RECRUITMENT, cond, null, 0, 0);
 
         if (lst != null) {
             for (Document document : lst) {
                 int needToRecruit = AppUtils.parseInt(document.get(DbKeyConfig.QUANTITY));
                 int recruited = (int) db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.STATUS_CV_ID, idPass), Filters.eq(DbKeyConfig.RECRUITMENT_ID, document.get(DbKeyConfig.ID))));
-                double persent = (double) recruited / (double) needToRecruit * 100;
+                double percent = (double) recruited / (double) needToRecruit * 100;
                 ReportRecruitmentResultEntity reportRecruitmentResultEntity = ReportRecruitmentResultEntity.builder()
                         .recruitmentName(AppUtils.parseString(document.get(DbKeyConfig.TITLE)))
                         .needToRecruit(needToRecruit)
                         .recruited(recruited)
-                        .percent(String.format("%.2f", persent) + "%")
+                        .percent(String.format("%.2f", percent) + "%")
                         .build();
                 rows.add(reportRecruitmentResultEntity);
             }
         }
-        reponse.setRows(rows);
-        reponse.setTotal(rows.size());
-        reponse.setSuccess();
-        return reponse;
+        response.setRows(rows);
+        response.setTotal(rows.size());
+        response.setSuccess();
+        return response;
     }
 
     @Override
     public ExportResponse exportReportRecruitmentResult(Long from, Long to) {
         List<ReportRecruitmentResultEntity> rows = new ArrayList<>();
-
-        List<Document> lst = db.findAll(CollectionNameDefs.COLL_RECRUITMENT, null, null, 0, 0);
+        List<Bson> c = new ArrayList<>();
+        if (from != null) {
+            c.add(Filters.gte(DbKeyConfig.CREATE_AT, from));
+        }else{
+            from = 0L;
+        }
+        if (to != null) {
+            c.add(Filters.lte(DbKeyConfig.CREATE_AT, to));
+        }else {
+            to = System.currentTimeMillis();
+        }
+        Bson cond = buildCondition(c);
+        List<Document> lst = db.findAll(CollectionNameDefs.COLL_RECRUITMENT, cond, null, 0, 0);
 
         if (lst != null) {
             for (Document document : lst) {
                 int needToRecruit = AppUtils.parseInt(document.get(DbKeyConfig.QUANTITY));
                 int recruited = (int) db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.STATUS_CV_ID, idPass), Filters.eq(DbKeyConfig.RECRUITMENT_ID, document.get(DbKeyConfig.ID))));
-                double persent = (double) recruited / (double) needToRecruit * 100;
+                double percent = (double) recruited / (double) needToRecruit * 100;
                 ReportRecruitmentResultEntity reportRecruitmentResultEntity = ReportRecruitmentResultEntity.builder()
                         .recruitmentName(AppUtils.parseString(document.get(DbKeyConfig.TITLE)))
                         .needToRecruit(needToRecruit)
                         .recruited(recruited)
-                        .percent(String.format("%.2f", persent) + "%")
+                        .percent(String.format("%.2f", percent) + "%")
                         .build();
                 rows.add(reportRecruitmentResultEntity);
             }

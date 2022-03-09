@@ -14,9 +14,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-public class ReportByDepartment implements Runnable {
+public class ReportByDepartment extends BaseReport implements Runnable {
 
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final Set<String> sourceCVNames;
     private final List<ReportByDepartmentEntity> rows;
     private final AggregateIterable<Document> lst;

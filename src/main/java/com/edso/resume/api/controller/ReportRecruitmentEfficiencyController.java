@@ -1,6 +1,7 @@
 package com.edso.resume.api.controller;
 
 import com.edso.resume.api.domain.entities.ReportRecruitmentEfficiencyEntity;
+import com.edso.resume.api.domain.entities.ReportRecruitmentEfficiencyEntity2;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.api.service.ReportRecruitmentEfficiencyService;
 import com.edso.resume.lib.entities.HeaderInfo;
@@ -36,7 +37,7 @@ public class ReportRecruitmentEfficiencyController extends BaseController {
             @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>getReportRecruitmentEfficiency u: {}", headerInfo);
-        GetArrayResponse<ReportRecruitmentEfficiencyEntity> resp = reportRecruitmentEfficiencyService.findAll(from, to);
+        GetArrayResponse<ReportRecruitmentEfficiencyEntity2> resp = reportRecruitmentEfficiencyService.findAll(from, to);
         logger.info("<=getReportRecruitmentEfficiency u: {}, resp: {}", headerInfo, resp.info());
         return resp;
     }
