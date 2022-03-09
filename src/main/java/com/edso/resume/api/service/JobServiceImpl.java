@@ -64,7 +64,7 @@ public class JobServiceImpl extends BaseService implements JobService {
 
         BaseResponse response = new BaseResponse();
         try {
-            String name = request.getName().trim();
+            String name = request.getName();
             Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             long count = db.countAll(CollectionNameDefs.COLL_JOB, c);
 
