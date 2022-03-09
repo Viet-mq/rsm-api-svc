@@ -2,9 +2,11 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.ReportByDepartmentEntity;
+import com.edso.resume.api.domain.entities.ReportByDepartmentEntity2;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.api.exporter.PositionResumeExporter;
 import com.edso.resume.api.report.ReportByDepartment;
+import com.edso.resume.api.report.ReportByDepartment2;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -34,10 +36,10 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
     }
 
     @Override
-    public GetArrayStatisticalReponse<ReportByDepartmentEntity> findAll(Long from, Long to) {
-        GetArrayStatisticalReponse<ReportByDepartmentEntity> reponse = new GetArrayStatisticalReponse<>();
+    public GetArrayStatisticalReponse<ReportByDepartmentEntity2> findAll(Long from, Long to) {
+        GetArrayStatisticalReponse<ReportByDepartmentEntity2> response = new GetArrayStatisticalReponse<>();
         try {
-            List<ReportByDepartmentEntity> rows = new ArrayList<>();
+            List<ReportByDepartmentEntity2> rows = new ArrayList<>();
 
             List<Bson> c = new ArrayList<>();
             Document query1 = new Document();
@@ -78,18 +80,18 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
 
                 CountDownLatch countDownLatch = new CountDownLatch(recruitmentNames.size());
                 for (String recruitmentName : recruitmentNames) {
-                    new Thread(new ReportByDepartment(sourceCVNames, rows, lst, recruitmentName, countDownLatch)).start();
+                    new Thread(new ReportByDepartment2(sourceCVNames, rows, lst, recruitmentName, countDownLatch)).start();
                 }
                 countDownLatch.await();
             }
-            reponse.setRows(rows);
-            reponse.setTotal(rows.size());
-            reponse.setSuccess();
-            return reponse;
+            response.setRows(rows);
+            response.setTotal(rows.size());
+            response.setSuccess();
+            return response;
         } catch (Throwable ex) {
             logger.error("Ex :", ex);
-            reponse.setFailed("Hệ thống bận");
-            return reponse;
+            response.setFailed("Hệ thống bận");
+            return response;
         }
     }
 

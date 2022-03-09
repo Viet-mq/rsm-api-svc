@@ -3,9 +3,11 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.Recruitment;
 import com.edso.resume.api.domain.entities.ReportRecruitmentEfficiencyEntity;
+import com.edso.resume.api.domain.entities.ReportRecruitmentEfficiencyEntity2;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.api.exporter.ReportRecruitmentEfficiencyExporter;
 import com.edso.resume.api.report.ReportRecruitmentEfficiency;
+import com.edso.resume.api.report.ReportRecruitmentEfficiency2;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -35,11 +37,11 @@ public class ReportRecruitmentEfficiencyServiceImpl extends BaseService implemen
     }
 
     @Override
-    public GetArrayResponse<ReportRecruitmentEfficiencyEntity> findAll(Long from, Long to) {
-        GetArrayResponse<ReportRecruitmentEfficiencyEntity> response = new GetArrayResponse<>();
+    public GetArrayResponse<ReportRecruitmentEfficiencyEntity2> findAll(Long from, Long to) {
+        GetArrayResponse<ReportRecruitmentEfficiencyEntity2> response = new GetArrayResponse<>();
 
         try {
-            List<ReportRecruitmentEfficiencyEntity> rows = new ArrayList<>();
+            List<ReportRecruitmentEfficiencyEntity2> rows = new ArrayList<>();
 
             List<Bson> c = new ArrayList<>();
             Document query1 = new Document();
@@ -84,7 +86,7 @@ public class ReportRecruitmentEfficiencyServiceImpl extends BaseService implemen
 
                 CountDownLatch countDownLatch = new CountDownLatch(recruitmentNames.size());
                 for (Recruitment recruitment : recruitmentNames) {
-                    new Thread(new ReportRecruitmentEfficiency(statusCVName, lst, recruitment, rows, countDownLatch)).start();
+                    new Thread(new ReportRecruitmentEfficiency2(statusCVName, lst, recruitment, rows, countDownLatch)).start();
                 }
                 countDownLatch.await();
             }
