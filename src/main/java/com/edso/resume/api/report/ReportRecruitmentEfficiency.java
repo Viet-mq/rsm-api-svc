@@ -15,9 +15,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-public class ReportRecruitmentEfficiency implements Runnable {
+public class ReportRecruitmentEfficiency extends BaseReport implements Runnable {
 
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final Set<String> statusCVName;
     private final AggregateIterable<Document> lst;
     private final Recruitment recruitment;

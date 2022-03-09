@@ -3,9 +3,12 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.Recruitment;
 import com.edso.resume.api.domain.entities.ReportRecruitmentActivitiesEntity;
+import com.edso.resume.api.domain.entities.ReportRecruitmentActivitiesEntity2;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.api.exporter.ReportRecruitmentActivitiesExporter;
 import com.edso.resume.api.report.ReportRecruitmentActivities;
+import com.edso.resume.api.report.ReportRecruitmentActivities2;
+import com.edso.resume.api.report.ReportRecruitmentActivities3;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
@@ -35,10 +38,10 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
     }
 
     @Override
-    public GetArrayResponse<ReportRecruitmentActivitiesEntity> findAll(Long from, Long to) {
-        GetArrayResponse<ReportRecruitmentActivitiesEntity> reponse = new GetArrayResponse<>();
+    public GetArrayResponse<ReportRecruitmentActivitiesEntity2> findAll(Long from, Long to) {
+        GetArrayResponse<ReportRecruitmentActivitiesEntity2> response = new GetArrayResponse<>();
         try {
-            List<ReportRecruitmentActivitiesEntity> rows = new ArrayList<>();
+            List<ReportRecruitmentActivitiesEntity2> rows = new ArrayList<>();
 
             List<Bson> c = new ArrayList<>();
             Document query1 = new Document();
@@ -58,7 +61,7 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
 
             Document query2 = new Document();
             query2.append("$group", new Document()
-                    .append("_id", new Document().append(DbKeyConfig.STATUS_CV_NAME, "$status_cv_name").append(DbKeyConfig.FULL_NAME_CREATOR, "$full_name_creator").append(DbKeyConfig.CREATE_RECRUITMENT_BY, "$create_recruitment_by"))
+                    .append("_id", new Document().append(DbKeyConfig.STATUS_CV_NAME, "$status_cv_name").append(DbKeyConfig.CREATE_BY, "$create_by"))
                     .append("count", new Document().append("$sum", 1)
                     )
             );
@@ -67,34 +70,32 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
             c.add(query2);
 
             AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
-
             if (lst != null) {
                 Set<String> statusCVNames = new HashSet<>();
                 Set<Recruitment> recruitmentNames = new HashSet<>();
-                for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    statusCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.STATUS_CV_NAME)));
-                    Recruitment recruitment = Recruitment.builder()
-                            .fullNameCreator(AppUtils.parseString(id.get(DbKeyConfig.FULL_NAME_CREATOR)))
-                            .createBy(AppUtils.parseString(id.get(DbKeyConfig.CREATE_RECRUITMENT_BY)))
-                            .build();
-                    recruitmentNames.add(recruitment);
+                int count = 0;
+                for(Document ignored : lst){
+                    count++;
                 }
-
-                CountDownLatch countDownLatch = new CountDownLatch(recruitmentNames.size());
-                for (Recruitment recruitment : recruitmentNames) {
-                    new Thread(new ReportRecruitmentActivities(db, statusCVNames, rows, lst, recruitment, countDownLatch)).start();
+                CountDownLatch countDownLatch = new CountDownLatch(count);
+                for (Document document : lst) {
+                    new Thread(new ReportRecruitmentActivities3(statusCVNames,recruitmentNames,document,db, countDownLatch)).start();
                 }
                 countDownLatch.await();
+                CountDownLatch countDownLatch2 = new CountDownLatch(recruitmentNames.size());
+                for (Recruitment recruitment : recruitmentNames) {
+                    new Thread(new ReportRecruitmentActivities2(db, statusCVNames, rows, lst, recruitment, countDownLatch2)).start();
+                }
+                countDownLatch2.await();
             }
-            reponse.setRows(rows);
-            reponse.setTotal(rows.size());
-            reponse.setSuccess();
-            return reponse;
+            response.setRows(rows);
+            response.setTotal(rows.size());
+            response.setSuccess();
+            return response;
         } catch (Throwable ex) {
             logger.error("Ex :", ex);
-            reponse.setFailed("Hệ thống bận");
-            return reponse;
+            response.setFailed("Hệ thống bận");
+            return response;
         }
     }
 
@@ -125,7 +126,7 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
 
             Document query2 = new Document();
             query2.append("$group", new Document()
-                    .append("_id", new Document().append(DbKeyConfig.STATUS_CV_NAME, "$status_cv_name").append(DbKeyConfig.FULL_NAME_CREATOR, "$full_name_creator").append(DbKeyConfig.CREATE_RECRUITMENT_BY, "$create_recruitment_by"))
+                    .append("_id", new Document().append(DbKeyConfig.STATUS_CV_NAME, "$status_cv_name").append(DbKeyConfig.CREATE_BY, "$create_by"))
                     .append("count", new Document().append("$sum", 1)
                     )
             );
@@ -135,27 +136,23 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
 
             AggregateIterable<Document> lst = db.countGroupBy(CollectionNameDefs.COLL_PROFILE, c);
             Set<String> statusCVNames = new HashSet<>();
+            Set<Recruitment> recruitmentNames = new HashSet<>();
             if (lst != null) {
-                for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    statusCVNames.add(AppUtils.parseString(id.get(DbKeyConfig.STATUS_CV_NAME)));
+                int count = 0;
+                for(Document ignored : lst){
+                    count++;
                 }
-
-                Set<Recruitment> recruitmentNames = new HashSet<>();
+                CountDownLatch countDownLatch = new CountDownLatch(count);
                 for (Document document : lst) {
-                    Document id = (Document) document.get(DbKeyConfig._ID);
-                    Recruitment recruitment = Recruitment.builder()
-                            .fullNameCreator(AppUtils.parseString(id.get(DbKeyConfig.FULL_NAME_CREATOR)))
-                            .createBy(AppUtils.parseString(id.get(DbKeyConfig.CREATE_RECRUITMENT_BY)))
-                            .build();
-                    recruitmentNames.add(recruitment);
-                }
-
-                CountDownLatch countDownLatch = new CountDownLatch(recruitmentNames.size());
-                for (Recruitment recruitment : recruitmentNames) {
-                    new Thread(new ReportRecruitmentActivities(db, statusCVNames, rows, lst, recruitment, countDownLatch)).start();
+                    new Thread(new ReportRecruitmentActivities3(statusCVNames,recruitmentNames,document,db, countDownLatch)).start();
                 }
                 countDownLatch.await();
+
+                CountDownLatch countDownLatch1 = new CountDownLatch(recruitmentNames.size());
+                for (Recruitment recruitment : recruitmentNames) {
+                    new Thread(new ReportRecruitmentActivities(db, statusCVNames, rows, lst, recruitment, countDownLatch1)).start();
+                }
+                countDownLatch1.await();
             }
             return exporter.exportReportRecruitmentActivities(rows, statusCVNames, path, from, to);
         } catch (Throwable ex) {
