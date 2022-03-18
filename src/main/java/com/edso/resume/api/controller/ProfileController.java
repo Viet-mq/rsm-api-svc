@@ -36,14 +36,16 @@ public class ProfileController extends BaseController {
             @RequestParam(value = "statusCV", required = false) String statusCV,
             @RequestParam(value = "key", required = false) String key,
             @RequestParam(value = "tag", required = false) String tag,
+            @RequestParam(value = "pic", required = false) String pic,
+            @RequestParam(value = "hrRef", required = false) String hrRef,
             @RequestParam(value = "from", required = false) Long from,
             @RequestParam(value = "to", required = false) Long to,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, from:{}, to:{}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, from, to, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, from, to, page, size);
-        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, from:{}, to:{}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, from, to, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, pic: {}, hrRef: {}, from:{}, to:{}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, page, size);
+        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, pic: {}, hrRef: {}, from:{}, to:{}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, page, size, resp.info());
         return resp;
     }
 

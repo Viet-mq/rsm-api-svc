@@ -81,6 +81,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                                                    String statusCV,
                                                    String key,
                                                    String tag,
+                                                   String pic,
+                                                   String hrRef,
                                                    Long from,
                                                    Long to,
                                                    Integer page,
@@ -127,6 +129,12 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (calendar.equals("notset")) {
                 c.add(Filters.ne(DbKeyConfig.CALENDAR, 1));
             }
+        }
+        if (!Strings.isNullOrEmpty(pic)) {
+            c.add(Filters.eq(DbKeyConfig.PIC_ID, pic));
+        }
+        if (!Strings.isNullOrEmpty(hrRef)) {
+            c.add(Filters.eq(DbKeyConfig.USERNAME, hrRef));
         }
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);

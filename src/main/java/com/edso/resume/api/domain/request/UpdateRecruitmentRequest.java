@@ -66,15 +66,6 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
         if (to != null && to < 0) {
             return new BaseResponse(ErrorCodeDefs.TO, "Vui lòng nhập mức lương đến bao nhiêu");
         }
-        if (Strings.isNullOrEmpty(jobDescription) || jobDescription.length() > 100000) {
-            return new BaseResponse(ErrorCodeDefs.JOB_DESCRIPTION, "Vui lòng nhập mô tả công việc chi tiết");
-        }
-        if (Strings.isNullOrEmpty(requirementOfJob) || requirementOfJob.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.REQUIREMENT_OF_JOB, "Vui lòng nhập yêu cầu công việc");
-        }
-        if (!Strings.isNullOrEmpty(interest) && interest.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.INTEREST, "Vui lòng nhập quyền lợi");
-        }
         if (deadLine == null || deadLine <= 0) {
             return new BaseResponse(ErrorCodeDefs.DEAD_LINE, "Vui lòng nhập hạn nộp hồ sơ");
         }
