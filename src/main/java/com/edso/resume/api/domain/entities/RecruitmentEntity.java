@@ -30,6 +30,8 @@ public class RecruitmentEntity {
     private Long createAt;
     private String createBy;
     private String fullName;
+    private String departmentId;
+    private String departmentName;
     private List<UserEntity> interviewer;
     private List<RoundEntity> interviewProcess;
 }

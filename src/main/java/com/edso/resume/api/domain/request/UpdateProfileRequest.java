@@ -30,6 +30,7 @@ public class UpdateProfileRequest extends BaseAuthRequest {
     private List<String> skill;
     private String levelJob;
     private String hrRef;
+    private String mailRef2;
     private String department;
     private String pic;
     private Long time;
@@ -68,6 +69,9 @@ public class UpdateProfileRequest extends BaseAuthRequest {
         }
         if (!Strings.isNullOrEmpty(email) && !AppUtils.validateEmail(email.replaceAll(" ", ""))) {
             return new BaseResponse(ErrorCodeDefs.EMAIL, "Vui lòng nhập đúng định dạng email");
+        }
+        if (!Strings.isNullOrEmpty(mailRef2) && !AppUtils.validateEmail(mailRef2.replaceAll(" ", ""))) {
+            return new BaseResponse(ErrorCodeDefs.MAIL_REF2, "Vui lòng nhập đúng định dạng email người giới thiệu");
         }
         if (Strings.isNullOrEmpty(job) || job.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.JOB, "Vui lòng nhập vị trí công việc");

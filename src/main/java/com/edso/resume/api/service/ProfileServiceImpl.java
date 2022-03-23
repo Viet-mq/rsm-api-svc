@@ -175,6 +175,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .recruitmentId(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_ID)))
                         .recruitmentName(AppUtils.parseString(doc.get(DbKeyConfig.RECRUITMENT_NAME)))
                         .mailRef(AppUtils.parseString(doc.get(DbKeyConfig.MAIL_REF)))
+                        .mailRef2(AppUtils.parseString(doc.get(DbKeyConfig.MAIL_REF2)))
                         .username(AppUtils.parseString(doc.get(DbKeyConfig.USERNAME)))
                         .skill((List<SkillEntity>) doc.get(DbKeyConfig.SKILL))
                         .avatarColor(AppUtils.parseString(doc.get(DbKeyConfig.AVATAR_COLOR)))
@@ -254,6 +255,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .recruitmentId(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_ID)))
                 .recruitmentName(AppUtils.parseString(one.get(DbKeyConfig.RECRUITMENT_NAME)))
                 .mailRef(AppUtils.parseString(one.get(DbKeyConfig.MAIL_REF)))
+                .mailRef2(AppUtils.parseString(one.get(DbKeyConfig.MAIL_REF2)))
                 .username(AppUtils.parseString(one.get(DbKeyConfig.USERNAME)))
                 .skill((List<SkillEntity>) one.get(DbKeyConfig.SKILL))
                 .avatarColor(AppUtils.parseString(one.get(DbKeyConfig.AVATAR_COLOR)))
@@ -416,6 +418,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName());
             profile.append(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool());
             profile.append(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName());
+            profile.append(DbKeyConfig.MAIL_REF2, AppUtils.removeWhitespace(request.getMailRef2()));
 
             if (!Strings.isNullOrEmpty(request.getRecruitment())) {
                 Document document = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, dictionaryNames.getCreateRecruitmentBy()));
@@ -585,10 +588,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.WEB, request.getWeb()),
                     set(DbKeyConfig.STATUS, request.getStatus()),
                     set(DbKeyConfig.COMPANY_ID, request.getCompany()),
-                    set(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName())
+                    set(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName()),
+                    set(DbKeyConfig.MAIL_REF2, AppUtils.removeWhitespace(request.getMailRef2()))
             );
 
-            // insert to rabbitmq
+            // insert to rabbitmq       
             ProfileRabbitMQEntity profileRabbitMQ = getProfileRabbit(request, dictionaryNames);
             publishActionToRabbitMQ(RabbitMQConfig.UPDATE, profileRabbitMQ);
 
@@ -746,7 +750,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                     set(DbKeyConfig.WEB, request.getWeb()),
                     set(DbKeyConfig.STATUS, request.getStatus()),
                     set(DbKeyConfig.COMPANY_ID, request.getCompany()),
-                    set(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName())
+                    set(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName()),
+                    set(DbKeyConfig.MAIL_REF2, AppUtils.removeWhitespace(request.getMailRef2()))
             );
 
             // insert to rabbitmq
@@ -1768,6 +1773,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
         profileEntity.setLevelSchool(AppUtils.mergeWhitespace(request.getLevelSchool()));
         profileEntity.setMailRef(dictionaryNames.getEmailUser());
+        profileEntity.setMailRef2(AppUtils.removeWhitespace(request.getMailRef2()));
         profileEntity.setSkill(request.getSkill());
         profileEntity.setAvatarColor(request.getAvatarColor());
         profileEntity.setUsername(request.getHrRef());
@@ -1819,6 +1825,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
         profileEntity.setLevelSchool(AppUtils.mergeWhitespace(request.getLevelSchool()));
         profileEntity.setMailRef(dictionaryNames.getEmailUser());
+        profileEntity.setMailRef2(AppUtils.removeWhitespace(request.getMailRef2()));
         profileEntity.setSkill(request.getSkill());
         profileEntity.setUsername(request.getHrRef());
         profileEntity.setPicId(request.getPic());
@@ -1861,6 +1868,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setDepartmentName(dictionaryNames.getDepartmentName());
         profileEntity.setLevelSchool(AppUtils.mergeWhitespace(request.getLevelSchool()));
         profileEntity.setMailRef(dictionaryNames.getEmailUser());
+        profileEntity.setMailRef2(AppUtils.removeWhitespace(request.getMailRef2()));
         profileEntity.setSkill(request.getSkill());
         profileEntity.setUsername(request.getHrRef());
         profileEntity.setPicId(request.getPic());

@@ -190,11 +190,16 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
                 }
             }
 
-            Bson idJobLevel = Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId());
+            Bson departmentId = Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId());
             Bson updateProfile = Updates.combine(
                     Updates.set(DbKeyConfig.DEPARTMENT_NAME, AppUtils.mergeWhitespace(name))
             );
-            db.update(CollectionNameDefs.COLL_PROFILE, idJobLevel, updateProfile);
+            db.update(CollectionNameDefs.COLL_PROFILE, departmentId, updateProfile);
+
+            Bson updateRecruitment = Updates.combine(
+                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, AppUtils.mergeWhitespace(name))
+            );
+            db.update(CollectionNameDefs.COLL_RECRUITMENT, departmentId, updateRecruitment);
 
             Bson updates;
             if (!Strings.isNullOrEmpty(idParent)) {
@@ -254,22 +259,26 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
         BaseResponse response = new BaseResponse();
         try {
             Document department = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId()));
-            if (department == null) {
-                String id = request.getId();
-                Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
-
-                if (idDocument == null) {
-                    response.setFailed("Id này không tồn tại");
-                    return response;
-                }
-                db.delete(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
-                response.setSuccess();
-                return response;
-            } else {
+            if (department != null) {
                 response.setFailed("Không thể xóa phòng ban này!");
                 return response;
             }
+            Document recruitment = db.findOne(CollectionNameDefs.COLL_RECRUITMENT, Filters.eq(DbKeyConfig.DEPARTMENT_ID, request.getId()));
+            if (recruitment != null) {
+                response.setFailed("Không thể xóa phòng ban này!");
+                return response;
+            }
+            String id = request.getId();
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
+
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+            db.delete(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond);
+            response.setSuccess();
+            return response;
         } catch (Throwable e) {
             logger.error("Exception: ", e);
             response.setFailed("Hệ thống bận");

@@ -6,8 +6,6 @@ import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.mongodb.client.AggregateIterable;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;

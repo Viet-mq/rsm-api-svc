@@ -1,6 +1,5 @@
 package com.edso.resume.api.controller;
 
-import com.edso.resume.api.domain.entities.ReportRecruitmentActivitiesEntity;
 import com.edso.resume.api.domain.entities.ReportRecruitmentActivitiesEntity2;
 import com.edso.resume.api.domain.response.ExportResponse;
 import com.edso.resume.api.service.ReportRecruitmentActivitiesService;

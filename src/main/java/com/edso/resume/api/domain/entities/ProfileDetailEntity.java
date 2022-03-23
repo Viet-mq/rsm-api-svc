@@ -26,6 +26,7 @@ public class ProfileDetailEntity {
     private String username;
     private String hrRef;
     private String mailRef;
+    private String mailRef2;
     private Long dateOfApply;
     private List<SkillEntity> skill;
     private Long lastApply;

@@ -30,6 +30,7 @@ public class UpdateRecruitmentRequest extends BaseAuthRequest {
     private String talentPool;
     private String salaryDescription;
     private String status;
+    private String department;
     private List<String> interviewer;
     private List<RoundEntity> interviewProcess;
 
