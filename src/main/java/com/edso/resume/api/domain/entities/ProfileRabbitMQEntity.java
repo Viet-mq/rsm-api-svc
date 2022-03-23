@@ -23,6 +23,7 @@ public class ProfileRabbitMQEntity {
     private String sourceCVName;
     private String hrRef;
     private String mailRef;
+    private String mailRef2;
     private List<String> skill;
     private Long dateOfApply;
     private String statusCVId;

@@ -303,7 +303,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return Filters.eq(DbKeyConfig.PHONE_NUMBER, this.id);
             }
             case ThreadConfig.RECRUITMENT_NAME: {
-                return Filters.eq(DbKeyConfig.NAME_EQUAL, this.id);
+                return Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, this.id), Filters.gte(DbKeyConfig.DEAD_LINE, AppUtils.getTimeBeginningDay()));
             }
             case ThreadConfig.FOLLOWER: {
                 return Filters.eq(DbKeyConfig.FOLLOWERS, this.id);

@@ -9,7 +9,6 @@ import com.edso.resume.api.exporter.ReportRecruitmentActivitiesExporter;
 import com.edso.resume.api.report.ReportRecruitmentActivities;
 import com.edso.resume.api.report.ReportRecruitmentActivities2;
 import com.edso.resume.api.report.ReportRecruitmentActivities3;
-import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.response.GetArrayResponse;
@@ -74,12 +73,12 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
                 Set<String> statusCVNames = new HashSet<>();
                 Set<Recruitment> recruitmentNames = new HashSet<>();
                 int count = 0;
-                for(Document ignored : lst){
+                for (Document ignored : lst) {
                     count++;
                 }
                 CountDownLatch countDownLatch = new CountDownLatch(count);
                 for (Document document : lst) {
-                    new Thread(new ReportRecruitmentActivities3(statusCVNames,recruitmentNames,document,db, countDownLatch)).start();
+                    new Thread(new ReportRecruitmentActivities3(statusCVNames, recruitmentNames, document, db, countDownLatch)).start();
                 }
                 countDownLatch.await();
                 CountDownLatch countDownLatch2 = new CountDownLatch(recruitmentNames.size());
@@ -139,12 +138,12 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
             Set<Recruitment> recruitmentNames = new HashSet<>();
             if (lst != null) {
                 int count = 0;
-                for(Document ignored : lst){
+                for (Document ignored : lst) {
                     count++;
                 }
                 CountDownLatch countDownLatch = new CountDownLatch(count);
                 for (Document document : lst) {
-                    new Thread(new ReportRecruitmentActivities3(statusCVNames,recruitmentNames,document,db, countDownLatch)).start();
+                    new Thread(new ReportRecruitmentActivities3(statusCVNames, recruitmentNames, document, db, countDownLatch)).start();
                 }
                 countDownLatch.await();
 

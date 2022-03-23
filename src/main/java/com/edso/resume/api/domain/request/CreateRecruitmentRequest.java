@@ -30,6 +30,7 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
     private List<String> interviewer;
     private List<RoundEntity> interviewProcess;
     private String salaryDescription;
+    private String department;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(title) || title.length() > 255) {

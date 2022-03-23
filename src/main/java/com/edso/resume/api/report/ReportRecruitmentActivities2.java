@@ -2,19 +2,18 @@ package com.edso.resume.api.report;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.Recruitment;
-import com.edso.resume.api.domain.entities.ReportRecruitmentActivitiesEntity;
 import com.edso.resume.api.domain.entities.ReportRecruitmentActivitiesEntity2;
-import com.edso.resume.api.domain.entities.StatusEntity;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 public class ReportRecruitmentActivities2 extends BaseReport implements Runnable {

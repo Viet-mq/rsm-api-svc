@@ -72,12 +72,12 @@ public class ReportRecruitmentResultServiceImpl extends BaseService implements R
         List<Bson> c = new ArrayList<>();
         if (from != null) {
             c.add(Filters.gte(DbKeyConfig.CREATE_AT, from));
-        }else{
+        } else {
             from = 0L;
         }
         if (to != null) {
             c.add(Filters.lte(DbKeyConfig.CREATE_AT, to));
-        }else {
+        } else {
             to = System.currentTimeMillis();
         }
         Bson cond = buildCondition(c);

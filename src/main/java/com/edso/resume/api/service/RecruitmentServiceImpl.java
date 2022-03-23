@@ -133,6 +133,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         .interviewer(userEntityList)
                         .interviewProcess(roundEntityList)
                         .fullName(AppUtils.parseString(doc.get(DbKeyConfig.FULL_NAME)))
+                        .departmentId(AppUtils.parseString(doc.get(DbKeyConfig.DEPARTMENT_ID)))
+                        .departmentName(AppUtils.parseString(doc.get(DbKeyConfig.DEPARTMENT_NAME)))
                         .build();
                 rows.add(recruitment);
             }
@@ -193,6 +195,9 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             if (!Strings.isNullOrEmpty(request.getTalentPool())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getDepartment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
@@ -277,7 +282,9 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()));
             recruitment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             recruitment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-            recruitment.append(DbKeyConfig.FULL_NAME, AppUtils.parseString(user.get(DbKeyConfig.FULL_NAME)));
+//            recruitment.append(DbKeyConfig.FULL_NAME, AppUtils.parseString(user.get(DbKeyConfig.FULL_NAME)));
+            recruitment.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
+            recruitment.append(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_RECRUITMENT, recruitment);
@@ -311,6 +318,9 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
             if (!Strings.isNullOrEmpty(request.getTalentPool())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
+            }
+            if (!Strings.isNullOrEmpty(request.getDepartment())) {
+                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
             }
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
             DictionaryValidateProcessor dictionaryValidateProcessor = new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this);
@@ -409,6 +419,8 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                     Updates.set(DbKeyConfig.INTERVIEWERS, dictionaryNames.getInterviewer()),
                     Updates.set(DbKeyConfig.INTERVIEW_PROCESS, interviewProcess),
                     Updates.set(DbKeyConfig.STATUS, request.getStatus()),
+                    Updates.set(DbKeyConfig.DEPARTMENT_ID, request.getDepartment()),
+                    Updates.set(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(request.getTitle())),
                     Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getTitle().toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
@@ -522,6 +534,10 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 }
                 case ThreadConfig.ADDRESS: {
                     dictionaryNames.setAddressName((String) r.getResult().getName());
+                    break;
+                }
+                case ThreadConfig.DEPARTMENT: {
+                    dictionaryNames.setDepartmentName((String) r.getResult().getName());
                     break;
                 }
                 default: {

@@ -34,6 +34,7 @@ public class ProfileEntity {
     private String username;
     private String hrRef;
     private String mailRef;
+    private String mailRef2;
     private String departmentId;
     private String departmentName;
     private String statusCVId;

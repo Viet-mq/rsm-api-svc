@@ -111,13 +111,13 @@ public class ReportRejectProfileServiceImpl extends BaseService implements Repor
 
         if (from != null && from > 0) {
             match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$gte", from));
-        }else {
+        } else {
             from = 0L;
         }
 
         if (to != null && to > 0) {
             match.append(DbKeyConfig.RECRUITMENT_TIME, new Document().append("$lte", to));
-        }else {
+        } else {
             to = System.currentTimeMillis();
         }
         match.append("status_cv_name", new Document().append("$ne", null));

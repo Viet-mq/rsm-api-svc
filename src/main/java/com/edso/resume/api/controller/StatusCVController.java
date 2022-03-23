@@ -11,6 +11,7 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class StatusCVController extends BaseController {
 
     private final StatusCVService statusCVService;
 
-    public StatusCVController(StatusCVService statusCVService) {
+    public StatusCVController(@Qualifier("statusCVServiceImpl2") StatusCVService statusCVService) {
         this.statusCVService = statusCVService;
     }
 
