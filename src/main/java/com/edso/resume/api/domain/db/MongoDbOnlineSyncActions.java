@@ -163,6 +163,19 @@ public class MongoDbOnlineSyncActions extends BaseAction {
         return 0;
     }
 
+    public long update(String collectionName, Bson condition, Bson values, UpdateOptions options) {
+        try {
+            MongoClient mongoClient = mongoDbAccess.getMongo();
+            MongoDatabase database = mongoClient.getDatabase(dbName);
+            UpdateResult result = database.getCollection(collectionName).updateMany(condition, values, options);
+            logger.info("update: {} result: {}", collectionName, result);
+            return result.getModifiedCount();
+        } catch (Exception ex) {
+            logger.error("Ex: ", ex);
+        }
+        return 0;
+    }
+
     public void bulkUpdate(String collectionName, List<WriteModel<Document>> data) {
         try {
             MongoClient mongoClient = mongoDbAccess.getMongo();
