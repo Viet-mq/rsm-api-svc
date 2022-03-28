@@ -199,7 +199,9 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             if (!Strings.isNullOrEmpty(request.getDepartment())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this));
+            DictionaryValidateProcessor processor = new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this);
+            processor.setDepartmentId(request.getDepartment());
+            rs.add(processor);
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
             if (request.getInterviewer() != null && !request.getInterviewer().isEmpty()) {
@@ -282,7 +284,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()));
             recruitment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             recruitment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-//            recruitment.append(DbKeyConfig.FULL_NAME, AppUtils.parseString(user.get(DbKeyConfig.FULL_NAME)));
+            recruitment.append(DbKeyConfig.FULL_NAME, AppUtils.parseString(user.get(DbKeyConfig.FULL_NAME)));
             recruitment.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
             recruitment.append(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName());
 
@@ -325,6 +327,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
             DictionaryValidateProcessor dictionaryValidateProcessor = new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this);
             dictionaryValidateProcessor.setRecruitmentId(request.getId());
+            dictionaryValidateProcessor.setDepartmentId(request.getDepartment());
             rs.add(dictionaryValidateProcessor);
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
