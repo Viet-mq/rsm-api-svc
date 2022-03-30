@@ -131,7 +131,7 @@ public class JobLevelServiceImpl extends BaseService implements JobLevelService 
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, name),
+                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
                     Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),

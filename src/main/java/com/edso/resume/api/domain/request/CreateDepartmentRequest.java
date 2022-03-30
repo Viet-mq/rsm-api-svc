@@ -11,19 +11,12 @@ import lombok.ToString;
 @Data
 @ToString(callSuper = true)
 public class CreateDepartmentRequest extends BaseAuthRequest {
-    private String idCompany;
     private String name;
-    private String description;
+    private String idParent;
 
     public BaseResponse validate() {
-//        if (!Strings.isNullOrEmpty(idCompany) || idCompany.length() > 255) {
-//            return new BaseResponse(-1, "Vui lòng nhập id company");
-//        }
         if (Strings.isNullOrEmpty(name) || name.length() > 255) {
             return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên phòng ban");
-        }
-        if (!Strings.isNullOrEmpty(description) && description.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.DESCRIPTION, "Vui lòng nhập mô tả ít hơn 255 ký tự");
         }
         return null;
     }

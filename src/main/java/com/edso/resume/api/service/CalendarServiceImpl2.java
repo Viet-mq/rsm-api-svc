@@ -54,7 +54,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     }
 
     @Override
-    public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String idProfile, String key, String keySearch, String recruitment) {
+    public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String id, String idProfile, String key, String keySearch, String recruitment) {
         GetArrayCalendarResponse<CalendarEntity2> resp = new GetArrayCalendarResponse<>();
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(keySearch)) {
@@ -65,6 +65,9 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
         }
         if (!Strings.isNullOrEmpty(recruitment)) {
             c.add(Filters.eq(DbKeyConfig.RECRUITMENT_ID, recruitment));
+        }
+        if (!Strings.isNullOrEmpty(id)) {
+            c.add(Filters.eq(DbKeyConfig.ID, id));
         }
         if (!Strings.isNullOrEmpty(key)) {
             if (key.equals("create")) {
