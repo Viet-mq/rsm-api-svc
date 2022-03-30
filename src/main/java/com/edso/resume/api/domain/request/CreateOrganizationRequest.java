@@ -16,7 +16,7 @@ import java.util.List;
 public class CreateOrganizationRequest extends BaseAuthRequest{
     private String name;
     private String description;
-    private List<Document> organizations;
+    private List<String> organizations;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(name)) {

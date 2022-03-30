@@ -37,12 +37,6 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
     @Override
     public GetArrayResponse<DepartmentEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         GetArrayResponse<DepartmentEntity> resp = new GetArrayResponse<>();
-//        Bson cond = Filters.eq(DbKeyConfig.COMPANY_ID, idCompany);
-//        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, idCompany));
-//        if (company == null) {
-//            resp.setFailed("Không tồn tại công ty này");
-//            return resp;
-//        }
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, null, null, pagingInfo.getStart(), pagingInfo.getLimit());
         List<DepartmentEntity> rows = new ArrayList<>();

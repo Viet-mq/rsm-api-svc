@@ -26,7 +26,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
-public class OrganizationServiceImpl extends BaseService implements OrganizationService{
+public class OrganizationServiceImpl extends BaseService implements OrganizationService {
     protected OrganizationServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
     }
@@ -47,6 +47,8 @@ public class OrganizationServiceImpl extends BaseService implements Organization
                 OrganizationEntity organization = OrganizationEntity.builder()
                         .id(AppUtils.parseString(doc.get(DbKeyConfig.ID)))
                         .name(AppUtils.parseString(doc.get(DbKeyConfig.NAME)))
+                        .description(AppUtils.parseString(doc.get(DbKeyConfig.DESCRIPTION)))
+                        .organizations((List<String>) doc.get(DbKeyConfig.ORGANIZATIONS))
                         .build();
                 rows.add(organization);
             }
@@ -72,24 +74,8 @@ public class OrganizationServiceImpl extends BaseService implements Organization
                 return response;
             }
 
-            FindIterable<Document> departments = db.findAll2(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.in(DbKeyConfig.ID, request.getOrganizations()), null, 0, 0);
-            List<Document> organizationResult = new ArrayList<>();
-            if (departments == null) {
-                response.setFailed("Không tồn tại tổ chức này");
-                return response;
-            }
-            for (Document document : departments) {
-                document.remove("_id");
-                document.remove(DbKeyConfig.NAME_SEARCH);
-                document.remove(DbKeyConfig.NAME_EQUAL);
-                document.remove(DbKeyConfig.CREATE_AT);
-                document.remove(DbKeyConfig.CREATE_BY);
-                document.remove(DbKeyConfig.UPDATE_AT);
-                document.remove(DbKeyConfig.UPDATE_BY);
-                document.remove(DbKeyConfig.APIS);
-                organizationResult.add(document);
-            }
-            if (organizationResult.size() != request.getOrganizations().size()) {
+            List<Document> departments = db.findAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.in(DbKeyConfig.ID, request.getOrganizations()), null, 0, 0);
+            if (departments.size() != request.getOrganizations().size()) {
                 response.setFailed("Không tồn tại tổ chức này");
                 return response;
             }
@@ -98,6 +84,7 @@ public class OrganizationServiceImpl extends BaseService implements Organization
             organization.append(DbKeyConfig.ID, UUID.randomUUID().toString());
             organization.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
             organization.append(DbKeyConfig.DESCRIPTION, AppUtils.mergeWhitespace(request.getDescription()));
+            organization.append(DbKeyConfig.ORGANIZATIONS, request.getOrganizations());
             organization.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
             organization.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
             organization.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
@@ -145,16 +132,23 @@ public class OrganizationServiceImpl extends BaseService implements Organization
                 }
             }
 
-            Bson idOrganization = Filters.eq(DbKeyConfig.LEVEL_JOB_ID, request.getId());
-            Bson updateProfile = Updates.combine(
-                    Updates.set(DbKeyConfig.LEVEL_JOB_NAME, AppUtils.mergeWhitespace(name))
-            );
-            db.update(CollectionNameDefs.COLL_PROFILE, idOrganization, updateProfile);
+            List<Document> departments = db.findAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.in(DbKeyConfig.ID, request.getOrganizations()), null, 0, 0);
+            if (departments.size() != request.getOrganizations().size()) {
+                response.setFailed("Không tồn tại tổ chức này");
+                return response;
+            }
 
+            Bson idOrganization = Filters.eq(DbKeyConfig.ORGANIZATION_ID, request.getId());
+            Bson updateUser = Updates.combine(
+                    Updates.set(DbKeyConfig.ORGANIZATION_NAME, AppUtils.mergeWhitespace(name))
+            );
+            db.update(CollectionNameDefs.COLL_USER, idOrganization, updateUser);
 
             // update roles
             Bson updates = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, name),
+                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
+                    Updates.set(DbKeyConfig.DESCRIPTION, AppUtils.mergeWhitespace(request.getDescription())),
+                    Updates.set(DbKeyConfig.ORGANIZATIONS, request.getOrganizations()),
                     Updates.set(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name)),
                     Updates.set(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())),
                     Updates.set(DbKeyConfig.UPDATE_AT, System.currentTimeMillis()),
@@ -177,23 +171,22 @@ public class OrganizationServiceImpl extends BaseService implements Organization
     public BaseResponse deleteOrganization(DeleteOrganizationRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            Document levelJob = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(DbKeyConfig.LEVEL_JOB_ID, request.getId()));
-            if (levelJob == null) {
-                String id = request.getId();
-                Bson cond = Filters.eq(DbKeyConfig.ID, id);
-                Document idDocument = db.findOne(CollectionNameDefs.COLL_ORGANIZATION, cond);
-
-                if (idDocument == null) {
-                    response.setFailed("Id này không tồn tại");
-                    return response;
-                }
-                db.delete(CollectionNameDefs.COLL_ORGANIZATION, cond);
-                response.setSuccess();
-                return response;
-            } else {
-                response.setFailed("Không thể xóa cấp bậc công việc này!");
+            String id = request.getId();
+            Document document = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.ORGANIZATION_ID, id));
+            if (document != null) {
+                response.setFailed("Không thể xóa tổ chức này");
                 return response;
             }
+            Bson cond = Filters.eq(DbKeyConfig.ID, id);
+            Document idDocument = db.findOne(CollectionNameDefs.COLL_ORGANIZATION, cond);
+
+            if (idDocument == null) {
+                response.setFailed("Id này không tồn tại");
+                return response;
+            }
+            db.delete(CollectionNameDefs.COLL_ORGANIZATION, cond);
+            response.setSuccess();
+            return response;
         } catch (Throwable ex) {
 
             logger.error("Exception: ", ex);

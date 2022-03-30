@@ -136,6 +136,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         if (!Strings.isNullOrEmpty(hrRef)) {
             c.add(Filters.eq(DbKeyConfig.USERNAME, hrRef));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATION_ID, info.getOrganizations()));
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -212,7 +213,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     public GetResponse<ProfileDetailEntity> findOne(HeaderInfo info, String idProfile) {
 
         GetResponse<ProfileDetailEntity> response = new GetResponse<>();
-        Bson cond = Filters.eq(DbKeyConfig.ID, idProfile);
+        List<Bson> c = new ArrayList<>();
+        c.add(Filters.eq(DbKeyConfig.ID, idProfile));
+        c.add(Filters.in(DbKeyConfig.ORGANIZATION_ID, info.getOrganizations()));
+        Bson cond = buildCondition(c);
         //Validate
         Document one = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
         if (one == null) {

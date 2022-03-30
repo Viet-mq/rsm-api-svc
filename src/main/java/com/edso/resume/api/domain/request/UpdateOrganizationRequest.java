@@ -17,7 +17,7 @@ public class UpdateOrganizationRequest extends BaseAuthRequest {
     private String id;
     private String name;
     private String description;
-    private List<Document> organizations;
+    private List<String> organizations;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id)) {
