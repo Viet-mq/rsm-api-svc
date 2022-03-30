@@ -326,15 +326,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this);
-                dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
-                rs.add(dictionaryValidateProcessorPhoneNumber);
             }
             if (!Strings.isNullOrEmpty(request.getEmail())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail().trim(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail().trim(), db, this);
-                dictionaryValidateProcessorEmail.setIdProfile(idProfile);
-                rs.add(dictionaryValidateProcessorEmail);
             }
             int total = rs.size();
 
@@ -503,15 +497,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this);
-                dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
-                rs.add(dictionaryValidateProcessorPhoneNumber);
             }
             if (!Strings.isNullOrEmpty(request.getEmail())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail().trim(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail().trim(), db, this);
-                dictionaryValidateProcessorEmail.setIdProfile(idProfile);
-                rs.add(dictionaryValidateProcessorEmail);
             }
             int total = rs.size();
 
@@ -663,15 +651,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorPhoneNumber = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this);
-                dictionaryValidateProcessorPhoneNumber.setIdProfile(idProfile);
-                rs.add(dictionaryValidateProcessorPhoneNumber);
             }
             if (!Strings.isNullOrEmpty(request.getEmail())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, request.getEmail().trim(), db, this));
-                DictionaryValidateProcessor dictionaryValidateProcessorEmail = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, request.getEmail().trim(), db, this);
-                dictionaryValidateProcessorEmail.setIdProfile(idProfile);
-                rs.add(dictionaryValidateProcessorEmail);
             }
             int total = rs.size();
 
@@ -790,12 +772,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         BaseResponse response = new BaseResponse();
         try {
             String id = request.getId();
-
-            long count = db.countAll(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ID_PROFILE, id));
-            if (count > 0) {
-                response.setFailed("Không thể xóa profile này!");
-                return response;
-            }
 
             //Validate
             Bson cond = Filters.eq(DbKeyConfig.ID, id);

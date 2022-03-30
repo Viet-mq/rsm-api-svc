@@ -27,50 +27,49 @@ public class DepartmentController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAllDeparment(
             @RequestHeader Map<String, String> headers,
-            @RequestParam(value = "idCompany", required = false) String idCompany,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllDeparment u: {}, idCompany: {}, page: {}, size: {}", headerInfo, idCompany, page, size);
-        GetArrayResponse<DepartmentEntity> resp = departmentService.findAll(headerInfo, idCompany, name, page, size);
-        logger.info("<=findAllDeparment u: {}, idCompany: {}, page: {}, size: {}, resp: {}", headerInfo, idCompany, page, size, resp.info());
+        logger.info("=>findAllDeparment u: {}, page: {}, size: {}", headerInfo, page, size);
+        GetArrayResponse<DepartmentEntity> resp = departmentService.findAll(headerInfo, name, page, size);
+        logger.info("<=findAllDeparment u: {}, page: {}, size: {}, resp: {}", headerInfo, page, size, resp.info());
         return resp;
     }
 
     @PostMapping("/create")
-    public BaseResponse createDepartment(@RequestHeader Map<String, String> headers, @RequestParam(value = "idParent", required = false) String idParent, @RequestBody CreateDepartmentRequest request) {
+    public BaseResponse createDepartment(@RequestHeader Map<String, String> headers, @RequestBody CreateDepartmentRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>createDepartment u: {}, idParent: {}, req: {}", headerInfo, idParent, request);
+        logger.info("=>createDepartment u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = departmentService.createDepartment(request, idParent);
+                response = departmentService.createDepartment(request);
             }
         }
-        logger.info("<=createDepartment u: {}, idParent: {}, req: {}, resp: {}", headerInfo, idParent, request, response);
+        logger.info("<=createDepartment u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 
     @PostMapping("/update")
-    public BaseResponse updateDepartment(@RequestHeader Map<String, String> headers, @RequestParam(value = "idParent", required = false) String idParent, @RequestBody UpdateDepartmentRequest request) {
+    public BaseResponse updateDepartment(@RequestHeader Map<String, String> headers, @RequestBody UpdateDepartmentRequest request) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateDepartment u: {}, idParent: {}, req: {}", headerInfo, idParent, request);
+        logger.info("=>updateDepartment u: {}, req: {}", headerInfo, request);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = departmentService.updateDepartment(request, idParent);
+                response = departmentService.updateDepartment(request);
             }
         }
-        logger.info("<=updateDepartment u: {}, idParent: {}, req: {}, resp: {}", headerInfo, idParent, request, response);
+        logger.info("<=updateDepartment u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 

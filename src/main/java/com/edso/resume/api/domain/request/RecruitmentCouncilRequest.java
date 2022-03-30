@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class RecruitmentCouncilRequest {
+    private String emailRecruitmentCouncil;
     private String subjectRecruitmentCouncil;
     private String contentRecruitmentCouncil;
     private List<MultipartFile> fileRecruitmentCouncils;

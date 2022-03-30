@@ -177,9 +177,9 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     case COLUMN_NOTE:
                         profiles.setNote(AppUtils.mergeWhitespace((String) getCellValue(cell)));
                         break;
-                    case COLUMN_COMPANY:
-                        profiles.setCompany(AppUtils.mergeWhitespace((String) getCellValue(cell)));
-                        break;
+//                    case COLUMN_COMPANY:
+//                        profiles.setCompany(AppUtils.mergeWhitespace((String) getCellValue(cell)));
+//                        break;
                     default:
                         break;
                 }
@@ -246,11 +246,9 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.SOURCE_CV, profile.getSourceCV().trim(), db, this));
                     if (!Strings.isNullOrEmpty(profile.getEmail())) {
                         rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_EMAIL, profile.getEmail().trim(), db, this));
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_EMAIL, profile.getEmail().trim(), db, this));
                     }
                     if (!Strings.isNullOrEmpty(profile.getPhoneNumber())) {
                         rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, profile.getPhoneNumber().trim(), db, this));
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PROFILE_PHONE_NUMBER, profile.getPhoneNumber().trim(), db, this));
                     }
                     rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.JOB, profile.getJob().trim(), db, this));
                     if (!Strings.isNullOrEmpty(profile.getLevel())) {
@@ -259,9 +257,9 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     if (!Strings.isNullOrEmpty(profile.getPic())) {
                         rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.PIC, profile.getPic().trim(), db, this));
                     }
-                    if (!Strings.isNullOrEmpty(profile.getCompany())) {
-                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.COMPANY, profile.getCompany().trim(), db, this));
-                    }
+//                    if (!Strings.isNullOrEmpty(profile.getCompany())) {
+//                        rs.add(new DictionaryNameValidateProcessor(key, ThreadConfig.COMPANY, profile.getCompany().trim(), db, this));
+//                    }
                     int total = rs.size();
 
                     for (DictionaryNameValidateProcessor r : rs) {
@@ -353,8 +351,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.PIC_NAME, profile.getPic());
                     pro.append(DbKeyConfig.PIC_MAIL, picMail);
                     pro.append(DbKeyConfig.STATUS, profile.getStatus());
-                    pro.append(DbKeyConfig.COMPANY_ID, companyId);
-                    pro.append(DbKeyConfig.COMPANY_NAME, profile.getCompany());
+//                    pro.append(DbKeyConfig.COMPANY_ID, companyId);
+//                    pro.append(DbKeyConfig.COMPANY_NAME, profile.getCompany());
                     pro.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(profile.getFullName()));
                     pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
@@ -391,8 +389,8 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     profileEntity.setPicId(picId);
                     profileEntity.setPicName(profile.getPic());
                     profileEntity.setStatus(profile.getStatus());
-                    profileEntity.setCompanyId(companyId);
-                    profileEntity.setCompanyName(profile.getCompany());
+//                    profileEntity.setCompanyId(companyId);
+//                    profileEntity.setCompanyName(profile.getCompany());
                     profileEntity.setAvatarColor(color);
                     publishActionToRabbitMQ(profileEntity);
                 } finally {

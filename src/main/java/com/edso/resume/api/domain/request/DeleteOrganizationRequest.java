@@ -10,17 +10,12 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class UpdateDepartmentRequest extends BaseAuthRequest {
+public class DeleteOrganizationRequest extends BaseAuthRequest {
     private String id;
-    private String name;
-    private String idParent;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng nhập id");
-        }
-        if (Strings.isNullOrEmpty(name) || name.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên phòng ban");
+            return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng chọn id");
         }
         return null;
     }

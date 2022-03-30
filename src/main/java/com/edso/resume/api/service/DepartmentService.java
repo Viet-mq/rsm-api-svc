@@ -9,11 +9,11 @@ import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 
 public interface DepartmentService {
-    GetArrayResponse<DepartmentEntity> findAll(HeaderInfo info, String company, String name, Integer page, Integer size);
+    GetArrayResponse<DepartmentEntity> findAll(HeaderInfo info, String name, Integer page, Integer size);
 
-    BaseResponse createDepartment(CreateDepartmentRequest request, String idProfile);
+    BaseResponse createDepartment(CreateDepartmentRequest request);
 
-    BaseResponse updateDepartment(UpdateDepartmentRequest request, String idProfile);
+    BaseResponse updateDepartment(UpdateDepartmentRequest request);
 
     BaseResponse deleteDepartment(DeleteDepartmentRequest request);
 }
