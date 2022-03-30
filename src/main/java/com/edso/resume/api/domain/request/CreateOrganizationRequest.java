@@ -7,13 +7,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import javax.swing.text.Document;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateOrganizationRequest extends BaseAuthRequest{
+public class CreateOrganizationRequest extends BaseAuthRequest {
     private String name;
     private String description;
     private List<String> organizations;

@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import javax.swing.text.Document;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
