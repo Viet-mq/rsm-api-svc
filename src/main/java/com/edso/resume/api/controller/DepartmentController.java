@@ -9,6 +9,7 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.BaseResponse;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.edso.resume.lib.utils.ParseHeaderUtil;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -20,7 +21,7 @@ public class DepartmentController extends BaseController {
 
     private final DepartmentService departmentService;
 
-    public DepartmentController(DepartmentService departmentService) {
+    public DepartmentController(@Qualifier("departmentServiceImpl2") DepartmentService departmentService) {
         this.departmentService = departmentService;
     }
 

@@ -181,14 +181,10 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, request.getIdProfile(), candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
-                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.ROUND_CANDIDATE, candidate, paths, historyId, request.getIdProfile());
+                historyEmailService.createHistoryEmail(TypeConfig.ROUND_CANDIDATE, request.getIdProfile(), null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, request.getIdProfile(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
-                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.ROUND_PRESENTER, presenter, paths, historyId, request.getIdProfile());
+                historyEmailService.createHistoryEmail(TypeConfig.ROUND_PRESENTER, request.getIdProfile(), presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
             }
 
         } catch (Throwable ex) {

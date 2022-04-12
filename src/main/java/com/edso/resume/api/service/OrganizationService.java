@@ -16,5 +16,4 @@ public interface OrganizationService {
     BaseResponse updateOrganization(UpdateOrganizationRequest request);
 
     BaseResponse deleteOrganization(DeleteOrganizationRequest request);
-
 }

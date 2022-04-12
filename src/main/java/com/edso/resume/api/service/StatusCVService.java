@@ -16,7 +16,7 @@ public interface StatusCVService {
 
     GetArrayResponse<StatusCVEntity> findAll(HeaderInfo info, String name, Integer page, Integer size);
 
-    GetStatusCVResponse<StatusCVEntity> findAllStatusCVProfile(HeaderInfo info);
+    GetStatusCVResponse<String> findAllStatusCVProfile(HeaderInfo info);
 
     //RES-293
     GetArrayResponse<StatusCVEntity> findAllStatusCVForRecruitment(HeaderInfo info, String name, Integer page, Integer size);

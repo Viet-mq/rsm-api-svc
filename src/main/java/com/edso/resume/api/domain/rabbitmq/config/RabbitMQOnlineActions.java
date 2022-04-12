@@ -91,6 +91,24 @@ public class RabbitMQOnlineActions extends BaseAction {
         logger.info("=>publishEmails emails: {}", emails);
     }
 
+    public void publishEmails(EmailEntity emailEntity) throws IOException, TimeoutException {
+        Connection connection = rabbitMQAccess.getConnection();
+        Channel channel = connection.createChannel();
+
+        //Neu khong co thi tao
+        channel.exchangeDeclare(exchangeEmail, "direct", true);
+        channel.queueDeclare(queueEmail, true, false, false, null);
+        channel.queueBind(queueEmail, exchangeEmail, routingKeyEmail);
+
+        BasicProperties messageProperties = new BasicProperties.Builder()
+                .contentType("application/json")
+                .build();
+        channel.basicPublish(exchangeEmail, routingKeyEmail, messageProperties, new Gson().toJson(emailEntity).getBytes());
+        channel.close();
+
+        logger.info("=>publishEmails emails: {}", emailEntity);
+    }
+
     public void publishCalendarCandidateEmail(String type, CandidateRequest candidate, List<String> listPath, String calendarId, String historyId, String profileId) throws IOException, TimeoutException {
 
         Connection connection = rabbitMQAccess.getConnection();

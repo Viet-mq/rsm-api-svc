@@ -227,8 +227,8 @@ public class RoleServiceImpl extends BaseService implements RoleService {
             db.update(CollectionNameDefs.COLL_ROLE, cond, updates);
 
             Bson updateUser = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
-                    Updates.set(DbKeyConfig.DESCRIPTION, AppUtils.mergeWhitespace(request.getDescription()))
+                    Updates.set("roles.$.name", AppUtils.mergeWhitespace(name)),
+                    Updates.set("roles.$.description", AppUtils.mergeWhitespace(request.getDescription()))
             );
             db.update(CollectionNameDefs.COLL_USER, Filters.eq("roles.id", request.getId()), updateUser);
             response.setSuccess();

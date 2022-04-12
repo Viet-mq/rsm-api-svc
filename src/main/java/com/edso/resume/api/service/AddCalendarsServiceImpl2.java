@@ -8,7 +8,6 @@ import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
-import com.edso.resume.api.domain.validator.IDictionaryValidator;
 import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
@@ -24,21 +23,15 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Service
-public class AddCalendarsServiceImpl extends BaseService implements AddCalendarsService, IDictionaryValidator {
+public class AddCalendarsServiceImpl2 extends AddCalendarsServiceImpl {
 
     private final Queue<DictionaryValidatorResult> queue = new LinkedBlockingQueue<>();
-    protected final HistoryService historyService;
-    protected final RabbitMQOnlineActions rabbitMQOnlineActions;
-    protected final HistoryEmailService historyEmailService;
 
     @Value("${mail.fileSize}")
     private Long fileSize;
 
-    public AddCalendarsServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitMQOnlineActions rabbitMQOnlineActions, HistoryEmailService historyEmailService) {
-        super(db);
-        this.historyService = historyService;
-        this.rabbitMQOnlineActions = rabbitMQOnlineActions;
-        this.historyEmailService = historyEmailService;
+    public AddCalendarsServiceImpl2(MongoDbOnlineSyncActions db, HistoryService historyService, RabbitMQOnlineActions rabbitMQOnlineActions, HistoryEmailService historyEmailService) {
+        super(db, historyService, rabbitMQOnlineActions, historyEmailService);
     }
 
     @Override
@@ -147,6 +140,7 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                 calendar.append(DbKeyConfig.RECRUITMENT_NAME_SEARCH, AppUtils.parseVietnameseToEnglish(dictionaryNames.getRecruitmentName()));
                 calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                 calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+                calendar.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations());
 
                 // insert to database
                 db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
@@ -163,18 +157,17 @@ public class AddCalendarsServiceImpl extends BaseService implements AddCalendars
                 }
             }
 
-            //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-//                List<String> paths = historyEmailService.createHistoryEmails(ids, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
-//                rabbitMQOnlineActions.publishCandidateEmails(TypeConfig.CALENDARS_CANDIDATE, candidate, paths, ids);
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_CANDIDATE, ids, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-//                List<String> paths = historyEmailService.createHistoryEmails(ids, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
-//                rabbitMQOnlineActions.publishPresenterEmails(TypeConfig.CALENDARS_PRESENTER, presenter, paths, ids);
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_PRESENTER, ids, presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
-//                List<String> paths = historyEmailService.createHistoryEmails(ids, recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
-//                rabbitMQOnlineActions.publishRecruitmentCouncilEmails(TypeConfig.CALENDARS_INTERVIEWER, recruitmentCouncil, paths, ids);
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_INTERVIEWER, ids, recruitmentCouncil.getEmailRecruitmentCouncil(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople())) {
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_RELATED_PEOPLE, ids, null, relatedPeople.getSubjectRelatedPeople(), relatedPeople.getContentRelatedPeople(), relatedPeople.getFileRelatedPeoples(), request.getInfo());
             }
 
             response.setSuccess();

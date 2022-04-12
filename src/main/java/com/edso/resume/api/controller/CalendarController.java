@@ -30,13 +30,14 @@ public class CalendarController extends BaseController {
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "id", required = false) String id,
             @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "act", required = false) String act,
             @RequestParam(value = "keySearch", required = false) String keySearch,
             @RequestParam(value = "recruitment", required = false) String recruitment,
             @RequestParam(value = "idProfile", required = false) String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllCalendar u: {}, id: {}, key: {}, keySearch: {}, recruitment: {}, idProfile: {}", headerInfo, id, key, keySearch, recruitment, idProfile);
-        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, id, idProfile, key, keySearch, recruitment);
-        logger.info("<=findAllCalendar u: {}, id: {}, key: {}, keySearch: {}, recruitment:{}, idProfile: {}, resp: {}", headerInfo, id, key, keySearch, recruitment, idProfile, resp.info());
+        logger.info("=>findAllCalendar u: {}, id: {}, key: {}, act: {}, keySearch: {}, recruitment: {}, idProfile: {}", headerInfo, id, key, act, keySearch, recruitment, idProfile);
+        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, id, idProfile, key, act, keySearch, recruitment);
+        logger.info("<=findAllCalendar u: {}, id: {}, key: {}, act: {}, keySearch: {}, recruitment:{}, idProfile: {}, resp: {}", headerInfo, id, key, act, keySearch, recruitment, idProfile, resp.info());
         return resp;
     }
 

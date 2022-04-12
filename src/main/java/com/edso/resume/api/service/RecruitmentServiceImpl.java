@@ -46,7 +46,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
     }
 
     @Override
-    public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String key, String keySearch, Long from, Long to, String status) {
+    public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String department, String key, String keySearch, Long from, Long to, String status) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(id)) {
             c.add(Filters.eq(DbKeyConfig.ID, id));
@@ -62,6 +62,9 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         }
         if (!Strings.isNullOrEmpty(status)) {
             c.add(Filters.eq(DbKeyConfig.STATUS, status));
+        }
+        if (!Strings.isNullOrEmpty(department)) {
+            c.add(Filters.eq(DbKeyConfig.DEPARTMENT_ID, department));
         }
         if (!Strings.isNullOrEmpty(key)) {
             if (key.equals("create")) {
@@ -193,9 +196,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         try {
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
-            }
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             if (!Strings.isNullOrEmpty(request.getDepartment())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
             }
@@ -318,9 +319,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
-            }
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             if (!Strings.isNullOrEmpty(request.getDepartment())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
             }

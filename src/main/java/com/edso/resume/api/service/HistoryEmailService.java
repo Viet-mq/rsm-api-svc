@@ -6,12 +6,14 @@ import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.GetArrayResponse;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public interface HistoryEmailService {
-    List<String> createHistoryEmail(String historyId, String profileId, String subject, String content, List<MultipartFile> files, HeaderInfo info);
+    void createHistoryEmail(String type, String profileId, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException;
 
-    List<String> createHistoryEmails(List<IdEntity> ids, String subject, String content, List<MultipartFile> files, HeaderInfo info);
+    void createHistoryEmails(String type, List<IdEntity> ids, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException;
 
     void deleteHistoryEmail(String idProfile);
 

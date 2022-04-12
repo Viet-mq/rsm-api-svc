@@ -30,15 +30,16 @@ public class RecruitmentController extends BaseController {
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size,
             @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "department", required = false) String department,
             @RequestParam(value = "keySearch", required = false) String keySearch,
             @RequestParam(value = "from", required = false) Long from,
             @RequestParam(value = "to", required = false) Long to,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "id", required = false) String id) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllRecruitment u: {}, page: {}, size: {}, key: {}, keySearch: {}, from: {}, to: {}, status: {}, id: {}", headerInfo, page, size, key, keySearch, from, to, status, id);
-        GetArrayResponse<RecruitmentEntity> resp = recruitmentService.findAll(headerInfo, page, size, id, key, keySearch, from, to, status);
-        logger.info("<=findAllRecruitment u: {}, page: {}, size: {}, key: {}, keySearch: {}, from: {}, to: {}, status: {}, id: {}, resp: {}", headerInfo, page, size, key, keySearch, from, to, status, id, resp.info());
+        logger.info("=>findAllRecruitment u: {}, page: {}, size: {}, department: {}, key: {}, keySearch: {}, from: {}, to: {}, status: {}, id: {}", headerInfo, page, size, department, key, keySearch, from, to, status, id);
+        GetArrayResponse<RecruitmentEntity> resp = recruitmentService.findAll(headerInfo, page, size, id, department, key, keySearch, from, to, status);
+        logger.info("<=findAllRecruitment u: {}, page: {}, size: {}, department: {}, key: {}, keySearch: {}, from: {}, to: {}, status: {}, id: {}, resp: {}", headerInfo, page, size, department, key, keySearch, from, to, status, id, resp.info());
         return resp;
     }
 

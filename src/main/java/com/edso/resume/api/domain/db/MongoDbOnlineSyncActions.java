@@ -86,6 +86,23 @@ public class MongoDbOnlineSyncActions extends BaseAction {
         return null;
     }
 
+    public Document findOneFirst(String collection, Bson params, Bson sort) {
+        try {
+            MongoClient mongoClient = mongoDbAccess.getMongo();
+            MongoDatabase database = mongoClient.getDatabase(dbName);
+            if (params == null) {
+                params = new Document();
+            }
+            if (sort == null) {
+                sort = new Document();
+            }
+            return database.getCollection(collection).find(params).sort(sort).first();
+        } catch (Exception ex) {
+            logger.error("Exception: ", ex);
+        }
+        return null;
+    }
+
     public long countAll(String collection, Bson params) {
         try {
             MongoClient mongoClient = mongoDbAccess.getMongo();

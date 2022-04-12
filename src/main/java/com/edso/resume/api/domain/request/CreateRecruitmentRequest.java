@@ -62,7 +62,7 @@ public class CreateRecruitmentRequest extends BaseAuthRequest {
         if (deadLine == null || deadLine <= 0) {
             return new BaseResponse(ErrorCodeDefs.DEAD_LINE, "Vui lòng nhập hạn nộp hồ sơ");
         }
-        if (!Strings.isNullOrEmpty(talentPool) && talentPool.length() > 255) {
+        if (Strings.isNullOrEmpty(talentPool)) {
             return new BaseResponse(ErrorCodeDefs.TALENT_POOL, "Vui lòng nhập talent pool");
         }
         if (!Strings.isNullOrEmpty(salaryDescription) && salaryDescription.length() > 255) {

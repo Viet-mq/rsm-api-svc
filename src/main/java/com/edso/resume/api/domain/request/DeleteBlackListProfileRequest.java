@@ -10,13 +10,12 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString(callSuper = true)
-public class CreateOrganizationRequest extends BaseAuthRequest {
-    private String name;
-    private String idParent;
+public class DeleteBlackListProfileRequest extends BaseAuthRequest {
+    private String profileId;
 
     public BaseResponse validate() {
-        if (Strings.isNullOrEmpty(name) || name.length() > 255) {
-            return new BaseResponse(ErrorCodeDefs.NAME, "Vui lòng nhập tên tổ chức");
+        if (Strings.isNullOrEmpty(profileId) || profileId.length() > 255) {
+            return new BaseResponse(ErrorCodeDefs.ID, "Vui lòng chọn profile id");
         }
         return null;
     }

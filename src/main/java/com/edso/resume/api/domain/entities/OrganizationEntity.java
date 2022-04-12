@@ -10,6 +10,6 @@ import java.util.List;
 public class OrganizationEntity {
     private String id;
     private String name;
-    private String description;
-    private List<String> organizations;
+    private List<SubOrganization> children;
+
 }

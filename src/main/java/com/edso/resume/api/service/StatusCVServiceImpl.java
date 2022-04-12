@@ -62,21 +62,17 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
     }
 
     @Override
-    public GetStatusCVResponse<StatusCVEntity> findAllStatusCVProfile(HeaderInfo info) {
+    public GetStatusCVResponse<String> findAllStatusCVProfile(HeaderInfo info) {
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, null, null, 0, 0);
-        Set<StatusCVEntity> rows = new HashSet<>();
+        Set<String> rows = new HashSet<>();
         if (lst != null) {
             for (Document doc : lst) {
                 if (!Strings.isNullOrEmpty(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))) {
-                    StatusCVEntity statusCV = StatusCVEntity.builder()
-                            .id(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)))
-                            .name(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME)))
-                            .build();
-                    rows.add(statusCV);
+                    rows.add(AppUtils.parseString(AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_NAME))));
                 }
             }
         }
-        GetStatusCVResponse<StatusCVEntity> resp = new GetStatusCVResponse<>();
+        GetStatusCVResponse<String> resp = new GetStatusCVResponse<>();
         resp.setSuccess();
         resp.setTotal(rows.size());
         resp.setRows(rows);
