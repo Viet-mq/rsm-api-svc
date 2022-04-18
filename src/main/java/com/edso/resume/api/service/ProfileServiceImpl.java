@@ -2,7 +2,6 @@ package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.*;
-import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
@@ -41,7 +40,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private final CalendarService calendarService;
     private final NoteService noteService;
     private final CommentService commentService;
-    private final RabbitMQOnlineActions rabbitMQOnlineActions;
 
     @Value("${spring.rabbitmq.profile.exchange}")
     private String exchange;
@@ -51,8 +49,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     private Long fileSize;
     @Value("${cv.path}")
     private String cvPath;
+    @Value("${id.reject}")
+    private String rejectId;
 
-    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService, CommentService commentService, RabbitMQOnlineActions rabbitMQOnlineActions) {
+    public ProfileServiceImpl(MongoDbOnlineSyncActions db, HistoryService historyService, HistoryEmailService historyEmailService, RabbitTemplate rabbitTemplate, CalendarService calendarService, NoteService noteService, CommentService commentService) {
         super(db);
         this.historyService = historyService;
         this.historyEmailService = historyEmailService;
@@ -60,7 +60,6 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         this.calendarService = calendarService;
         this.noteService = noteService;
         this.commentService = commentService;
-        this.rabbitMQOnlineActions = rabbitMQOnlineActions;
     }
 
     private void publishActionToRabbitMQ(String type, Object profile) {
@@ -71,7 +70,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
     @Override
     public GetArrayResponse<ProfileEntity> findAll(HeaderInfo info,
+                                                   String reject,
                                                    String fullName,
+                                                   String follow,
+                                                   String blackList,
                                                    String talentPool,
                                                    String job,
                                                    String levelJob,
@@ -85,6 +87,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                                                    String hrRef,
                                                    Long from,
                                                    Long to,
+                                                   Long fromCreateAt,
+                                                   Long toCreateAt,
                                                    Integer page,
                                                    Integer size) {
 
@@ -95,14 +99,44 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         if (!Strings.isNullOrEmpty(talentPool)) {
             c.add(Filters.eq(DbKeyConfig.TALENT_POOL_ID, talentPool));
         }
-        if (!Strings.isNullOrEmpty(key) && key.equals("follow")) {
+        if (!Strings.isNullOrEmpty(reject)) {
+            if (reject.equals("reject")) {
+                c.add(Filters.eq(DbKeyConfig.STATUS_CV_ID, rejectId));
+            }
+            if (reject.equals("notject")) {
+                c.add(Filters.ne(DbKeyConfig.STATUS_CV_ID, rejectId));
+            }
+        }
+        if (!Strings.isNullOrEmpty(key)) {
+            if (key.equals("notrecruitment")) {
+                c.add(Filters.eq(DbKeyConfig.RECRUITMENT_ID, null));
+            }
+            if (key.equals("recruitment")) {
+                c.add(Filters.ne(DbKeyConfig.RECRUITMENT_ID, null));
+            }
+        }
+        if (!Strings.isNullOrEmpty(follow)) {
             c.add(Filters.eq(DbKeyConfig.FOLLOWERS, info.getUsername()));
+        }
+        if (!Strings.isNullOrEmpty(blackList)) {
+            if (blackList.equals("blacklist")) {
+                c.add(Filters.eq(DbKeyConfig.BLACK_LIST, true));
+            }
+            if (blackList.equals("notblacklist")) {
+                c.add(Filters.ne(DbKeyConfig.BLACK_LIST, true));
+            }
         }
         if (from != null && from > 0) {
             c.add(Filters.gte(DbKeyConfig.DATE_OF_APPLY, from));
         }
+        if (fromCreateAt != null && fromCreateAt > 0) {
+            c.add(Filters.gte(DbKeyConfig.CREATE_AT, fromCreateAt));
+        }
         if (to != null && to > 0) {
             c.add(Filters.lte(DbKeyConfig.DATE_OF_APPLY, to));
+        }
+        if (toCreateAt != null && toCreateAt > 0) {
+            c.add(Filters.lte(DbKeyConfig.CREATE_AT, toCreateAt));
         }
         if (!Strings.isNullOrEmpty(job)) {
             c.add(Filters.eq(DbKeyConfig.JOB_ID, job));
@@ -136,7 +170,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         if (!Strings.isNullOrEmpty(hrRef)) {
             c.add(Filters.eq(DbKeyConfig.USERNAME, hrRef));
         }
-//        c.add(Filters.in(DbKeyConfig.ORGANIZATION_ID, info.getOrganizations()));
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -196,6 +230,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .status(AppUtils.parseString(doc.get(DbKeyConfig.STATUS)))
                         .companyId(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_ID)))
                         .companyName(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_NAME)))
+                        .createAt(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
+                        .blackList(AppUtils.parseBoolean(doc.get(DbKeyConfig.BLACK_LIST)))
                         .build();
                 rows.add(profile);
             }
@@ -215,7 +251,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         GetResponse<ProfileDetailEntity> response = new GetResponse<>();
         List<Bson> c = new ArrayList<>();
         c.add(Filters.eq(DbKeyConfig.ID, idProfile));
-//        c.add(Filters.in(DbKeyConfig.ORGANIZATION_ID, info.getOrganizations()));
+        if (info.getRole() != 1) {
+            c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
+        }
         Bson cond = buildCondition(c);
         //Validate
         Document one = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
@@ -278,6 +316,8 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .status(AppUtils.parseString(one.get(DbKeyConfig.STATUS)))
                 .companyId(AppUtils.parseString(one.get(DbKeyConfig.COMPANY_ID)))
                 .companyName(AppUtils.parseString(one.get(DbKeyConfig.COMPANY_NAME)))
+                .createAt(AppUtils.parseLong(one.get(DbKeyConfig.CREATE_AT)))
+                .blackList(AppUtils.parseBoolean(one.get(DbKeyConfig.BLACK_LIST)))
                 .build();
 
         response.setSuccess(profile);
@@ -416,7 +456,11 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             profile.append(DbKeyConfig.COMPANY_NAME, dictionaryNames.getCompanyName());
             profile.append(DbKeyConfig.TALENT_POOL_ID, request.getTalentPool());
             profile.append(DbKeyConfig.TALENT_POOL_NAME, dictionaryNames.getTalentPoolName());
+            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
+                profile.append(DbKeyConfig.TALENT_POOL_TIME, System.currentTimeMillis());
+            }
             profile.append(DbKeyConfig.MAIL_REF2, AppUtils.removeWhitespace(request.getMailRef2()));
+            profile.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations());
 
             if (!Strings.isNullOrEmpty(request.getRecruitment())) {
                 Document document = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, dictionaryNames.getCreateRecruitmentBy()));
@@ -497,7 +541,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getCompany())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.COMPANY, request.getCompany(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
+            DictionaryValidateProcessor dic = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this);
+            dic.setOrganizations(request.getInfo().getOrganizations());
+            rs.add(dic);
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
@@ -651,7 +697,9 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             if (!Strings.isNullOrEmpty(request.getCompany())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.COMPANY, request.getCompany(), db, this));
             }
-            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this));
+            DictionaryValidateProcessor dic = new DictionaryValidateProcessor(key, ThreadConfig.PROFILE, request.getId(), db, this);
+            dic.setOrganizations(request.getInfo().getOrganizations());
+            rs.add(dic);
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.SOURCE_CV, request.getSourceCV(), db, this));
             if (!Strings.isNullOrEmpty(request.getPhoneNumber())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.BLACKLIST_PHONE_NUMBER, request.getPhoneNumber().trim(), db, this));
@@ -926,7 +974,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, PresenterRequest presenter) {
+    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, RecruitmentCouncilRequest recruitmentCouncil, PresenterRequest presenter, RelatedPeopleRequest relatedPeople) {
 
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
@@ -993,7 +1041,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             // update roles
             Bson updates = Updates.combine(
-                    set(DbKeyConfig.STATUS_CV_ID, "d0d08b54-4ac7-4947-9018-e8c4f991b7b"),
+                    set(DbKeyConfig.STATUS_CV_ID, rejectId),
                     set(DbKeyConfig.STATUS_CV_NAME, "Loại"),
                     set(DbKeyConfig.UPDATE_STATUS_CV_AT, System.currentTimeMillis()),
                     set(DbKeyConfig.UPDATE_STATUS_CV_BY, request.getInfo().getUsername())
@@ -1029,14 +1077,16 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
-                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.REJECT_CANDIDATE, candidate, paths, historyId, request.getIdProfile());
+                historyEmailService.createHistoryEmail(TypeConfig.REJECT_CANDIDATE, idProfile, null, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
-                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.REJECT_PRESENTER, presenter, paths, historyId, request.getIdProfile());
+                historyEmailService.createHistoryEmail(TypeConfig.REJECT_PRESENTER, idProfile, presenter.getUsernamePresenters(), presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
+                historyEmailService.createHistoryEmail(TypeConfig.REJECT_INTERVIEWER, idProfile, recruitmentCouncil.getUsernameRecruitmentCouncils(), recruitmentCouncil.getEmailRecruitmentCouncil(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople())) {
+                historyEmailService.createHistoryEmail(TypeConfig.REJECT_RELATED_PEOPLE, idProfile, relatedPeople.getUsernameRelatedPeoples(), null, relatedPeople.getSubjectRelatedPeople(), relatedPeople.getContentRelatedPeople(), relatedPeople.getFileRelatedPeoples(), request.getInfo());
             }
 
             response.setSuccess();
@@ -1124,7 +1174,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 //            }
 
             //Insert history to DB
-            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên vào talent pool", request.getInfo());
+            historyService.createHistory(idProfile, TypeConfig.UPDATE, "Chuyển ứng viên sang talent pool khác", request.getInfo());
 
             response.setSuccess();
             return response;
@@ -1177,6 +1227,56 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             synchronized (queue) {
                 queue.removeIf(s -> s.getKey().equals(key));
             }
+        }
+    }
+
+    @Override
+    public BaseResponse updateBlackListProfile(UpdateBlackListProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        try {
+            Bson cond = Filters.eq(DbKeyConfig.ID, request.getProfileId());
+            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+            if (profile == null) {
+                response.setFailed("Không tồn tại profile này");
+                return response;
+            }
+
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.BLACK_LIST, true)
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, update);
+            response.setSuccess();
+            return response;
+        } catch (Throwable ex) {
+            logger.error("Ex: ", ex);
+            response.setFailed("Hệ thống bận");
+            return response;
+        }
+    }
+
+    @Override
+    public BaseResponse deleteBlackListProfile(DeleteBlackListProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        try {
+            Bson cond = Filters.eq(DbKeyConfig.ID, request.getProfileId());
+            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, cond);
+            if (profile == null) {
+                response.setFailed("Không tồn tại profile này");
+                return response;
+            }
+
+            Bson update = Updates.combine(
+                    Updates.set(DbKeyConfig.BLACK_LIST, null)
+            );
+
+            db.update(CollectionNameDefs.COLL_PROFILE, cond, update);
+            response.setSuccess();
+            return response;
+        } catch (Throwable ex) {
+            logger.error("Ex: ", ex);
+            response.setFailed("Hệ thống bận");
+            return response;
         }
     }
 
@@ -1772,6 +1872,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         profileEntity.setCompanyName(dictionaryNames.getCompanyName());
         profileEntity.setRecruitmentId(request.getRecruitment());
         profileEntity.setRecruitmentName(dictionaryNames.getRecruitmentName());
+        profileEntity.setOrganizations(request.getInfo().getOrganizations());
         if (dictionaryNames.getStatusCV() != null) {
             profileEntity.setStatusCVName(AppUtils.parseString(dictionaryNames.getStatusCV().get(DbKeyConfig.NAME)));
             profileEntity.setStatusCVId(AppUtils.parseString(dictionaryNames.getStatusCV().get(DbKeyConfig.ID)));

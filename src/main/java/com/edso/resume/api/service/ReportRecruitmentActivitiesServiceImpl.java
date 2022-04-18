@@ -11,6 +11,7 @@ import com.edso.resume.api.report.ReportRecruitmentActivities2;
 import com.edso.resume.api.report.ReportRecruitmentActivities3;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.mongodb.client.AggregateIterable;
 import org.bson.Document;
@@ -37,7 +38,7 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
     }
 
     @Override
-    public GetArrayResponse<ReportRecruitmentActivitiesEntity2> findAll(Long from, Long to) {
+    public GetArrayResponse<ReportRecruitmentActivitiesEntity2> findAll(HeaderInfo info, Long from, Long to) {
         GetArrayResponse<ReportRecruitmentActivitiesEntity2> response = new GetArrayResponse<>();
         try {
             List<ReportRecruitmentActivitiesEntity2> rows = new ArrayList<>();
@@ -56,6 +57,7 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
 
             match.append("create_recruitment_by", new Document().append("$ne", null));
             match.append("status_cv_name", new Document().append("$ne", null));
+            match.append(DbKeyConfig.ORGANIZATIONS, new Document().append("$in", info.getOrganizations()));
             query1.append("$match", match);
 
             Document query2 = new Document();
@@ -99,7 +101,7 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
     }
 
     @Override
-    public ExportResponse exportReportRecruitmentActivities(Long from, Long to) {
+    public ExportResponse exportReportRecruitmentActivities(HeaderInfo info, Long from, Long to) {
         try {
             List<ReportRecruitmentActivitiesEntity> rows = new ArrayList<>();
 
@@ -121,6 +123,7 @@ public class ReportRecruitmentActivitiesServiceImpl extends BaseService implemen
 
             match.append("create_recruitment_by", new Document().append("$ne", null));
             match.append("status_cv_name", new Document().append("$ne", null));
+            match.append(DbKeyConfig.ORGANIZATIONS, new Document().append("$in", info.getOrganizations()));
             query1.append("$match", match);
 
             Document query2 = new Document();

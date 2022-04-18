@@ -11,6 +11,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,9 @@ public class DictionaryValidateProcessor implements Runnable {
     private String idProfile;
     private String recruitmentId;
     private String departmentId;
+    private List<String> organizations;
+    @Value("${id.reject}")
+    private String rejectId;
 
     public DictionaryValidateProcessor(String key, String type, Object id, MongoDbOnlineSyncActions db, IDictionaryValidator target) {
         this.key = key;
@@ -205,7 +209,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return;
             }
             case ThreadConfig.REJECT_PROFILE: {
-                if (AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)).equals("d0d08b54-4ac7-4947-9018-e8c4f991b7b")) {
+                if (AppUtils.parseString(doc.get(DbKeyConfig.STATUS_CV_ID)).equals(rejectId)) {
                     result.setResult(false);
                     result.setName("Không thể loại ứng viên đã bị loại!");
                     return;
@@ -304,7 +308,7 @@ public class DictionaryValidateProcessor implements Runnable {
                 return Filters.eq(DbKeyConfig.PHONE_NUMBER, this.id);
             }
             case ThreadConfig.RECRUITMENT_NAME: {
-                return Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, this.id), Filters.gte(DbKeyConfig.DEAD_LINE, AppUtils.getTimeBeginningDay()), Filters.eq(DbKeyConfig.DEPARTMENT_ID, departmentId));
+                return Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, this.id), Filters.gte(DbKeyConfig.DEAD_LINE, AppUtils.getTimeBeginningDay()), Filters.eq(DbKeyConfig.DEPARTMENT_ID, departmentId), Filters.in(DbKeyConfig.ORGANIZATIONS, organizations));
             }
             case ThreadConfig.FOLLOWER: {
                 return Filters.eq(DbKeyConfig.FOLLOWERS, this.id);

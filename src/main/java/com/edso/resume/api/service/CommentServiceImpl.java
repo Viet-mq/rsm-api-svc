@@ -37,6 +37,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.FULL_NAME, 1);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -83,6 +84,7 @@ public class CommentServiceImpl extends BaseService implements CommentService {
             comment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             comment.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             comment.append(DbKeyConfig.FULL_NAME, user.get(DbKeyConfig.FULL_NAME));
+            comment.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_COMMENT, comment);

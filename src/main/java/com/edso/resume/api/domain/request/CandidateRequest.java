@@ -7,7 +7,6 @@ import java.util.List;
 
 @Data
 public class CandidateRequest {
-    private String emailCandidate;
     private String subjectCandidate;
     private String contentCandidate;
     private List<MultipartFile> fileCandidates;

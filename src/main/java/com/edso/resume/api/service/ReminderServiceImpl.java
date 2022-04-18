@@ -37,6 +37,7 @@ public class ReminderServiceImpl extends BaseService implements ReminderService 
         if (to != null && to > 0) {
             c.add(Filters.lte(DbKeyConfig.START, to));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_REMINDER, cond, null, 0, 0);
         List<ReminderEntity> rows = new ArrayList<>();
@@ -75,6 +76,7 @@ public class ReminderServiceImpl extends BaseService implements ReminderService 
             reminder.append(DbKeyConfig.DESCRIPTION, AppUtils.mergeWhitespace(request.getDesc()));
             reminder.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             reminder.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            reminder.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_REMINDER, reminder);

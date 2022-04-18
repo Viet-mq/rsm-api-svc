@@ -36,7 +36,7 @@ public class ReportRecruitmentActivitiesController extends BaseController {
             @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>getReportRecruitmentActivities u: {}", headerInfo);
-        GetArrayResponse<ReportRecruitmentActivitiesEntity2> resp = reportRecruitmentActivitiesService.findAll(from, to);
+        GetArrayResponse<ReportRecruitmentActivitiesEntity2> resp = reportRecruitmentActivitiesService.findAll(headerInfo, from, to);
         logger.info("<=getReportRecruitmentActivities u: {}, resp: {}", headerInfo, resp.info());
         return resp;
     }
@@ -47,7 +47,7 @@ public class ReportRecruitmentActivitiesController extends BaseController {
                                                                       @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>exportReportRecruitmentActivities u: {}", headerInfo);
-        ExportResponse response = reportRecruitmentActivitiesService.exportReportRecruitmentActivities(from, to);
+        ExportResponse response = reportRecruitmentActivitiesService.exportReportRecruitmentActivities(headerInfo, from, to);
         File file = new File(response.getPath());
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = null;

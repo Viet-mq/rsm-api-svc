@@ -1,6 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
+import com.google.common.base.Strings;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -8,9 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public abstract class BaseService {
 
@@ -29,6 +28,13 @@ public abstract class BaseService {
             return lst.get(0);
         }
         return Filters.and(lst);
+    }
+
+    public List<String> splitString(String str, String regex) {
+        if (Strings.isNullOrEmpty(str)) {
+            return new ArrayList<>();
+        }
+        return Arrays.asList(str.split(regex));
     }
 
     public String parseDate(Long time) {

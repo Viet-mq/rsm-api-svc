@@ -38,6 +38,7 @@ public class JobServiceImpl extends BaseService implements JobService {
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -65,7 +66,7 @@ public class JobServiceImpl extends BaseService implements JobService {
         BaseResponse response = new BaseResponse();
         try {
             String name = request.getName();
-            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            Bson c = Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations()));
             long count = db.countAll(CollectionNameDefs.COLL_JOB, c);
 
             if (count > 0) {
@@ -82,6 +83,7 @@ public class JobServiceImpl extends BaseService implements JobService {
             job.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             job.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             job.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+            job.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_JOB, job);
@@ -113,7 +115,7 @@ public class JobServiceImpl extends BaseService implements JobService {
             }
 
             String name = request.getName();
-            Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
+            Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {

@@ -36,7 +36,7 @@ public class ReportRejectProfileController extends BaseController {
             @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>getReportRejectProfile u: {}", headerInfo);
-        GetArrayResponse<ReportRejectProfileEntity> resp = reportRejectProfileService.findAll(from, to);
+        GetArrayResponse<ReportRejectProfileEntity> resp = reportRejectProfileService.findAll(headerInfo, from, to);
         logger.info("<=getReportRejectProfile u: {}, resp: {}", headerInfo, resp.info());
         return resp;
     }
@@ -47,7 +47,7 @@ public class ReportRejectProfileController extends BaseController {
                                                               @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>exportReportRejectProfile u: {}", headerInfo);
-        ExportResponse response = reportRejectProfileService.exportReportRejectProfile(from, to);
+        ExportResponse response = reportRejectProfileService.exportReportRejectProfile(headerInfo, from, to);
         File file = new File(response.getPath());
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = null;

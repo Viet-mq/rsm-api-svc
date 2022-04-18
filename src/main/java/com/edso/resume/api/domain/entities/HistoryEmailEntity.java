@@ -9,7 +9,9 @@ import java.util.List;
 @Builder
 public class HistoryEmailEntity {
     private String id;
+    private String type;
     private String idProfile;
+    private String email;
     private String subject;
     private List<FileEntity> files;
     private Long time;

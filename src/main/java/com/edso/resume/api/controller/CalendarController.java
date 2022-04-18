@@ -30,13 +30,14 @@ public class CalendarController extends BaseController {
             @RequestHeader Map<String, String> headers,
             @RequestParam(value = "id", required = false) String id,
             @RequestParam(value = "key", required = false) String key,
+            @RequestParam(value = "act", required = false) String act,
             @RequestParam(value = "keySearch", required = false) String keySearch,
             @RequestParam(value = "recruitment", required = false) String recruitment,
             @RequestParam(value = "idProfile", required = false) String idProfile) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllCalendar u: {}, id: {}, key: {}, keySearch: {}, recruitment: {}, idProfile: {}", headerInfo, id, key, keySearch, recruitment, idProfile);
-        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, id, idProfile, key, keySearch, recruitment);
-        logger.info("<=findAllCalendar u: {}, id: {}, key: {}, keySearch: {}, recruitment:{}, idProfile: {}, resp: {}", headerInfo, id, key, keySearch, recruitment, idProfile, resp.info());
+        logger.info("=>findAllCalendar u: {}, id: {}, key: {}, act: {}, keySearch: {}, recruitment: {}, idProfile: {}", headerInfo, id, key, act, keySearch, recruitment, idProfile);
+        GetArrayCalendarResponse<CalendarEntity2> resp = calendarService2.findAllCalendar(headerInfo, id, idProfile, key, act, keySearch, recruitment);
+        logger.info("<=findAllCalendar u: {}, id: {}, key: {}, act: {}, keySearch: {}, recruitment:{}, idProfile: {}, resp: {}", headerInfo, id, key, act, keySearch, recruitment, idProfile, resp.info());
         return resp;
     }
 
@@ -45,20 +46,21 @@ public class CalendarController extends BaseController {
                                               @ModelAttribute CreateCalendarProfileRequest2 request,
                                               @ModelAttribute PresenterRequest presenter,
                                               @ModelAttribute RecruitmentCouncilRequest recruitmentCouncil,
+                                              @ModelAttribute RelatedPeopleRequest relatedPeople,
                                               @ModelAttribute CandidateRequest candidate) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>createCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, presenter, recruitmentCouncil, candidate);
+        logger.info("=>createCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}, relatedPeople: {}", headerInfo, request, presenter, recruitmentCouncil, candidate, relatedPeople);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = calendarService2.createCalendarProfile(request, presenter, recruitmentCouncil, candidate);
+                response = calendarService2.createCalendarProfile(request, presenter, recruitmentCouncil, candidate, relatedPeople);
             }
         }
-        logger.info("<=createCalendarProfile u: {}, req: {}, rep: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate);
+        logger.info("<=createCalendarProfile u: {}, req: {}, rep: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}, relatedPeople: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate, relatedPeople);
         return response;
     }
 
@@ -67,20 +69,21 @@ public class CalendarController extends BaseController {
                                               @ModelAttribute UpdateCalendarProfileRequest2 request,
                                               @ModelAttribute PresenterRequest presenter,
                                               @ModelAttribute RecruitmentCouncilRequest recruitmentCouncil,
+                                              @ModelAttribute RelatedPeopleRequest relatedPeople,
                                               @ModelAttribute CandidateRequest candidate) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, presenter, recruitmentCouncil, candidate);
+        logger.info("=>updateCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}, relatedPeople: {}", headerInfo, request, presenter, recruitmentCouncil, candidate, relatedPeople);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = calendarService2.updateCalendarProfile(request, presenter, recruitmentCouncil, candidate);
+                response = calendarService2.updateCalendarProfile(request, presenter, recruitmentCouncil, candidate, relatedPeople);
             }
         }
-        logger.info("<=updateCalendarProfile u: {}, req: {}, resp: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate);
+        logger.info("<=updateCalendarProfile u: {}, req: {}, resp: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}, relatedPeople: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate, relatedPeople);
         return response;
     }
 

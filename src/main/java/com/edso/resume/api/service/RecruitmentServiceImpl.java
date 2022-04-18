@@ -46,7 +46,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
     }
 
     @Override
-    public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String key, String keySearch, Long from, Long to, String status) {
+    public GetArrayResponse<RecruitmentEntity> findAll(HeaderInfo info, Integer page, Integer size, String id, String department, String key, String keySearch, Long from, Long to, String status) {
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(id)) {
             c.add(Filters.eq(DbKeyConfig.ID, id));
@@ -63,6 +63,9 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         if (!Strings.isNullOrEmpty(status)) {
             c.add(Filters.eq(DbKeyConfig.STATUS, status));
         }
+        if (!Strings.isNullOrEmpty(department)) {
+            c.add(Filters.eq(DbKeyConfig.DEPARTMENT_ID, department));
+        }
         if (!Strings.isNullOrEmpty(key)) {
             if (key.equals("create")) {
                 c.add(Filters.eq(DbKeyConfig.CREATE_BY, info.getUsername()));
@@ -71,6 +74,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                 c.add(Filters.eq(DbKeyConfig.JOIN_USERNAME, info.getUsername()));
             }
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
@@ -87,7 +91,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
                         RoundEntity roundEntity = RoundEntity.builder()
                                 .id(AppUtils.parseString(document.get(DbKeyConfig.ID)))
                                 .name(AppUtils.parseString(document.get(DbKeyConfig.NAME)))
-                                .total(AppUtils.parseLong(document.get(DbKeyConfig.TOTAL)))
+                                .total(AppUtils.parseLong(db.countAll(CollectionNameDefs.COLL_PROFILE, Filters.and(Filters.eq(DbKeyConfig.RECRUITMENT_ID, AppUtils.parseString(doc.get(DbKeyConfig.ID))), Filters.eq(DbKeyConfig.STATUS_CV_ID, AppUtils.parseString(document.get(DbKeyConfig.ID)))))))
                                 .isDragDisabled((Boolean) document.get(DbKeyConfig.DELETE))
                                 .isNew((Boolean) document.get(DbKeyConfig.NEW))
                                 .build();
@@ -193,14 +197,13 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
         try {
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
-            }
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             if (!Strings.isNullOrEmpty(request.getDepartment())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
             }
             DictionaryValidateProcessor processor = new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this);
             processor.setDepartmentId(request.getDepartment());
+            processor.setOrganizations(request.getInfo().getOrganizations());
             rs.add(processor);
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.ADDRESS, request.getAddress(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));
@@ -287,6 +290,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             recruitment.append(DbKeyConfig.FULL_NAME, AppUtils.parseString(user.get(DbKeyConfig.FULL_NAME)));
             recruitment.append(DbKeyConfig.DEPARTMENT_ID, request.getDepartment());
             recruitment.append(DbKeyConfig.DEPARTMENT_NAME, dictionaryNames.getDepartmentName());
+            recruitment.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_RECRUITMENT, recruitment);
@@ -318,9 +322,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
 
             List<DictionaryValidateProcessor> rs = new ArrayList<>();
-            if (!Strings.isNullOrEmpty(request.getTalentPool())) {
-                rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
-            }
+            rs.add(new DictionaryValidateProcessor(key, ThreadConfig.TALENT_POOL, request.getTalentPool(), db, this));
             if (!Strings.isNullOrEmpty(request.getDepartment())) {
                 rs.add(new DictionaryValidateProcessor(key, ThreadConfig.DEPARTMENT, request.getDepartment(), db, this));
             }
@@ -328,6 +330,7 @@ public class RecruitmentServiceImpl extends BaseService implements RecruitmentSe
             DictionaryValidateProcessor dictionaryValidateProcessor = new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT_NAME, AppUtils.mergeWhitespace(request.getTitle().toLowerCase()), db, this);
             dictionaryValidateProcessor.setRecruitmentId(request.getId());
             dictionaryValidateProcessor.setDepartmentId(request.getDepartment());
+            dictionaryValidateProcessor.setOrganizations(request.getInfo().getOrganizations());
             rs.add(dictionaryValidateProcessor);
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.RECRUITMENT, request.getId(), db, this));
             rs.add(new DictionaryValidateProcessor(key, ThreadConfig.JOB, request.getJob(), db, this));

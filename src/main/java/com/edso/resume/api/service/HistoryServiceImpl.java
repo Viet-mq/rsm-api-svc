@@ -37,8 +37,11 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
             resp.setFailed("Id profile không tồn tại");
             return resp;
         }
+        List<Bson> c = new ArrayList<>();
 
-        Bson cond = Filters.eq(DbKeyConfig.ID_PROFILE, idProfile);
+        c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
+        Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.TIME, -1);
 
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -78,6 +81,7 @@ public class HistoryServiceImpl extends BaseService implements HistoryService {
             history.append(DbKeyConfig.ACTION, action);
             history.append(DbKeyConfig.USERNAME, info.getUsername());
             history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
+            history.append(DbKeyConfig.ORGANIZATIONS, info.getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_HISTORY_PROFILE, history);

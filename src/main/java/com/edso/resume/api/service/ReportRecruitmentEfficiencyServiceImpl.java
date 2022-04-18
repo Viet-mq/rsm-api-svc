@@ -11,6 +11,7 @@ import com.edso.resume.api.report.ReportRecruitmentEfficiency2;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.mongodb.client.AggregateIterable;
 import org.bson.Document;
@@ -37,7 +38,7 @@ public class ReportRecruitmentEfficiencyServiceImpl extends BaseService implemen
     }
 
     @Override
-    public GetArrayResponse<ReportRecruitmentEfficiencyEntity2> findAll(Long from, Long to) {
+    public GetArrayResponse<ReportRecruitmentEfficiencyEntity2> findAll(HeaderInfo info, Long from, Long to) {
         GetArrayResponse<ReportRecruitmentEfficiencyEntity2> response = new GetArrayResponse<>();
 
         try {
@@ -57,6 +58,7 @@ public class ReportRecruitmentEfficiencyServiceImpl extends BaseService implemen
 
             match.append("recruitment_name", new Document().append("$ne", null));
             match.append("status_cv_name", new Document().append("$ne", null));
+            match.append(DbKeyConfig.ORGANIZATIONS, new Document().append("$in", info.getOrganizations()));
             query1.append("$match", match);
 
             Document query2 = new Document();
@@ -102,7 +104,7 @@ public class ReportRecruitmentEfficiencyServiceImpl extends BaseService implemen
     }
 
     @Override
-    public ExportResponse exportReportRecruitmentEfficiency(Long from, Long to) {
+    public ExportResponse exportReportRecruitmentEfficiency(HeaderInfo info, Long from, Long to) {
         try {
             List<ReportRecruitmentEfficiencyEntity> rows = new ArrayList<>();
 
@@ -124,6 +126,7 @@ public class ReportRecruitmentEfficiencyServiceImpl extends BaseService implemen
 
             match.append("recruitment_name", new Document().append("$ne", null));
             match.append("status_cv_name", new Document().append("$ne", null));
+            match.append(DbKeyConfig.ORGANIZATIONS, new Document().append("$in", info.getOrganizations()));
             query1.append("$match", match);
 
             Document query2 = new Document();

@@ -23,14 +23,11 @@ import java.util.regex.Pattern;
 @Service
 public class ExcelServiceImpl extends BaseService implements ExcelService {
 
-    private final ProfilesExporter profilesExporter;
-
     @Value("${excel.path}")
     private String path;
 
-    protected ExcelServiceImpl(MongoDbOnlineSyncActions db, ProfilesExporter profilesExporter) {
+    protected ExcelServiceImpl(MongoDbOnlineSyncActions db) {
         super(db);
-        this.profilesExporter = profilesExporter;
     }
 
 

@@ -13,7 +13,6 @@ import lombok.ToString;
 public class UpdateDepartmentRequest extends BaseAuthRequest {
     private String id;
     private String name;
-    private String idParent;
 
     public BaseResponse validate() {
         if (Strings.isNullOrEmpty(id) || id.length() > 255) {

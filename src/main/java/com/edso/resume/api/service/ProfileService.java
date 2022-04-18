@@ -10,7 +10,7 @@ import com.edso.resume.lib.response.GetResponse;
 
 public interface ProfileService {
 
-    GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String fullName, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, String statusCV, String key, String tag, String pic, String hrRef, Long from, Long to, Integer page, Integer size);
+    GetArrayResponse<ProfileEntity> findAll(HeaderInfo info, String reject, String fullName, String follow, String blackList, String talentPool, String job, String levelJob, String department, String recruitment, String calendar, String statusCV, String key, String tag, String pic, String hrRef, Long from, Long to, Long fromCreateAt, Long toCreateAt, Integer page, Integer size);
 
     GetResponse<ProfileDetailEntity> findOne(HeaderInfo info, String idProfile);
 
@@ -24,11 +24,15 @@ public interface ProfileService {
 
     BaseResponse updateStatusProfile(UpdateStatusProfileRequest request);
 
-    BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, PresenterRequest presenter);
+    BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, RecruitmentCouncilRequest recruitmentCouncil, PresenterRequest presenter, RelatedPeopleRequest relatedPeople);
 
     BaseResponse updateTalentPoolProfile(UpdateTalentPoolProfileRequest request);
 
     BaseResponse deleteTalentPoolProfile(DeleteTalentPoolProfileRequest request);
+
+    BaseResponse updateBlackListProfile(UpdateBlackListProfileRequest request);
+
+    BaseResponse deleteBlackListProfile(DeleteBlackListProfileRequest request);
 
     void isOld(String id);
 

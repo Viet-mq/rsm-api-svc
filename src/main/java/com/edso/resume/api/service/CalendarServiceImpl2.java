@@ -1,10 +1,7 @@
 package com.edso.resume.api.service;
 
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
-import com.edso.resume.api.domain.entities.CalendarEntity2;
-import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
-import com.edso.resume.api.domain.entities.TimeEntity;
-import com.edso.resume.api.domain.entities.UserEntity;
+import com.edso.resume.api.domain.entities.*;
 import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
 import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
@@ -54,7 +51,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     }
 
     @Override
-    public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String id, String idProfile, String key, String keySearch, String recruitment) {
+    public GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String id, String idProfile, String key, String act, String keySearch, String recruitment) {
         GetArrayCalendarResponse<CalendarEntity2> resp = new GetArrayCalendarResponse<>();
         List<Bson> c = new ArrayList<>();
         if (!Strings.isNullOrEmpty(keySearch)) {
@@ -77,6 +74,19 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
                 c.add(Filters.eq(DbKeyConfig.JOIN_USERNAME, info.getUsername()));
             }
         }
+        if (!Strings.isNullOrEmpty(act)) {
+            if (act.equals("dadienra")) {
+                c.add(Filters.lt(DbKeyConfig.INTERVIEW_TIME, System.currentTimeMillis()));
+            }
+            if (act.equals("dangdienra")) {
+                c.add(Filters.lte(DbKeyConfig.DATE, System.currentTimeMillis()));
+                c.add(Filters.gte(DbKeyConfig.INTERVIEW_TIME, System.currentTimeMillis()));
+            }
+            if (act.equals("sapdienra")) {
+                c.add(Filters.gt(DbKeyConfig.DATE, System.currentTimeMillis()));
+            }
+        }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson sort = Filters.eq(DbKeyConfig.DATE, 1);
         Bson cond = buildCondition(c);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_CALENDAR_PROFILE, cond, sort, 0, 0);
@@ -110,7 +120,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     }
 
     @Override
-    public BaseResponse createCalendarProfile(CreateCalendarProfileRequest2 request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate) {
+    public BaseResponse createCalendarProfile(CreateCalendarProfileRequest2 request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate, RelatedPeopleRequest relatedPeople) {
 
         BaseResponse response = new BaseResponse();
 
@@ -206,6 +216,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             calendar.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             calendar.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+            calendar.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
 
             // insert to database
@@ -214,21 +225,27 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             //Insert history to DB
             historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo());
 
+            List<IdEntity> ids = new ArrayList<>();
+            if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter()) || !Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil()) || !Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
+                IdEntity idEntity = IdEntity.builder()
+                        .calendarId(id)
+                        .profileId(idProfile)
+                        .build();
+                ids.add(idEntity);
+            }
+
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
-                rabbitMQOnlineActions.publishCalendarCandidateEmail(TypeConfig.CALENDAR_CANDIDATE, candidate, paths, id, historyId, idProfile);
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDAR_CANDIDATE, ids, null, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
-                rabbitMQOnlineActions.publishCalendarPresenterEmail(TypeConfig.CALENDAR_PRESENTER, presenter, paths, id, historyId, idProfile);
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDAR_PRESENTER, ids, presenter.getUsernamePresenters(), presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, idProfile, recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
-                rabbitMQOnlineActions.publishRecruitmentCouncilEmail(TypeConfig.CALENDAR_INTERVIEWER, recruitmentCouncil, paths, historyId, id);
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDAR_INTERVIEWER, ids, recruitmentCouncil.getUsernameRecruitmentCouncils(), recruitmentCouncil.getEmailRecruitmentCouncil(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople())) {
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDAR_RELATED_PEOPLE, ids, relatedPeople.getUsernameRelatedPeoples(), null, relatedPeople.getSubjectRelatedPeople(), relatedPeople.getContentRelatedPeople(), relatedPeople.getFileRelatedPeoples(), request.getInfo());
             }
 
             response.setSuccess();
@@ -248,7 +265,7 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
     }
 
     @Override
-    public BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest2 request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate) {
+    public BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest2 request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate, RelatedPeopleRequest relatedPeople) {
         BaseResponse response = new BaseResponse();
         String id = request.getId();
         Bson cond = Filters.eq(DbKeyConfig.ID, id);
@@ -342,23 +359,28 @@ public class CalendarServiceImpl2 extends BaseService implements CalendarService
             //Insert history to DB
             historyService.createHistory(dictionaryNames.getIdProfile(), TypeConfig.UPDATE, "Sửa lịch phỏng vấn", request.getInfo());
 
-            //publish rabbit
-            if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
-                rabbitMQOnlineActions.publishCalendarCandidateEmail(TypeConfig.CALENDAR_CANDIDATE, candidate, paths, id, historyId, dictionaryNames.getIdProfile());
-            }
-            if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
-                rabbitMQOnlineActions.publishCalendarPresenterEmail(TypeConfig.CALENDAR_PRESENTER, presenter, paths, id, historyId, dictionaryNames.getIdProfile());
-            }
-            if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, dictionaryNames.getIdProfile(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
-                rabbitMQOnlineActions.publishRecruitmentCouncilEmail(TypeConfig.CALENDAR_INTERVIEWER, recruitmentCouncil, paths, historyId, id);
+            List<IdEntity> ids = new ArrayList<>();
+            if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter()) || !Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil()) || !Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate()) || !Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople()) && relatedPeople.getUsernameRelatedPeoples() != null && !relatedPeople.getUsernameRelatedPeoples().isEmpty()) {
+                IdEntity idEntity = IdEntity.builder()
+                        .calendarId(id)
+                        .profileId(dictionaryNames.getIdProfile())
+                        .build();
+                ids.add(idEntity);
             }
 
+            //publish rabbit
+            if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDAR_CANDIDATE, ids, null, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDAR_PRESENTER, ids, presenter.getUsernamePresenters(), presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDAR_INTERVIEWER, ids, recruitmentCouncil.getUsernameRecruitmentCouncils(), recruitmentCouncil.getEmailRecruitmentCouncil(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople()) && relatedPeople.getUsernameRelatedPeoples() != null && !relatedPeople.getUsernameRelatedPeoples().isEmpty()) {
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDAR_RELATED_PEOPLE, ids, relatedPeople.getUsernameRelatedPeoples(), null, relatedPeople.getSubjectRelatedPeople(), relatedPeople.getContentRelatedPeople(), relatedPeople.getFileRelatedPeoples(), request.getInfo());
+            }
             response.setSuccess();
             return response;
         } catch (Throwable ex) {

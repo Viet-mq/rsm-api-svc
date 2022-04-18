@@ -26,7 +26,10 @@ public class ProfileController extends BaseController {
     @GetMapping("/list")
     public BaseResponse findAllProfile(
             @RequestHeader Map<String, String> headers,
+            @RequestParam(value = "reject", required = false) String reject,
             @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "follow", required = false) String follow,
+            @RequestParam(value = "blackList", required = false) String blackList,
             @RequestParam(value = "talentPool", required = false) String talentPool,
             @RequestParam(value = "job", required = false) String job,
             @RequestParam(value = "levelJob", required = false) String levelJob,
@@ -38,14 +41,16 @@ public class ProfileController extends BaseController {
             @RequestParam(value = "tag", required = false) String tag,
             @RequestParam(value = "pic", required = false) String pic,
             @RequestParam(value = "hrRef", required = false) String hrRef,
+            @RequestParam(value = "fromCreateAt", required = false) Long fromCreateAt,
             @RequestParam(value = "from", required = false) Long from,
+            @RequestParam(value = "toCreateAt", required = false) Long toCreateAt,
             @RequestParam(value = "to", required = false) Long to,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, pic: {}, hrRef: {}, from:{}, to:{}, page: {}, size: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, page, size);
-        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, page, size);
-        logger.info("<=findAllProfile u: {}, fullName: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, pic: {}, hrRef: {}, from:{}, to:{}, page: {}, size: {}, resp: {}", headerInfo, fullName, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, page, size, resp.info());
+        logger.info("=>findAllProfile u: {}, reject: {}, fullName: {}, follow: {}, blackList: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, pic: {}, hrRef: {}, from:{}, to:{}, fromCreateAt:{}, toCreateAt:{}, page: {}, size: {}", headerInfo, reject, fullName, follow, blackList, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, fromCreateAt, toCreateAt, page, size);
+        GetArrayResponse<ProfileEntity> resp = profileService.findAll(headerInfo, reject, fullName, follow, blackList, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, fromCreateAt, toCreateAt, page, size);
+        logger.info("<=findAllProfile u: {}, reject: {}, fullName: {}, follow: {}, blackList: {}, talentPool: {}, job: {}, levelJob: {}, department: {}, recruitment: {}, calendar: {}, statusCV: {}, key: {}, tag: {}, pic: {}, hrRef: {}, from:{}, to:{}, fromCreateAt:{}, toCreateAt:{}, page: {}, size: {}, resp: {}", headerInfo, reject, fullName, follow, blackList, talentPool, job, levelJob, department, recruitment, calendar, statusCV, key, tag, pic, hrRef, from, to, fromCreateAt, toCreateAt, page, size, resp.info());
         return resp;
     }
 
@@ -118,20 +123,22 @@ public class ProfileController extends BaseController {
     public BaseResponse updateRejectProfile(@RequestHeader Map<String, String> headers,
                                             @ModelAttribute UpdateRejectProfileRequest request,
                                             @ModelAttribute CandidateRequest candidate,
+                                            @ModelAttribute RecruitmentCouncilRequest recruitmentCouncil,
+                                            @ModelAttribute RelatedPeopleRequest relatedPeople,
                                             @ModelAttribute PresenterRequest presenter) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateRejectProfile u: {}, req: {}, candidate: {}, presenter: {}", headerInfo, request, candidate, presenter);
+        logger.info("=>updateRejectProfile u: {}, req: {}, candidate: {}, presenter: {}, relatedPeople: {}, recruitmentCouncil: {}", headerInfo, request, candidate, presenter, relatedPeople, recruitmentCouncil);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = profileService.updateRejectProfile(request, candidate, presenter);
+                response = profileService.updateRejectProfile(request, candidate, recruitmentCouncil, presenter, relatedPeople);
             }
         }
-        logger.info("<=updateRejectProfile u: {}, req: {}, resp: {}, candidate: {}, presenter: {}", headerInfo, request, response, candidate, presenter);
+        logger.info("<=updateRejectProfile u: {}, req: {}, resp: {}, candidate: {}, presenter: {}, relatedPeople: {}, recruitmentCouncil: {}", headerInfo, request, response, candidate, presenter, relatedPeople, recruitmentCouncil);
         return response;
     }
 
@@ -168,6 +175,42 @@ public class ProfileController extends BaseController {
             }
         }
         logger.info("<=deleteTalentPoolProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
+    @PostMapping("/blacklist")
+    public BaseResponse updateBlackListProfile(@RequestHeader Map<String, String> headers, @RequestBody UpdateBlackListProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>updateBlackListProfile u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.updateBlackListProfile(request);
+            }
+        }
+        logger.info("<=updateBlackListProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
+        return response;
+    }
+
+    @PostMapping("/delete-blacklist")
+    public BaseResponse deleteBlackListProfile(@RequestHeader Map<String, String> headers, @RequestBody DeleteBlackListProfileRequest request) {
+        BaseResponse response = new BaseResponse();
+        HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
+        logger.info("=>deleteBlackListProfile u: {}, req: {}", headerInfo, request);
+        if (request == null) {
+            response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
+        } else {
+            response = request.validate();
+            if (response == null) {
+                request.setInfo(headerInfo);
+                response = profileService.deleteBlackListProfile(request);
+            }
+        }
+        logger.info("<=deleteBlackListProfile u: {}, req: {}, resp: {}", headerInfo, request, response);
         return response;
     }
 

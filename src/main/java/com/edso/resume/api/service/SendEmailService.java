@@ -1,8 +1,20 @@
 package com.edso.resume.api.service;
 
-import com.edso.resume.api.domain.request.SendEmailRequest;
-import com.edso.resume.lib.response.BaseResponse;
+import com.edso.resume.api.domain.entities.EmailResult;
+
+import java.util.List;
 
 public interface SendEmailService {
-    BaseResponse sendEmail(SendEmailRequest request);
+    List<EmailResult> sendEmail(
+            String profileId,
+            List<String> usernames,
+            List<String> emails,
+            String subject,
+            String content);
+
+    List<EmailResult> sendCalendarEmail(String calendarId,
+                                        List<String> usernames,
+                                        List<String> emails,
+                                        String subject,
+                                        String content);
 }

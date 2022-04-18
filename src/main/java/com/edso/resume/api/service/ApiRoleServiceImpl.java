@@ -149,8 +149,8 @@ public class ApiRoleServiceImpl extends BaseService implements ApiRoleService {
             db.update(CollectionNameDefs.COLL_API_ROLE, cond, updates);
 
             Bson updateRole = Updates.combine(
-                    Updates.set(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name)),
-                    Updates.set(DbKeyConfig.DESCRIPTION, AppUtils.mergeWhitespace(request.getDescription()))
+                    Updates.set("api_roles.$.name", AppUtils.mergeWhitespace(name)),
+                    Updates.set("api_roles.$.description", AppUtils.mergeWhitespace(request.getDescription()))
             );
             db.update(CollectionNameDefs.COLL_ROLE, Filters.eq("api_roles.id"), updateRole);
 

@@ -5,9 +5,7 @@ import com.edso.resume.api.domain.entities.DictionaryNamesEntity;
 import com.edso.resume.api.domain.entities.EventEntity;
 import com.edso.resume.api.domain.entities.ProfileRabbitMQEntity;
 import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
-import com.edso.resume.api.domain.request.CandidateRequest;
-import com.edso.resume.api.domain.request.ChangeRecruitmentRequest;
-import com.edso.resume.api.domain.request.PresenterRequest;
+import com.edso.resume.api.domain.request.*;
 import com.edso.resume.api.domain.validator.DictionaryValidateProcessor;
 import com.edso.resume.api.domain.validator.DictionaryValidatorResult;
 import com.edso.resume.api.domain.validator.IDictionaryValidator;
@@ -60,7 +58,7 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
     }
 
     @Override
-    public BaseResponse changeRecruitment(ChangeRecruitmentRequest request, CandidateRequest candidate, PresenterRequest presenter) {
+    public BaseResponse changeRecruitment(ChangeRecruitmentRequest request, CandidateRequest candidate, PresenterRequest presenter, RelatedPeopleRequest relatedPeople, RecruitmentCouncilRequest recruitmentCouncil) {
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
         try {
@@ -181,14 +179,16 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, request.getIdProfile(), candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
-                rabbitMQOnlineActions.publishCandidateEmail(TypeConfig.ROUND_CANDIDATE, candidate, paths, historyId, request.getIdProfile());
+                historyEmailService.createHistoryEmail(TypeConfig.ROUND_CANDIDATE, request.getIdProfile(), null, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                String historyId = UUID.randomUUID().toString();
-                List<String> paths = historyEmailService.createHistoryEmail(historyId, request.getIdProfile(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
-                rabbitMQOnlineActions.publishPresenterEmail(TypeConfig.ROUND_PRESENTER, presenter, paths, historyId, request.getIdProfile());
+                historyEmailService.createHistoryEmail(TypeConfig.ROUND_PRESENTER, request.getIdProfile(), presenter.getUsernamePresenters(), presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
+                historyEmailService.createHistoryEmail(TypeConfig.ROUND_INTERVIEWER, request.getIdProfile(), recruitmentCouncil.getUsernameRecruitmentCouncils(), recruitmentCouncil.getEmailRecruitmentCouncil(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople())) {
+                historyEmailService.createHistoryEmail(TypeConfig.ROUND_RELATED_PEOPLE, request.getIdProfile(), relatedPeople.getUsernameRelatedPeoples(), null, relatedPeople.getSubjectRelatedPeople(), relatedPeople.getContentRelatedPeople(), relatedPeople.getFileRelatedPeoples(), request.getInfo());
             }
 
         } catch (Throwable ex) {
