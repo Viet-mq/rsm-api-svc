@@ -41,8 +41,8 @@ public class MongoDbAccess {
     public MongoClient getMongo() throws RuntimeException {
 
         int connectionsPerHost = 15;
-        int maxConnectionIdleTime = 60;
-        int maxConnectionLifeTime = 120;
+        int maxConnectionIdleTime = 75;
+        int maxConnectionLifeTime = 60;
         String encodedPwd = "";
 
         logger.info("Mongo DB server: {}:{}", dbHost, dbPort);

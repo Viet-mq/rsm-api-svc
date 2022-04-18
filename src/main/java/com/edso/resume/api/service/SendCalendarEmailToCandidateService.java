@@ -27,13 +27,13 @@ public class SendCalendarEmailToCandidateService extends BaseService implements 
     }
 
     @Override
-    public List<EmailResult> sendEmail(String profileId, List<String> emails, String subject, String content) {
+    public List<EmailResult> sendEmail(String profileId, List<String> usernames, List<String> emails, String subject, String content) {
         return null;
     }
 
     @SneakyThrows
     @Override
-    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> emails, String subject, String content) {
+    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> usernames, List<String> emails, String subject, String content) {
         List<EmailResult> results = new ArrayList<>();
         try {
             Bson cond = Filters.eq(EmailTemplateConfig.ID, calendarId);

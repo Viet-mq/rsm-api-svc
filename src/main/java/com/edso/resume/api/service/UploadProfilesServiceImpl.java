@@ -357,6 +357,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     pro.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     pro.append(DbKeyConfig.CREATE_BY, info.getUsername());
                     pro.append(DbKeyConfig.AVATAR_COLOR, color);
+                    pro.append(DbKeyConfig.ORGANIZATIONS, info.getMyOrganizations());
                     db.insertOne(CollectionNameDefs.COLL_PROFILE, pro);
 
                     Document comment = new Document();
@@ -366,6 +367,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     comment.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                     comment.append(DbKeyConfig.CREATE_BY, info.getUsername());
                     comment.append(DbKeyConfig.FULL_NAME, user.get(DbKeyConfig.FULL_NAME));
+                    comment.append(DbKeyConfig.ORGANIZATIONS, info.getMyOrganizations());
                     db.insertOne(CollectionNameDefs.COLL_COMMENT, comment);
 
                     ProfileRabbitMQEntity profileEntity = new ProfileRabbitMQEntity();
@@ -389,6 +391,7 @@ public class UploadProfilesServiceImpl extends BaseService implements UploadProf
                     profileEntity.setPicId(picId);
                     profileEntity.setPicName(profile.getPic());
                     profileEntity.setStatus(profile.getStatus());
+                    profileEntity.setOrganizations(info.getMyOrganizations());
 //                    profileEntity.setCompanyId(companyId);
 //                    profileEntity.setCompanyName(profile.getCompany());
                     profileEntity.setAvatarColor(color);

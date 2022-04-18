@@ -52,6 +52,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
         if (!Strings.isNullOrEmpty(idProfile)) {
             c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.FULL_NAME, 1);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -162,6 +163,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             note.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             note.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             note.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+            note.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_NOTE_PROFILE, note);

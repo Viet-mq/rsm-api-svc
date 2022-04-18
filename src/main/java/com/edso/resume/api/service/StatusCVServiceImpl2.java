@@ -26,7 +26,7 @@ public class StatusCVServiceImpl2 extends StatusCVServiceImpl {
         BaseResponse response = new BaseResponse();
         try {
             String name = request.getName();
-            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            Bson c = Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations()));
             long count = db.countAll(CollectionNameDefs.COLL_STATUS_CV, c);
 
             if (count > 0) {
@@ -51,6 +51,7 @@ public class StatusCVServiceImpl2 extends StatusCVServiceImpl {
             statusCV.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             statusCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            statusCV.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             list.add(index + 1, statusCV);
 

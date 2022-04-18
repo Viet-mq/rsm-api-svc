@@ -38,6 +38,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -65,7 +66,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
         BaseResponse response = new BaseResponse();
         try {
             String name = request.getName();
-            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            Bson c = Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations()));
             long count = db.countAll(CollectionNameDefs.COLL_SCHOOL, c);
 
             if (count > 0) {
@@ -82,6 +83,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
             school.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             school.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             school.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+            school.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_SCHOOL, school);
@@ -113,7 +115,7 @@ public class SchoolServiceImpl extends BaseService implements SchoolService {
             }
 
             String name = request.getName();
-            Document obj = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
+            Document obj = db.findOne(CollectionNameDefs.COLL_SCHOOL, Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {

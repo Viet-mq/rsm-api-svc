@@ -28,7 +28,7 @@ public class SendRoundEmailToRelatedPeopleService extends BaseService implements
 
     @SneakyThrows
     @Override
-    public List<EmailResult> sendEmail(String profileId, List<String> emails, String subject, String content) {
+    public List<EmailResult> sendEmail(String profileId, List<String> usernames, List<String> emails, String subject, String content) {
         List<EmailResult> results = new ArrayList<>();
         try {
             Bson cond = Filters.eq(EmailTemplateConfig.ID, profileId);
@@ -93,18 +93,11 @@ public class SendRoundEmailToRelatedPeopleService extends BaseService implements
 
             //Replace keypoint
             StrSubstitutor sub = new StrSubstitutor(replacementStrings, "{", "}");
-            if (!AppUtils.parseString(profile.get(DbKeyConfig.MAIL_REF)).isEmpty()) {
-                EmailResult emailResult = EmailResult.builder()
-                        .email(AppUtils.parseString(profile.get(DbKeyConfig.MAIL_REF)))
-                        .subject(sub.replace(subject))
-                        .content(sub.replace(content))
-                        .build();
-                results.add(emailResult);
-            }
-            if (emails != null) {
-                for (String email : emails) {
+            for (String username : usernames) {
+                Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
+                if (user != null) {
                     EmailResult emailResult = EmailResult.builder()
-                            .email(email)
+                            .email(AppUtils.parseString(user.get(DbKeyConfig.EMAIL)))
                             .subject(sub.replace(subject))
                             .content(sub.replace(content))
                             .build();
@@ -119,7 +112,7 @@ public class SendRoundEmailToRelatedPeopleService extends BaseService implements
     }
 
     @Override
-    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> emails, String subject, String content) {
+    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> usernames, List<String> emails, String subject, String content) {
         return null;
     }
 }

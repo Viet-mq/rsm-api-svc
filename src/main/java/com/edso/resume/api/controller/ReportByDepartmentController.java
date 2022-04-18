@@ -35,7 +35,7 @@ public class ReportByDepartmentController extends BaseController {
             @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>getReportByDepartmentService u: {}", headerInfo);
-        GetArrayStatisticalReponse<ReportByDepartmentEntity2> resp = reportByDepartmentService.findAll(from, to);
+        GetArrayStatisticalReponse<ReportByDepartmentEntity2> resp = reportByDepartmentService.findAll(headerInfo, from, to);
         logger.info("<=getReportByDepartmentService u: {}, resp: {}", headerInfo, resp.info());
         return resp;
     }
@@ -46,7 +46,7 @@ public class ReportByDepartmentController extends BaseController {
                                                              @RequestParam(value = "to", required = false) Long to) {
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
         logger.info("=>exportReportByDepartment u: {}", headerInfo);
-        ExportResponse response = reportByDepartmentService.exportReportByDepartment(from, to);
+        ExportResponse response = reportByDepartmentService.exportReportByDepartment(headerInfo, from, to);
         File file = new File(response.getPath());
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = null;

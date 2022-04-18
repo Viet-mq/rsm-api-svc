@@ -9,6 +9,7 @@ import com.edso.resume.lib.common.DbKeyConfig;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.GetArrayResponse;
+import com.google.common.base.Strings;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -29,7 +30,12 @@ public class DepartmentServiceImpl2 extends DepartmentServiceImpl {
     public GetArrayResponse<DepartmentEntity> findAll(HeaderInfo info, String name, Integer page, Integer size) {
         try {
             GetArrayResponse<DepartmentEntity> resp = new GetArrayResponse<>();
-            Bson cond = Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name)));
+            List<Bson> c = new ArrayList<>();
+            if (!Strings.isNullOrEmpty(name)) {
+                c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
+            }
+            c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
+            Bson cond = buildCondition(c);
             PagingInfo pagingInfo = PagingInfo.parse(page, size);
             List<Document> lst = db.findAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
             List<DepartmentEntity> rows = new ArrayList<>();

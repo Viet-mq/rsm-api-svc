@@ -10,6 +10,7 @@ import com.edso.resume.api.report.ReportByDepartment2;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.GetArrayStatisticalReponse;
 import com.mongodb.client.AggregateIterable;
 import org.bson.Document;
@@ -36,7 +37,7 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
     }
 
     @Override
-    public GetArrayStatisticalReponse<ReportByDepartmentEntity2> findAll(Long from, Long to) {
+    public GetArrayStatisticalReponse<ReportByDepartmentEntity2> findAll(HeaderInfo info, Long from, Long to) {
         GetArrayStatisticalReponse<ReportByDepartmentEntity2> response = new GetArrayStatisticalReponse<>();
         try {
             List<ReportByDepartmentEntity2> rows = new ArrayList<>();
@@ -55,6 +56,7 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
 
             match.append("recruitment_name", new Document().append("$ne", null));
             match.append("source_cv_name", new Document().append("$ne", null));
+            match.append(DbKeyConfig.ORGANIZATIONS, new Document().append("$in", info.getOrganizations()));
             query1.append("$match", match);
 
             Document query2 = new Document();
@@ -96,7 +98,7 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
     }
 
     @Override
-    public ExportResponse exportReportByDepartment(Long from, Long to) {
+    public ExportResponse exportReportByDepartment(HeaderInfo info, Long from, Long to) {
         try {
             List<ReportByDepartmentEntity> rows = new ArrayList<>();
             List<Bson> c = new ArrayList<>();
@@ -117,6 +119,7 @@ public class ReportByDepartmentServiceImpl extends BaseService implements Report
 
             match.append("recruitment_name", new Document().append("$ne", null));
             match.append("source_cv_name", new Document().append("$ne", null));
+            match.append(DbKeyConfig.ORGANIZATIONS, new Document().append("$in", info.getOrganizations()));
             query1.append("$match", match);
 
             Document query2 = new Document();

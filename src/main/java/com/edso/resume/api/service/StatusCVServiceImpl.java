@@ -39,6 +39,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_STATUS_CV, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
@@ -63,7 +64,8 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
 
     @Override
     public GetStatusCVResponse<String> findAllStatusCVProfile(HeaderInfo info) {
-        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, null, null, 0, 0);
+        Bson cond = Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations());
+        FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_PROFILE, cond, null, 0, 0);
         Set<String> rows = new HashSet<>();
         if (lst != null) {
             for (Document doc : lst) {
@@ -86,6 +88,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_STATUS_CV, cond, null, pagingInfo.getStart(), pagingInfo.getLimit());
@@ -114,7 +117,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
         BaseResponse response = new BaseResponse();
         try {
             String name = request.getName();
-            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            Bson c = Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations()));
             long count = db.countAll(CollectionNameDefs.COLL_STATUS_CV, c);
 
             if (count > 0) {
@@ -147,6 +150,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             statusCV.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             statusCV.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            statusCV.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_STATUS_CV, statusCV);
@@ -178,7 +182,7 @@ public class StatusCVServiceImpl extends BaseService implements StatusCVService 
             }
 
             String name = request.getName().trim();
-            Document obj = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
+            Document obj = db.findOne(CollectionNameDefs.COLL_STATUS_CV, Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {

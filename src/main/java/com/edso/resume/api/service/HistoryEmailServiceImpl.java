@@ -33,8 +33,10 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
     private final SendEmailService sendRejectEmailToCandidate;
     private final SendEmailService sendRejectEmailToPresenter;
     private final SendEmailService sendRejectEmailToRelatedPeople;
+    private final SendEmailService sendRejectEmailToInterviewer;
     private final SendEmailService sendRoundEmailToPresenter;
     private final SendEmailService sendRoundEmailToCandidate;
+    private final SendEmailService sendRoundEmailToInterviewer;
     private final SendEmailService sendRoundEmailToRelatedPeople;
     private final SendEmailService sendCalendarEmailToPresenter;
     private final SendEmailService sendCalendarEmailToInterviewer;
@@ -50,8 +52,10 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
                                       @Qualifier("sendRejectEmailToCandidateService") SendEmailService sendRejectEmailToCandidate,
                                       @Qualifier("sendRejectEmailToPresenterService") SendEmailService sendRejectEmailToPresenter,
                                       @Qualifier("sendRejectEmailToRelatedPeopleService") SendEmailService sendRejectEmailToRelatedPeople,
+                                      @Qualifier("sendRejectEmailToInterviewerService") SendEmailService sendRejectEmailToInterviewer,
                                       @Qualifier("sendRoundEmailToPresenterService") SendEmailService sendRoundEmailToPresenter,
                                       @Qualifier("sendRoundEmailToCandidateService") SendEmailService sendRoundEmailToCandidate,
+                                      @Qualifier("sendRoundEmailToInterviewerService") SendEmailService sendRoundEmailToInterviewer,
                                       @Qualifier("sendRoundEmailToRelatedPeopleService") SendEmailService sendRoundEmailToRelatedPeople,
                                       @Qualifier("sendCalendarEmailToPresenterService") SendEmailService sendCalendarEmailToPresenter,
                                       @Qualifier("sendCalendarEmailToInterviewerService") SendEmailService sendCalendarEmailToInterviewer,
@@ -62,8 +66,10 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
         this.sendRejectEmailToCandidate = sendRejectEmailToCandidate;
         this.sendRejectEmailToPresenter = sendRejectEmailToPresenter;
         this.sendRejectEmailToRelatedPeople = sendRejectEmailToRelatedPeople;
+        this.sendRejectEmailToInterviewer = sendRejectEmailToInterviewer;
         this.sendRoundEmailToPresenter = sendRoundEmailToPresenter;
         this.sendRoundEmailToCandidate = sendRoundEmailToCandidate;
+        this.sendRoundEmailToInterviewer = sendRoundEmailToInterviewer;
         this.sendRoundEmailToRelatedPeople = sendRoundEmailToRelatedPeople;
         this.sendCalendarEmailToPresenter = sendCalendarEmailToPresenter;
         this.sendCalendarEmailToInterviewer = sendCalendarEmailToInterviewer;
@@ -73,7 +79,7 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
 
 
     @Override
-    public void createHistoryEmail(String type, String profileId, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException {
+    public void createHistoryEmail(String type, String profileId, List<String> usernames, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException {
         List<String> listPath = new ArrayList<>();
         List<Document> listDocument = new ArrayList<>();
         Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
@@ -91,12 +97,12 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             }
         }
 
-        List<String> emails = splitString(email, ";");
+        List<String> emails = splitString(AppUtils.removeWhitespace(email), ";");
 
         SendEmailService service = getEmailService(type);
         List<EmailResult> list = new ArrayList<>();
         if (service != null) {
-            list = service.sendEmail(profileId, emails, subject, content);
+            list = service.sendEmail(profileId, usernames, emails, subject, content);
         }
 
         for (EmailResult emailResult : list) {
@@ -137,12 +143,12 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
     }
 
     @Override
-    public void createHistoryEmails(String type, List<IdEntity> ids, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException {
+    public void createHistoryEmails(String type, List<IdEntity> ids, List<String> usernames, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException {
         List<String> listPath = new ArrayList<>();
         List<Document> listDocument = new ArrayList<>();
         Document fullName = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, info.getUsername()));
 
-        List<String> emails = splitString(email, ";");
+        List<String> emails = splitString(AppUtils.removeWhitespace(email), ";");
 
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
@@ -162,7 +168,7 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             SendEmailService service = getEmailService(type);
             List<EmailResult> list = new ArrayList<>();
             if (service != null) {
-                list = service.sendCalendarEmail(id.getCalendarId(), emails, subject, content);
+                list = service.sendCalendarEmail(id.getCalendarId(), usernames, emails, subject, content);
             }
 
             for (EmailResult emailResult : list) {
@@ -184,7 +190,7 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
                 }
                 history.append(DbKeyConfig.FULL_NAME, fullName.get(DbKeyConfig.FULL_NAME));
                 history.append(DbKeyConfig.FILE, listDocument);
-                history.append(DbKeyConfig.ORGANIZATIONS, info.getOrganizations());
+                history.append(DbKeyConfig.ORGANIZATIONS, info.getMyOrganizations());
 
                 // insert to database
                 db.insertOne(CollectionNameDefs.COLL_HISTORY_EMAIL, history);
@@ -235,6 +241,7 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
 
     private SendEmailService getEmailService(String type) {
         switch (type) {
+            case TypeConfig.CALENDAR_INTERVIEWER:
             case TypeConfig.CALENDARS_INTERVIEWER: {
                 return sendCalendarEmailToInterviewer;
             }
@@ -256,6 +263,9 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             case TypeConfig.REJECT_PRESENTER: {
                 return sendRejectEmailToPresenter;
             }
+            case TypeConfig.REJECT_INTERVIEWER: {
+                return sendRejectEmailToInterviewer;
+            }
             case TypeConfig.REJECT_RELATED_PEOPLE: {
                 return sendRejectEmailToRelatedPeople;
             }
@@ -267,6 +277,9 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             }
             case TypeConfig.ROUND_RELATED_PEOPLE: {
                 return sendRoundEmailToRelatedPeople;
+            }
+            case TypeConfig.ROUND_INTERVIEWER: {
+                return sendRoundEmailToInterviewer;
             }
         }
         return null;
@@ -290,7 +303,10 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
             return resp;
         }
 
-        Bson cond = Filters.eq(DbKeyConfig.ID_PROFILE, idProfile);
+        List<Bson> c = new ArrayList<>();
+        c.add(Filters.eq(DbKeyConfig.ID_PROFILE, idProfile));
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
+        Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.TIME, -1);
 
         PagingInfo pagingInfo = PagingInfo.parse(page, size);

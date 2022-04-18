@@ -28,7 +28,7 @@ public class SendRoundEmailToCandidateService extends BaseService implements Sen
     @SneakyThrows
     @Override
     public List<EmailResult> sendEmail(String profileId,
-                                       List<String> emails, String subject,
+                                       List<String> usernames, List<String> emails, String subject,
                                        String content) {
         List<EmailResult> results = new ArrayList<>();
         try {
@@ -101,7 +101,7 @@ public class SendRoundEmailToCandidateService extends BaseService implements Sen
     }
 
     @Override
-    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> emails, String subject, String content) {
+    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> usernames, List<String> emails, String subject, String content) {
         return null;
     }
 

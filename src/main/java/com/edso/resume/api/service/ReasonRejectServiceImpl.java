@@ -40,6 +40,7 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
         FindIterable<Document> lst = db.findAll2(CollectionNameDefs.COLL_REASON_REJECT, cond, sort, pagingInfo.getStart(), pagingInfo.getLimit());
@@ -65,7 +66,7 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
         BaseResponse response = new BaseResponse();
         try {
             String name = request.getReason();
-            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            Bson c = Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations()));
             long count = db.countAll(CollectionNameDefs.COLL_JOB_LEVEL, c);
 
             if (count > 0) {
@@ -82,6 +83,7 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
             reason.append(DbKeyConfig.UPDATE_AT, System.currentTimeMillis());
             reason.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
             reason.append(DbKeyConfig.UPDATE_BY, request.getInfo().getUsername());
+            reason.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_REASON_REJECT, reason);
@@ -110,7 +112,7 @@ public class ReasonRejectServiceImpl extends BaseService implements ReasonReject
             }
 
             String name = request.getReason();
-            Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
+            Document obj = db.findOne(CollectionNameDefs.COLL_JOB, Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {

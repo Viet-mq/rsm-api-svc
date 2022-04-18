@@ -203,6 +203,12 @@ OrganizationServiceImpl extends BaseService implements OrganizationService {
         BaseResponse response = new BaseResponse();
         try {
             String id = request.getId();
+            Document org = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.ORGANIZATIONS, id));
+            if (org != null) {
+                response.setFailed("Không thể xóa tổ chức này");
+                return response;
+            }
+
             Bson cond = Filters.eq(DbKeyConfig.ID, id);
             Document idDocument = db.findOne(CollectionNameDefs.COLL_ORGANIZATION, cond);
 

@@ -1,5 +1,6 @@
 package com.edso.resume.api.service;
 
+
 import com.edso.resume.api.common.EmailTemplateConfig;
 import com.edso.resume.api.common.KeyPointConfig;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
@@ -19,27 +20,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-public class SendCalendarEmailToInterviewerService extends BaseService implements SendEmailService {
+class SendRoundEmailToInterviewerService extends BaseService implements SendEmailService {
 
-    protected SendCalendarEmailToInterviewerService(MongoDbOnlineSyncActions db) {
+    protected SendRoundEmailToInterviewerService(MongoDbOnlineSyncActions db) {
         super(db);
     }
 
-
     @Override
     public List<EmailResult> sendEmail(String profileId, List<String> usernames, List<String> emails, String subject, String content) {
-        return null;
-    }
-
-    @SneakyThrows
-    @Override
-    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> usernames, List<String> emails, String subject, String content) {
         List<EmailResult> results = new ArrayList<>();
         try {
-            Document calendar = db.findOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, Filters.eq(DbKeyConfig.ID, calendarId));
-
-            String id_profile = AppUtils.parseString(calendar.get(DbKeyConfig.ID_PROFILE));
-            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(EmailTemplateConfig.ID, id_profile));
+            Document profile = db.findOne(CollectionNameDefs.COLL_PROFILE, Filters.eq(EmailTemplateConfig.ID, profileId));
 
             //Name Filter
             String fullName = AppUtils.parseString(profile.get(DbKeyConfig.FULL_NAME));
@@ -54,7 +45,6 @@ public class SendCalendarEmailToInterviewerService extends BaseService implement
 
             if (usernames != null) {
                 for (String username : usernames) {
-
                     Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
                     if (user != null) {
 
@@ -95,25 +85,6 @@ public class SendCalendarEmailToInterviewerService extends BaseService implement
                                 case KeyPointConfig.ROUND:
                                     replacementStrings.put(KeyPointConfig.ROUND, AppUtils.parseString(profile.get(DbKeyConfig.STATUS_CV_NAME)));
                                     break;
-                                case KeyPointConfig.DATE:
-                                    String date = AppUtils.formatDateToString(new Date(AppUtils.parseLong(calendar.get(DbKeyConfig.DATE))));
-                                    replacementStrings.put(KeyPointConfig.DATE, date);
-                                    break;
-                                case KeyPointConfig.INTERVIEW_TIME:
-                                    String interview_time = AppUtils.formatDateToString(new Date(AppUtils.parseLong(calendar.get(DbKeyConfig.INTERVIEW_TIME))));
-                                    replacementStrings.put(KeyPointConfig.INTERVIEW_TIME, interview_time);
-                                    break;
-                                case KeyPointConfig.INTERVIEW_ADDRESS:
-                                    replacementStrings.put(KeyPointConfig.INTERVIEW_ADDRESS, AppUtils.parseString(calendar.get(DbKeyConfig.INTERVIEW_ADDRESS_NAME)));
-                                    break;
-                                case KeyPointConfig.FLOOR:
-                                    replacementStrings.put(KeyPointConfig.FLOOR, AppUtils.parseString(calendar.get(DbKeyConfig.FLOOR)));
-                                    break;
-                                case KeyPointConfig.INTERVIEW_TYPE:
-                                    replacementStrings.put(KeyPointConfig.INTERVIEW_TYPE, AppUtils.parseString(calendar.get(DbKeyConfig.TYPE)));
-                                    break;
-                                case KeyPointConfig.INTERVIEWER_NAME:
-                                    replacementStrings.put(KeyPointConfig.INTERVIEWER_NAME, AppUtils.parseString(user.get(DbKeyConfig.FULL_NAME)));
                             }
                         }
 
@@ -148,7 +119,7 @@ public class SendCalendarEmailToInterviewerService extends BaseService implement
                     for (String placeholder : keypointList) {
                         switch (placeholder) {
                             case KeyPointConfig.FULL_NAME:
-                                replacementStrings.put(KeyPointConfig.FULL_NAME, email);
+                                replacementStrings.put(KeyPointConfig.FULL_NAME, fullName);
                                 break;
                             case KeyPointConfig.NAME:
                             case KeyPointConfig.FIRST_NAME:
@@ -167,23 +138,6 @@ public class SendCalendarEmailToInterviewerService extends BaseService implement
                                 break;
                             case KeyPointConfig.ROUND:
                                 replacementStrings.put(KeyPointConfig.ROUND, AppUtils.parseString(profile.get(DbKeyConfig.STATUS_CV_NAME)));
-                                break;
-                            case KeyPointConfig.DATE:
-                                String date = AppUtils.formatDateToString(new Date(AppUtils.parseLong(calendar.get(DbKeyConfig.DATE))));
-                                replacementStrings.put(KeyPointConfig.DATE, date);
-                                break;
-                            case KeyPointConfig.INTERVIEW_TIME:
-                                String interview_time = AppUtils.formatDateToString(new Date(AppUtils.parseLong(calendar.get(DbKeyConfig.INTERVIEW_TIME))));
-                                replacementStrings.put(KeyPointConfig.INTERVIEW_TIME, interview_time);
-                                break;
-                            case KeyPointConfig.INTERVIEW_ADDRESS:
-                                replacementStrings.put(KeyPointConfig.INTERVIEW_ADDRESS, AppUtils.parseString(calendar.get(DbKeyConfig.INTERVIEW_ADDRESS_NAME)));
-                                break;
-                            case KeyPointConfig.FLOOR:
-                                replacementStrings.put(KeyPointConfig.FLOOR, AppUtils.parseString(calendar.get(DbKeyConfig.FLOOR)));
-                                break;
-                            case KeyPointConfig.INTERVIEW_TYPE:
-                                replacementStrings.put(KeyPointConfig.INTERVIEW_TYPE, AppUtils.parseString(calendar.get(DbKeyConfig.TYPE)));
                                 break;
                         }
                     }
@@ -206,5 +160,10 @@ public class SendCalendarEmailToInterviewerService extends BaseService implement
             return null;
         }
     }
-}
 
+    @SneakyThrows
+    @Override
+    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> usernames, List<String> emails, String subject, String content) {
+        return null;
+    }
+}

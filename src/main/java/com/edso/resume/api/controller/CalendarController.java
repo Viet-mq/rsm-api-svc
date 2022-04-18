@@ -46,20 +46,21 @@ public class CalendarController extends BaseController {
                                               @ModelAttribute CreateCalendarProfileRequest2 request,
                                               @ModelAttribute PresenterRequest presenter,
                                               @ModelAttribute RecruitmentCouncilRequest recruitmentCouncil,
+                                              @ModelAttribute RelatedPeopleRequest relatedPeople,
                                               @ModelAttribute CandidateRequest candidate) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>createCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, presenter, recruitmentCouncil, candidate);
+        logger.info("=>createCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}, relatedPeople: {}", headerInfo, request, presenter, recruitmentCouncil, candidate, relatedPeople);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = calendarService2.createCalendarProfile(request, presenter, recruitmentCouncil, candidate);
+                response = calendarService2.createCalendarProfile(request, presenter, recruitmentCouncil, candidate, relatedPeople);
             }
         }
-        logger.info("<=createCalendarProfile u: {}, req: {}, rep: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate);
+        logger.info("<=createCalendarProfile u: {}, req: {}, rep: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}, relatedPeople: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate, relatedPeople);
         return response;
     }
 
@@ -68,20 +69,21 @@ public class CalendarController extends BaseController {
                                               @ModelAttribute UpdateCalendarProfileRequest2 request,
                                               @ModelAttribute PresenterRequest presenter,
                                               @ModelAttribute RecruitmentCouncilRequest recruitmentCouncil,
+                                              @ModelAttribute RelatedPeopleRequest relatedPeople,
                                               @ModelAttribute CandidateRequest candidate) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, presenter, recruitmentCouncil, candidate);
+        logger.info("=>updateCalendarProfile u: {}, req: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}, relatedPeople: {}", headerInfo, request, presenter, recruitmentCouncil, candidate, relatedPeople);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = calendarService2.updateCalendarProfile(request, presenter, recruitmentCouncil, candidate);
+                response = calendarService2.updateCalendarProfile(request, presenter, recruitmentCouncil, candidate, relatedPeople);
             }
         }
-        logger.info("<=updateCalendarProfile u: {}, req: {}, resp: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate);
+        logger.info("<=updateCalendarProfile u: {}, req: {}, resp: {}, presenter: {}, recruitmentCouncil: {}, candidate: {}, relatedPeople: {}", headerInfo, request, response, presenter, recruitmentCouncil, candidate, relatedPeople);
         return response;
     }
 

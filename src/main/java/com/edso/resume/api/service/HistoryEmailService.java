@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 public interface HistoryEmailService {
-    void createHistoryEmail(String type, String profileId, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException;
+    void createHistoryEmail(String type, String profileId, List<String> usernames, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException;
 
-    void createHistoryEmails(String type, List<IdEntity> ids, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException;
+    void createHistoryEmails(String type, List<IdEntity> ids, List<String> usernames, String email, String subject, String content, List<MultipartFile> files, HeaderInfo info) throws IOException, TimeoutException;
 
     void deleteHistoryEmail(String idProfile);
 

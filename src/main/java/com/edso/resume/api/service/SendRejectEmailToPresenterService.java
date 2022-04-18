@@ -7,6 +7,7 @@ import com.edso.resume.api.domain.entities.EmailResult;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.google.common.base.Strings;
 import com.mongodb.client.model.Filters;
 import lombok.SneakyThrows;
 import org.apache.commons.lang.text.StrSubstitutor;
@@ -28,7 +29,7 @@ public class SendRejectEmailToPresenterService extends BaseService implements Se
 
     @SneakyThrows
     @Override
-    public List<EmailResult> sendEmail(String profileId, List<String> emails, String subject, String content) {
+    public List<EmailResult> sendEmail(String profileId, List<String> usernames, List<String> emails, String subject, String content) {
         List<EmailResult> results = new ArrayList<>();
         try {
             Bson cond = Filters.eq(EmailTemplateConfig.ID, profileId);
@@ -99,16 +100,21 @@ public class SendRejectEmailToPresenterService extends BaseService implements Se
 
             //Replace keypoint
             StrSubstitutor sub = new StrSubstitutor(replacementStrings, "{", "}");
-            if (!AppUtils.parseString(profile.get(DbKeyConfig.MAIL_REF)).isEmpty()) {
-                EmailResult emailResult = EmailResult.builder()
-                        .email(AppUtils.parseString(profile.get(DbKeyConfig.MAIL_REF)))
-                        .subject(sub.replace(subject))
-                        .content(sub.replace(content))
-                        .build();
-                results.add(emailResult);
+            if (usernames != null) {
+                for (String username : usernames) {
+                    Document user = db.findOne(CollectionNameDefs.COLL_USER, Filters.eq(DbKeyConfig.USERNAME, username));
+                    if (user != null) {
+                        EmailResult emailResult = EmailResult.builder()
+                                .email(AppUtils.parseString(user.get(DbKeyConfig.EMAIL)))
+                                .subject(sub.replace(subject))
+                                .content(sub.replace(content))
+                                .build();
+                        results.add(emailResult);
+                    }
+                }
             }
-            if (emails != null) {
-                for (String email : emails) {
+            for (String email : emails) {
+                if (!Strings.isNullOrEmpty(email) && AppUtils.validateEmail(email)) {
                     EmailResult emailResult = EmailResult.builder()
                             .email(email)
                             .subject(sub.replace(subject))
@@ -125,7 +131,7 @@ public class SendRejectEmailToPresenterService extends BaseService implements Se
     }
 
     @Override
-    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> emails, String subject, String content) {
+    public List<EmailResult> sendCalendarEmail(String calendarId, List<String> usernames, List<String> emails, String subject, String content) {
         return null;
     }
 }

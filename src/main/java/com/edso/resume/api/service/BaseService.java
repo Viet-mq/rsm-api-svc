@@ -9,10 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public abstract class BaseService {
 
@@ -35,7 +32,7 @@ public abstract class BaseService {
 
     public List<String> splitString(String str, String regex) {
         if (Strings.isNullOrEmpty(str)) {
-            return null;
+            return new ArrayList<>();
         }
         return Arrays.asList(str.split(regex));
     }

@@ -140,7 +140,7 @@ public class AddCalendarsServiceImpl2 extends AddCalendarsServiceImpl {
                 calendar.append(DbKeyConfig.RECRUITMENT_NAME_SEARCH, AppUtils.parseVietnameseToEnglish(dictionaryNames.getRecruitmentName()));
                 calendar.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
                 calendar.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
-                calendar.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations());
+                calendar.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
                 // insert to database
                 db.insertOne(CollectionNameDefs.COLL_CALENDAR_PROFILE, calendar);
@@ -148,7 +148,7 @@ public class AddCalendarsServiceImpl2 extends AddCalendarsServiceImpl {
                 //Insert history to DB
                 historyService.createHistory(idProfile, TypeConfig.CREATE, "Tạo lịch phỏng vấn", request.getInfo());
 
-                if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter()) || !Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil()) || !Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
+                if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter()) || !Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil()) || !Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate()) || !Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople()) && relatedPeople.getUsernameRelatedPeoples() != null && !relatedPeople.getUsernameRelatedPeoples().isEmpty()) {
                     IdEntity idEntity = IdEntity.builder()
                             .calendarId(id)
                             .profileId(idProfile)
@@ -158,16 +158,16 @@ public class AddCalendarsServiceImpl2 extends AddCalendarsServiceImpl {
             }
 
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_CANDIDATE, ids, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_CANDIDATE, ids, null, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_PRESENTER, ids, presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_PRESENTER, ids, presenter.getUsernamePresenters(), presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
-                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_INTERVIEWER, ids, recruitmentCouncil.getEmailRecruitmentCouncil(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_INTERVIEWER, ids, recruitmentCouncil.getUsernameRecruitmentCouncils(), recruitmentCouncil.getEmailRecruitmentCouncil(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
             }
-            if (!Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople())) {
-                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_RELATED_PEOPLE, ids, null, relatedPeople.getSubjectRelatedPeople(), relatedPeople.getContentRelatedPeople(), relatedPeople.getFileRelatedPeoples(), request.getInfo());
+            if (!Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople()) && relatedPeople.getUsernameRelatedPeoples() != null && !relatedPeople.getUsernameRelatedPeoples().isEmpty()) {
+                historyEmailService.createHistoryEmails(TypeConfig.CALENDARS_RELATED_PEOPLE, ids, relatedPeople.getUsernameRelatedPeoples(), null, relatedPeople.getSubjectRelatedPeople(), relatedPeople.getContentRelatedPeople(), relatedPeople.getFileRelatedPeoples(), request.getInfo());
             }
 
             response.setSuccess();

@@ -62,5 +62,6 @@ public class ProfileDetailEntity {
     private String companyId;
     private String companyName;
     private Long createAt;
+    private Boolean blackList;
 
 }

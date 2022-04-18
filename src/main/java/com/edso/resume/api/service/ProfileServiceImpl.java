@@ -119,10 +119,10 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             c.add(Filters.eq(DbKeyConfig.FOLLOWERS, info.getUsername()));
         }
         if (!Strings.isNullOrEmpty(blackList)) {
-            if (key.equals("blacklist")) {
+            if (blackList.equals("blacklist")) {
                 c.add(Filters.eq(DbKeyConfig.BLACK_LIST, true));
             }
-            if (key.equals("notblacklist")) {
+            if (blackList.equals("notblacklist")) {
                 c.add(Filters.ne(DbKeyConfig.BLACK_LIST, true));
             }
         }
@@ -154,7 +154,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
             c.add(Filters.eq(DbKeyConfig.RECRUITMENT_ID, recruitment));
         }
         if (!Strings.isNullOrEmpty(statusCV)) {
-            c.add(Filters.eq(DbKeyConfig.STATUS_CV_NAME, statusCV));
+            c.add(Filters.eq(DbKeyConfig.STATUS_CV_ID, statusCV));
         }
         if (!Strings.isNullOrEmpty(calendar)) {
             if (calendar.equals("set")) {
@@ -170,9 +170,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
         if (!Strings.isNullOrEmpty(hrRef)) {
             c.add(Filters.eq(DbKeyConfig.USERNAME, hrRef));
         }
-        if (info.getRole() != 1) {
-            c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
-        }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -233,6 +231,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                         .companyId(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_ID)))
                         .companyName(AppUtils.parseString(doc.get(DbKeyConfig.COMPANY_NAME)))
                         .createAt(AppUtils.parseLong(doc.get(DbKeyConfig.CREATE_AT)))
+                        .blackList(AppUtils.parseBoolean(doc.get(DbKeyConfig.BLACK_LIST)))
                         .build();
                 rows.add(profile);
             }
@@ -318,6 +317,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
                 .companyId(AppUtils.parseString(one.get(DbKeyConfig.COMPANY_ID)))
                 .companyName(AppUtils.parseString(one.get(DbKeyConfig.COMPANY_NAME)))
                 .createAt(AppUtils.parseLong(one.get(DbKeyConfig.CREATE_AT)))
+                .blackList(AppUtils.parseBoolean(one.get(DbKeyConfig.BLACK_LIST)))
                 .build();
 
         response.setSuccess(profile);
@@ -974,7 +974,7 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
     }
 
     @Override
-    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, PresenterRequest presenter) {
+    public BaseResponse updateRejectProfile(UpdateRejectProfileRequest request, CandidateRequest candidate, RecruitmentCouncilRequest recruitmentCouncil, PresenterRequest presenter, RelatedPeopleRequest relatedPeople) {
 
         BaseResponse response = new BaseResponse();
         String key = UUID.randomUUID().toString();
@@ -1077,10 +1077,16 @@ public class ProfileServiceImpl extends BaseService implements ProfileService, I
 
             //publish rabbit
             if (!Strings.isNullOrEmpty(candidate.getSubjectCandidate()) && !Strings.isNullOrEmpty(candidate.getContentCandidate())) {
-                historyEmailService.createHistoryEmail(TypeConfig.REJECT_CANDIDATE, idProfile, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
+                historyEmailService.createHistoryEmail(TypeConfig.REJECT_CANDIDATE, idProfile, null, null, candidate.getSubjectCandidate(), candidate.getContentCandidate(), candidate.getFileCandidates(), request.getInfo());
             }
             if (!Strings.isNullOrEmpty(presenter.getSubjectPresenter()) && !Strings.isNullOrEmpty(presenter.getContentPresenter())) {
-                historyEmailService.createHistoryEmail(TypeConfig.REJECT_PRESENTER, idProfile, presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+                historyEmailService.createHistoryEmail(TypeConfig.REJECT_PRESENTER, idProfile, presenter.getUsernamePresenters(), presenter.getEmailPresenter(), presenter.getSubjectPresenter(), presenter.getContentPresenter(), presenter.getFilePresenters(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(recruitmentCouncil.getSubjectRecruitmentCouncil()) && !Strings.isNullOrEmpty(recruitmentCouncil.getContentRecruitmentCouncil())) {
+                historyEmailService.createHistoryEmail(TypeConfig.REJECT_INTERVIEWER, idProfile, recruitmentCouncil.getUsernameRecruitmentCouncils(), recruitmentCouncil.getEmailRecruitmentCouncil(), recruitmentCouncil.getSubjectRecruitmentCouncil(), recruitmentCouncil.getContentRecruitmentCouncil(), recruitmentCouncil.getFileRecruitmentCouncils(), request.getInfo());
+            }
+            if (!Strings.isNullOrEmpty(relatedPeople.getSubjectRelatedPeople()) && !Strings.isNullOrEmpty(relatedPeople.getContentRelatedPeople())) {
+                historyEmailService.createHistoryEmail(TypeConfig.REJECT_RELATED_PEOPLE, idProfile, relatedPeople.getUsernameRelatedPeoples(), null, relatedPeople.getSubjectRelatedPeople(), relatedPeople.getContentRelatedPeople(), relatedPeople.getFileRelatedPeoples(), request.getInfo());
             }
 
             response.setSuccess();

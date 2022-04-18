@@ -9,9 +9,9 @@ import com.edso.resume.lib.response.GetArrayCalendarResponse;
 public interface CalendarService2 {
     GetArrayCalendarResponse<CalendarEntity2> findAllCalendar(HeaderInfo info, String id, String idProfile, String key, String act, String keySearch, String recruitment);
 
-    BaseResponse createCalendarProfile(CreateCalendarProfileRequest2 request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate);
+    BaseResponse createCalendarProfile(CreateCalendarProfileRequest2 request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate, RelatedPeopleRequest relatedPeople);
 
-    BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest2 request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate);
+    BaseResponse updateCalendarProfile(UpdateCalendarProfileRequest2 request, PresenterRequest presenter, RecruitmentCouncilRequest recruitmentCouncil, CandidateRequest candidate, RelatedPeopleRequest relatedPeople);
 
     BaseResponse deleteCalendarProfile(DeleteCalendarProfileRequest request);
 

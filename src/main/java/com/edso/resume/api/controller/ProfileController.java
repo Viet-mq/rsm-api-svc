@@ -123,20 +123,22 @@ public class ProfileController extends BaseController {
     public BaseResponse updateRejectProfile(@RequestHeader Map<String, String> headers,
                                             @ModelAttribute UpdateRejectProfileRequest request,
                                             @ModelAttribute CandidateRequest candidate,
+                                            @ModelAttribute RecruitmentCouncilRequest recruitmentCouncil,
+                                            @ModelAttribute RelatedPeopleRequest relatedPeople,
                                             @ModelAttribute PresenterRequest presenter) {
         BaseResponse response = new BaseResponse();
         HeaderInfo headerInfo = ParseHeaderUtil.build(headers);
-        logger.info("=>updateRejectProfile u: {}, req: {}, candidate: {}, presenter: {}", headerInfo, request, candidate, presenter);
+        logger.info("=>updateRejectProfile u: {}, req: {}, candidate: {}, presenter: {}, relatedPeople: {}, recruitmentCouncil: {}", headerInfo, request, candidate, presenter, relatedPeople, recruitmentCouncil);
         if (request == null) {
             response.setResult(-1, "Vui lòng điền đầy đủ thông tin");
         } else {
             response = request.validate();
             if (response == null) {
                 request.setInfo(headerInfo);
-                response = profileService.updateRejectProfile(request, candidate, presenter);
+                response = profileService.updateRejectProfile(request, candidate, recruitmentCouncil, presenter, relatedPeople);
             }
         }
-        logger.info("<=updateRejectProfile u: {}, req: {}, resp: {}, candidate: {}, presenter: {}", headerInfo, request, response, candidate, presenter);
+        logger.info("<=updateRejectProfile u: {}, req: {}, resp: {}, candidate: {}, presenter: {}, relatedPeople: {}, recruitmentCouncil: {}", headerInfo, request, response, candidate, presenter, relatedPeople, recruitmentCouncil);
         return response;
     }
 

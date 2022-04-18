@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 public class RelatedPeopleRequest {
-    private List<String> relatedPeople;
+    private List<String> usernameRelatedPeoples;
     private String subjectRelatedPeople;
     private String contentRelatedPeople;
     private List<MultipartFile> fileRelatedPeoples;

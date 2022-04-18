@@ -7,11 +7,13 @@ import java.util.List;
 public interface SendEmailService {
     List<EmailResult> sendEmail(
             String profileId,
+            List<String> usernames,
             List<String> emails,
             String subject,
             String content);
 
     List<EmailResult> sendCalendarEmail(String calendarId,
+                                        List<String> usernames,
                                         List<String> emails,
                                         String subject,
                                         String content);

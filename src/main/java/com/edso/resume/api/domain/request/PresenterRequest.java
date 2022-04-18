@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class PresenterRequest {
+    private List<String> usernamePresenters;
     private String emailPresenter;
     private String subjectPresenter;
     private String contentPresenter;

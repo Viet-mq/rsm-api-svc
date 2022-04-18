@@ -107,11 +107,6 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
 
         BaseResponse response = new BaseResponse();
         try {
-//        Document company = db.findOne(CollectionNameDefs.COLL_COMPANY, Filters.eq(DbKeyConfig.ID, request.getIdCompany()));
-//        if (company == null) {
-//            response.setFailed("Không tồn tại id company này");
-//            return response;
-//        }
             if (!Strings.isNullOrEmpty(request.getIdParent())) {
                 Document doc = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.ID, request.getIdParent()));
                 if (doc == null) {
@@ -121,7 +116,7 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
             }
 
             String name = request.getName();
-            Bson c = Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
+            Bson c = Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations()));
             long count = db.countAll(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, c);
 
             if (count > 0) {
@@ -137,6 +132,7 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
             department.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
             department.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());
             department.append(DbKeyConfig.CREATE_BY, request.getInfo().getUsername());
+            department.append(DbKeyConfig.ORGANIZATIONS, request.getInfo().getMyOrganizations());
 
             // insert to database
             db.insertOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, department);
@@ -166,7 +162,7 @@ DepartmentServiceImpl extends BaseService implements DepartmentService {
             }
 
             String name = request.getName();
-            Document obj = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())));
+            Document obj = db.findOne(CollectionNameDefs.COLL_DEPARTMENT_COMPANY, Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations())));
             if (obj != null) {
                 String objId = AppUtils.parseString(obj.get(DbKeyConfig.ID));
                 if (!objId.equals(id)) {

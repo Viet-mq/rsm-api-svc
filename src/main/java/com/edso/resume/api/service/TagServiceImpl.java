@@ -39,6 +39,7 @@ public class TagServiceImpl extends BaseService implements TagService {
         if (!Strings.isNullOrEmpty(name)) {
             c.add(Filters.regex(DbKeyConfig.NAME_SEARCH, Pattern.compile(AppUtils.parseVietnameseToEnglish(name))));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson sort = Filters.eq(DbKeyConfig.CREATE_AT, -1);
         Bson cond = buildCondition(c);
         PagingInfo pagingInfo = PagingInfo.parse(page, size);
@@ -65,7 +66,7 @@ public class TagServiceImpl extends BaseService implements TagService {
     public BaseResponse createTag(CreateTagRequest request) {
         BaseResponse response = new BaseResponse();
         try {
-            Document name = db.findOne(CollectionNameDefs.COLL_TAG, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getName().toLowerCase())));
+            Document name = db.findOne(CollectionNameDefs.COLL_TAG, Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getName().toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations())));
             if (name != null) {
                 response.setFailed("Tên thẻ này đã tồn tại!");
                 return response;
@@ -100,7 +101,7 @@ public class TagServiceImpl extends BaseService implements TagService {
                 return response;
             }
 
-            Document name = db.findOne(CollectionNameDefs.COLL_TAG, Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getName().toLowerCase())));
+            Document name = db.findOne(CollectionNameDefs.COLL_TAG, Filters.and(Filters.eq(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(request.getName().toLowerCase())), Filters.in(DbKeyConfig.ORGANIZATIONS, request.getInfo().getOrganizations())));
             if (name != null && !request.getId().equals(AppUtils.parseString(name.get(DbKeyConfig.ID)))) {
                 response.setFailed("Tên thẻ này đã tồn tại");
                 return response;

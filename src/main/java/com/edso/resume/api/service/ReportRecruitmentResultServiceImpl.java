@@ -7,6 +7,7 @@ import com.edso.resume.api.exporter.ReportRecruitmentResultExporter;
 import com.edso.resume.lib.common.AppUtils;
 import com.edso.resume.lib.common.CollectionNameDefs;
 import com.edso.resume.lib.common.DbKeyConfig;
+import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.response.GetArrayResponse;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
@@ -33,7 +34,7 @@ public class ReportRecruitmentResultServiceImpl extends BaseService implements R
 
 
     @Override
-    public GetArrayResponse<ReportRecruitmentResultEntity> findAll(Long from, Long to) {
+    public GetArrayResponse<ReportRecruitmentResultEntity> findAll(HeaderInfo info, Long from, Long to) {
         GetArrayResponse<ReportRecruitmentResultEntity> response = new GetArrayResponse<>();
         List<ReportRecruitmentResultEntity> rows = new ArrayList<>();
         List<Bson> c = new ArrayList<>();
@@ -43,6 +44,7 @@ public class ReportRecruitmentResultServiceImpl extends BaseService implements R
         if (to != null) {
             c.add(Filters.lte(DbKeyConfig.CREATE_AT, to));
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         List<Document> lst = db.findAll(CollectionNameDefs.COLL_RECRUITMENT, cond, null, 0, 0);
 
@@ -67,7 +69,7 @@ public class ReportRecruitmentResultServiceImpl extends BaseService implements R
     }
 
     @Override
-    public ExportResponse exportReportRecruitmentResult(Long from, Long to) {
+    public ExportResponse exportReportRecruitmentResult(HeaderInfo info, Long from, Long to) {
         List<ReportRecruitmentResultEntity> rows = new ArrayList<>();
         List<Bson> c = new ArrayList<>();
         if (from != null) {
@@ -80,6 +82,7 @@ public class ReportRecruitmentResultServiceImpl extends BaseService implements R
         } else {
             to = System.currentTimeMillis();
         }
+        c.add(Filters.in(DbKeyConfig.ORGANIZATIONS, info.getOrganizations()));
         Bson cond = buildCondition(c);
         List<Document> lst = db.findAll(CollectionNameDefs.COLL_RECRUITMENT, cond, null, 0, 0);
 
