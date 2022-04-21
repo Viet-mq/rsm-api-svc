@@ -258,7 +258,12 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                     if (!Strings.isNullOrEmpty(pathFile)) {
                         deleteFile(pathFile);
                     }
-                    fileName = FileUtils.saveFile(serverPath, file);
+                    String type = file.getOriginalFilename().split("\\.")[1];
+                    if (type.equals("doc") || type.equals("docx")) {
+                        fileName = DocToPdfConverter.convertWordToPdf(serverPath, file);
+                    } else {
+                        fileName = FileUtils.saveFile(serverPath, file);
+                    }
                     url = domain + fileName;
                     pathFile1 = serverPath + fileName;
                 } catch (Throwable ex) {
