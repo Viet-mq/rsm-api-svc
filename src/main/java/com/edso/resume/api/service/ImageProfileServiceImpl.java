@@ -5,10 +5,7 @@ import com.edso.resume.api.domain.entities.EventImageEntity;
 import com.edso.resume.api.domain.entities.ImageEntity;
 import com.edso.resume.api.domain.request.DeleteImageProfileRequest;
 import com.edso.resume.api.domain.request.UpdateImageProfileRequest;
-import com.edso.resume.lib.common.AppUtils;
-import com.edso.resume.lib.common.CollectionNameDefs;
-import com.edso.resume.lib.common.DbKeyConfig;
-import com.edso.resume.lib.common.ErrorCodeDefs;
+import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.response.BaseResponse;
 import com.google.common.base.Strings;
 import com.mongodb.client.model.Filters;
@@ -21,8 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.util.Objects;
 
 @Service
 public class ImageProfileServiceImpl extends BaseService implements ImageProfileService {
@@ -73,7 +68,7 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
             if (!Strings.isNullOrEmpty(path)) {
                 deleteFile(path);
             }
-            String fileName = saveFile(image);
+            String fileName = FileUtils.saveFile(serverPath, image);
 
             Bson update = Updates.combine(
                     Updates.set(DbKeyConfig.URL_IMAGE, domain + fileName),
@@ -133,35 +128,6 @@ public class ImageProfileServiceImpl extends BaseService implements ImageProfile
 
         }
         response.setSuccess();
-        return null;
-    }
-
-    public String saveFile(MultipartFile file) {
-        FileOutputStream fos = null;
-        try {
-            String fileName = file.getOriginalFilename();
-            File file1 = new File(serverPath + fileName);
-            int i = 0;
-            while (file1.exists()) {
-                i++;
-                String[] arr = Objects.requireNonNull(file.getOriginalFilename()).split("\\.");
-                fileName = arr[0] + " (" + i + ")." + arr[1];
-                file1 = new File(serverPath + fileName);
-            }
-            fos = new FileOutputStream(file1);
-            fos.write(file.getBytes());
-            return fileName;
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (Throwable ex) {
-                    logger.error("Exception: ", ex);
-                }
-            }
-        }
         return null;
     }
 

@@ -1,5 +1,6 @@
 package com.edso.resume.api.service;
 
+import com.edso.resume.api.common.DocToPdfConverter;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.NoteProfileEntity;
 import com.edso.resume.api.domain.request.CreateNoteProfileRequest;
@@ -24,8 +25,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Service
@@ -141,7 +144,12 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
             String url = null;
             if (file != null && !file.isEmpty()) {
                 try {
-                    fileName = saveFile(file);
+                    String type = file.getOriginalFilename().split("\\.")[1];
+                    if (type.equals("doc") || type.equals("docx")) {
+                        fileName = DocToPdfConverter.convertWordToPdf(serverPath, file);
+                    } else {
+                        fileName = FileUtils.saveFile(serverPath, file);
+                    }
                     pathFile = serverPath + fileName;
                     url = domain + fileName;
                 } catch (Throwable ex) {
@@ -233,15 +241,12 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
 
             String fullName = null;
             String pathFile = null;
-            String idProfile = null;
             for (DictionaryValidateProcessor r : rs) {
                 if (r.getResult().getType().equals(ThreadConfig.USER)) {
                     fullName = r.getResult().getFullName();
                 }
                 if (r.getResult().getType().equals(ThreadConfig.NOTE)) {
                     pathFile = (String) r.getResult().getName();
-                    idProfile = r.getResult().getIdProfile()
-                    ;
                 }
             }
 
@@ -253,7 +258,7 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
                     if (!Strings.isNullOrEmpty(pathFile)) {
                         deleteFile(pathFile);
                     }
-                    fileName = saveFile(file);
+                    fileName = FileUtils.saveFile(serverPath, file);
                     url = domain + fileName;
                     pathFile1 = serverPath + fileName;
                 } catch (Throwable ex) {
@@ -338,35 +343,6 @@ public class NoteServiceImpl extends BaseService implements NoteService, IDictio
         }
         //Xóa note
         db.delete(CollectionNameDefs.COLL_NOTE_PROFILE, cond);
-    }
-
-    public String saveFile(MultipartFile file) {
-        FileOutputStream fos = null;
-        try {
-            String fileName = file.getOriginalFilename();
-            File file1 = new File(serverPath + fileName);
-            int i = 0;
-            while (file1.exists()) {
-                i++;
-                String[] arr = Objects.requireNonNull(file.getOriginalFilename()).split("\\.");
-                fileName = arr[0] + " (" + i + ")." + arr[1];
-                file1 = new File(serverPath + fileName);
-            }
-            fos = new FileOutputStream(file1);
-            fos.write(file.getBytes());
-            return fileName;
-        } catch (Throwable ex) {
-            logger.error("Exception: ", ex);
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (Throwable ex) {
-                    logger.error("Exception: ", ex);
-                }
-            }
-        }
-        return null;
     }
 
     public void deleteFile(String path) {
