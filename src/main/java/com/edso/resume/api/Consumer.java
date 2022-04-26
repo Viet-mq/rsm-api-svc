@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 
 public class Consumer {
 
-    private final static String QUEUE_NAME = "EMAIL.queue";
+    private final static String QUEUE_NAME = "email.queue";
 
     public static void main(String[] argv) throws Exception {
         System.out.println("Create a ConnectionFactory");

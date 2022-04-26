@@ -37,7 +37,7 @@ public class StatusCVServiceImpl2 extends StatusCVServiceImpl {
             List<Document> list = db.findAll(CollectionNameDefs.COLL_STATUS_CV, null, null, 0, 0);
             int index = 0;
             for (Document document : list) {
-                if (!(Boolean) document.get(DbKeyConfig.DELETE) || (Boolean) document.get(DbKeyConfig.CHECK)) {
+                if (!(Boolean) document.get(DbKeyConfig.DELETE)) {
                     index = list.indexOf(document);
                 }
             }
@@ -46,7 +46,6 @@ public class StatusCVServiceImpl2 extends StatusCVServiceImpl {
             statusCV.append(DbKeyConfig.ID, UUID.randomUUID().toString());
             statusCV.append(DbKeyConfig.NAME, AppUtils.mergeWhitespace(name));
             statusCV.append(DbKeyConfig.DELETE, false);
-            statusCV.append(DbKeyConfig.CHECK, false);
             statusCV.append(DbKeyConfig.NAME_SEARCH, AppUtils.parseVietnameseToEnglish(name));
             statusCV.append(DbKeyConfig.NAME_EQUAL, AppUtils.mergeWhitespace(name.toLowerCase()));
             statusCV.append(DbKeyConfig.CREATE_AT, System.currentTimeMillis());

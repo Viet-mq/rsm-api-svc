@@ -166,9 +166,13 @@ public class ChangeRecruitmentServiceImpl extends BaseService implements ChangeR
                     }
                 }
             }
-            //Insert history to DB
-            historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Chuyển ứng viên sang tin tuyển dụng khác", request.getInfo());
 
+            //Insert history to DB
+            if(dictionaryNames.getRecruitmentId().equals(request.getRecruitmentId())) {
+                historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Chuyển vòng tuyển dụng", request.getInfo());
+            }else {
+                historyService.createHistory(request.getIdProfile(), TypeConfig.UPDATE, "Chuyển ứng viên sang tin tuyển dụng khác", request.getInfo());
+            }
             ProfileRabbitMQEntity profileRabbitMQ = new ProfileRabbitMQEntity();
             profileRabbitMQ.setRecruitmentId(request.getRecruitmentId());
             profileRabbitMQ.setRecruitmentName(dictionaryNames.getRecruitmentName());

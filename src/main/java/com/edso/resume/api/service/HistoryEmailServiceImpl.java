@@ -3,10 +3,7 @@ package com.edso.resume.api.service;
 import com.edso.resume.api.domain.db.MongoDbOnlineSyncActions;
 import com.edso.resume.api.domain.entities.*;
 import com.edso.resume.api.domain.rabbitmq.config.RabbitMQOnlineActions;
-import com.edso.resume.lib.common.AppUtils;
-import com.edso.resume.lib.common.CollectionNameDefs;
-import com.edso.resume.lib.common.DbKeyConfig;
-import com.edso.resume.lib.common.TypeConfig;
+import com.edso.resume.lib.common.*;
 import com.edso.resume.lib.entities.HeaderInfo;
 import com.edso.resume.lib.entities.PagingInfo;
 import com.edso.resume.lib.response.GetArrayResponse;
@@ -87,7 +84,7 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
                 if (file != null && !file.isEmpty()) {
-                    String path = AppUtils.saveFile(serverPath, file);
+                    String path = FileUtils.saveFile(serverPath, file);
                     listPath.add(path);
                     Document pathDocument = new Document();
                     pathDocument.append(DbKeyConfig.FILE_NAME, file.getOriginalFilename());
@@ -153,7 +150,7 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
                 if (file != null && !file.isEmpty()) {
-                    String path = AppUtils.saveFile(serverPath, file);
+                    String path = FileUtils.saveFile(serverPath, file);
                     listPath.add(path);
                     Document pathDocument = new Document();
                     pathDocument.append(DbKeyConfig.FILE_NAME, file.getOriginalFilename());
@@ -213,6 +210,8 @@ public class HistoryEmailServiceImpl extends BaseService implements HistoryEmail
 
     private String getType(String type) {
         switch (type) {
+            case TypeConfig.REJECT_INTERVIEWER:
+            case TypeConfig.ROUND_INTERVIEWER:
             case TypeConfig.CALENDAR_INTERVIEWER:
             case TypeConfig.CALENDARS_INTERVIEWER: {
                 return "Hội đồng tuyển dụng";
